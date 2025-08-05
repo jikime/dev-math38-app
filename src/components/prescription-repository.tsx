@@ -578,7 +578,7 @@ export function PrescriptionRepository() {
                   placeholder="처방명, 학생명, 내용으로 검색..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-80"
+                  className="pl-10 w-80 shadow-none"
                 />
               </div>
               <div className="flex items-center gap-1 rounded-lg p-1">

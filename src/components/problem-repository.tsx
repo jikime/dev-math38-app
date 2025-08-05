@@ -563,7 +563,7 @@ export function ProblemRepository() {
                   placeholder="문제명, 범위, 내용으로 검색..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-80"
+                  className="pl-10 w-80 shadow-none"
                 />
               </div>
               <div className="flex items-center gap-1 rounded-lg p-1">
