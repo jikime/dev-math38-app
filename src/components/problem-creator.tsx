@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -168,7 +167,7 @@ export function ProblemCreator() {
   ]
 
   const headerStyles = [
-    { id: 1, name: "스타일 1", color: "bg-gray-100", description: "기본 스타일" },
+    { id: 1, name: "스타일 1", color: "border", description: "기본 스타일" },
     { id: 2, name: "스타일 2", color: "bg-gradient-to-br from-blue-400 to-blue-600", description: "파란색 그라데이션" },
     { id: 3, name: "스타일 3", color: "bg-gradient-to-br from-teal-400 to-cyan-500", description: "청록색 그라데이션" },
     { id: 4, name: "스타일 4", color: "bg-gradient-to-br from-green-400 to-blue-500", description: "기하학적 패턴" },
@@ -229,16 +228,16 @@ export function ProblemCreator() {
         {Object.entries(simpleDifficultyStats).map(([level, stats]) => (
           <div key={level} className="text-center">
             <div
-              className={`p-2 rounded-lg mb-1 ${
+              className={`p-2 rounded-lg mb-1 border ${
                 level === "최상"
-                  ? "bg-red-100"
+                  ? "border-red-200"
                   : level === "상"
-                    ? "bg-orange-100"
+                    ? "border-orange-200"
                     : level === "중"
-                      ? "bg-blue-100"
+                      ? "border-blue-200"
                       : level === "하"
-                        ? "bg-green-100"
-                        : "bg-teal-100"
+                        ? "border-green-200"
+                        : "border-teal-200"
               }`}
             >
               <Input
@@ -256,7 +255,7 @@ export function ProblemCreator() {
                 max={stats.total}
               />
             </div>
-            <div className="text-xs text-gray-500 mb-1">{stats.total}</div>
+            <div className="text-xs text-muted-foreground mb-1">{stats.total}</div>
             <div className="text-xs font-medium">{level}</div>
           </div>
         ))}
@@ -308,7 +307,7 @@ export function ProblemCreator() {
                     min="0"
                     max={stats.total}
                   />
-                  <div className="text-xs text-gray-500">{stats.total}</div>
+                  <div className="text-xs text-muted-foreground">{stats.total}</div>
                 </div>
               </div>
             ))}
@@ -355,7 +354,7 @@ export function ProblemCreator() {
                     min="0"
                     max={stats.total}
                   />
-                  <div className="text-xs text-gray-500">{stats.total}</div>
+                  <div className="text-xs text-muted-foreground">{stats.total}</div>
                 </div>
               </div>
             ))}
@@ -502,9 +501,9 @@ export function ProblemCreator() {
 
     if (problemsData.length === 0) {
       return (
-        <div className="flex items-center justify-center h-96 text-gray-500">
+        <div className="flex items-center justify-center h-96 text-muted-foreground">
           <div className="text-center">
-            <BarChart3 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+            <BarChart3 className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
             <p>왼쪽에서 문제를 선택해주세요</p>
           </div>
         </div>
@@ -569,7 +568,7 @@ export function ProblemCreator() {
               ))}
             </div>
             <div className="mt-4 text-center">
-              <div className="inline-flex items-center gap-2 text-sm text-gray-600">
+              <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
                 <div className="w-3 h-3 bg-purple-500 rounded"></div>
                 <span>문항 수</span>
               </div>
@@ -631,7 +630,7 @@ export function ProblemCreator() {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-gray-800">18</div>
-                    <div className="text-sm text-gray-600">총 문항</div>
+                    <div className="text-sm text-muted-foreground">총 문항</div>
                   </div>
                 </div>
               </div>
@@ -645,7 +644,7 @@ export function ProblemCreator() {
                       <div className={`w-3 h-3 ${item.color} rounded`}></div>
                       <span className="text-sm font-medium">{item.domain}</span>
                     </div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-muted-foreground">
                       {item.count}개 ({item.percentage.toFixed(1)}%)
                     </div>
                   </div>
@@ -663,50 +662,50 @@ export function ProblemCreator() {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 border-r">번호</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 border-r">유형명</th>
-                  <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 border-r">난이도</th>
-                  <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">인지영역</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground border-r">번호</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground border-r">유형명</th>
+                  <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground border-r">난이도</th>
+                  <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">인지영역</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {itemList.map((item) => (
-                  <tr key={item.number} className="hover:bg-gray-50">
+                  <tr key={item.number} className="hover:bg-muted/50">
                     <td className="px-4 py-3 text-sm font-medium text-gray-900 border-r">{item.number}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700 border-r">{item.type}</td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground border-r">{item.type}</td>
                     <td className="px-4 py-3 text-center border-r">
-                      <Badge
-                        className={`text-xs ${
+                      <span
+                        className={`text-xs font-medium ${
                           item.difficulty === "최상"
-                            ? "bg-red-100 text-red-800"
+                            ? "text-red-600 dark:text-red-400"
                             : item.difficulty === "상"
-                              ? "bg-orange-100 text-orange-800"
+                              ? "text-orange-600 dark:text-orange-400"
                               : item.difficulty === "중"
-                                ? "bg-blue-100 text-blue-800"
+                                ? "text-blue-600 dark:text-blue-400"
                                 : item.difficulty === "하"
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-teal-100 text-teal-800"
+                                  ? "text-green-600 dark:text-green-400"
+                                  : "text-teal-600 dark:text-teal-400"
                         }`}
                       >
                         {item.difficulty}
-                      </Badge>
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <Badge
-                        className={`text-xs ${
+                      <span
+                        className={`text-xs font-medium ${
                           item.domain === "계산"
-                            ? "bg-blue-100 text-blue-800"
+                            ? "text-blue-600 dark:text-blue-400"
                             : item.domain === "이해"
-                              ? "bg-green-100 text-green-800"
+                              ? "text-green-600 dark:text-green-400"
                               : item.domain === "해결"
-                                ? "bg-orange-100 text-orange-800"
+                                ? "text-orange-600 dark:text-orange-400"
                                 : item.domain === "추론"
-                                  ? "bg-red-100 text-red-800"
-                                  : "bg-gray-100 text-gray-800"
+                                  ? "text-red-600 dark:text-red-400"
+                                  : "text-muted-foreground dark:text-gray-400"
                         }`}
                       >
                         {item.domain}
-                      </Badge>
+                      </span>
                     </td>
                   </tr>
                 ))}
@@ -757,16 +756,16 @@ export function ProblemCreator() {
                   시험지 헤더
                 </div>
                 <div className="text-center mb-3">
-                  <span className="text-lg font-bold text-gray-700">{questionsPerPage} 문항</span>
+                  <span className="text-lg font-bold text-muted-foreground">{questionsPerPage} 문항</span>
                 </div>
                 <div className="flex-1 border-2 border-gray-400 rounded relative">
                   {/* 문제 배치 미리보기 로직 */}
                   {questionsPerPage === 2 && (
                     <div className="h-full grid grid-cols-2 gap-2 p-2">
-                      <div className="border border-gray-300 rounded flex items-center justify-center text-lg font-bold text-gray-600">
+                      <div className="border border-gray-300 rounded flex items-center justify-center text-lg font-bold text-muted-foreground">
                         1
                       </div>
-                      <div className="border border-gray-300 rounded flex items-center justify-center text-lg font-bold text-gray-600">
+                      <div className="border border-gray-300 rounded flex items-center justify-center text-lg font-bold text-muted-foreground">
                         2
                       </div>
                     </div>
@@ -774,18 +773,18 @@ export function ProblemCreator() {
                   {questionsPerPage === 4 && (
                     <div className="h-full grid grid-cols-2 gap-2 p-2">
                       <div className="grid grid-rows-2 gap-2">
-                        <div className="border border-gray-300 rounded flex items-center justify-center text-lg font-bold text-gray-600">
+                        <div className="border border-gray-300 rounded flex items-center justify-center text-lg font-bold text-muted-foreground">
                           1
                         </div>
-                        <div className="border border-gray-300 rounded flex items-center justify-center text-lg font-bold text-gray-600">
+                        <div className="border border-gray-300 rounded flex items-center justify-center text-lg font-bold text-muted-foreground">
                           2
                         </div>
                       </div>
                       <div className="grid grid-rows-2 gap-2">
-                        <div className="border border-gray-300 rounded flex items-center justify-center text-lg font-bold text-gray-600">
+                        <div className="border border-gray-300 rounded flex items-center justify-center text-lg font-bold text-muted-foreground">
                           3
                         </div>
-                        <div className="border border-gray-300 rounded flex items-center justify-center text-lg font-bold text-gray-600">
+                        <div className="border border-gray-300 rounded flex items-center justify-center text-lg font-bold text-muted-foreground">
                           4
                         </div>
                       </div>
@@ -819,7 +818,7 @@ export function ProblemCreator() {
                   >
                     {style.name}
                   </div>
-                  <div className="text-sm text-gray-600">{style.description}</div>
+                  <div className="text-sm text-muted-foreground">{style.description}</div>
                 </div>
               </div>
             ))}
@@ -869,9 +868,9 @@ export function ProblemCreator() {
 
     if (problemsData.length === 0) {
       return (
-        <div className="flex items-center justify-center h-96 text-gray-500">
+        <div className="flex items-center justify-center h-96 text-muted-foreground">
           <div className="text-center">
-            <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+            <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
             <p>왼쪽에서 문제를 선택해주세요</p>
           </div>
         </div>
@@ -893,7 +892,7 @@ export function ProblemCreator() {
 
         {/* 문제 수 표시 */}
         <div className="text-center mb-4">
-          <span className="text-lg font-bold text-gray-700">
+          <span className="text-lg font-bold text-muted-foreground">
             {Math.min(questionsPerPage, problemsData.length)} 문항
           </span>
         </div>
@@ -902,25 +901,25 @@ export function ProblemCreator() {
         {questionsPerPage === 2 && (
           <div className="grid grid-cols-2 gap-4">
             {getProblemsToShow().map((problem) => (
-              <div key={problem.id} className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm border-gray-200">
+              <div key={problem.id} className="flex flex-col gap-6 rounded-xl py-6 border">
                 <div className="px-6 p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-lg">{problem.id}</span>
-                      <Badge variant="outline" className="text-xs">
+                      <span className="text-xs text-muted-foreground">
                         {problem.title}
-                      </Badge>
+                      </span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Badge className="bg-blue-100 text-blue-800 text-xs">쉬움</Badge>
-                      <Badge className="bg-gray-100 text-gray-800 text-xs">객관</Badge>
+                      <span className="text-blue-600 dark:text-blue-400 text-xs font-medium">쉬움</span>
+                      <span className="text-muted-foreground dark:text-gray-400 text-xs font-medium">객관</span>
                       <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
                         <Edit3 className="w-3 h-3" />
                       </Button>
                     </div>
                   </div>
                   <div className="mb-3">
-                    <p className="text-sm text-gray-700 leading-relaxed">{problem.content}</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{problem.content}</p>
                   </div>
                   <div className="mb-3">
                     <Input value={problem.equation} className="text-center font-mono text-sm" readOnly />
@@ -946,22 +945,22 @@ export function ProblemCreator() {
               {getProblemsToShow()
                 .slice(0, 2)
                 .map((problem) => (
-                  <div key={problem.id} className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm border-gray-200">
+                  <div key={problem.id} className="flex flex-col gap-6 rounded-xl py-6 border">
                     <div className="px-6 p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-lg">{problem.id}</span>
-                          <Badge variant="outline" className="text-xs">
+                          <span className="text-xs text-muted-foreground">
                             {problem.title}
-                          </Badge>
+                          </span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Badge className="bg-blue-100 text-blue-800 text-xs">쉬움</Badge>
-                          <Badge className="bg-gray-100 text-gray-800 text-xs">객관</Badge>
+                          <span className="text-blue-600 dark:text-blue-400 text-xs font-medium">쉬움</span>
+                          <span className="text-muted-foreground dark:text-gray-400 text-xs font-medium">객관</span>
                         </div>
                       </div>
                       <div className="mb-3">
-                        <p className="text-sm text-gray-700 leading-relaxed">{problem.content}</p>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{problem.content}</p>
                       </div>
                       <div className="mb-3">
                         <Input value={problem.equation} className="text-center font-mono text-sm" readOnly />
@@ -974,22 +973,22 @@ export function ProblemCreator() {
               {getProblemsToShow()
                 .slice(2, 4)
                 .map((problem) => (
-                  <div key={problem.id} className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm border-gray-200">
+                  <div key={problem.id} className="flex flex-col gap-6 rounded-xl py-6 border">
                     <div className="px-6 p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-lg">{problem.id}</span>
-                          <Badge variant="outline" className="text-xs">
+                          <span className="text-xs text-muted-foreground">
                             {problem.title}
-                          </Badge>
+                          </span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Badge className="bg-blue-100 text-blue-800 text-xs">쉬움</Badge>
-                          <Badge className="bg-gray-100 text-gray-800 text-xs">객관</Badge>
+                          <span className="text-blue-600 dark:text-blue-400 text-xs font-medium">쉬움</span>
+                          <span className="text-muted-foreground dark:text-gray-400 text-xs font-medium">객관</span>
                         </div>
                       </div>
                       <div className="mb-3">
-                        <p className="text-sm text-gray-700 leading-relaxed">{problem.content}</p>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{problem.content}</p>
                       </div>
                       <div className="mb-3">
                         <Input value={problem.equation} className="text-center font-mono text-sm" readOnly />
@@ -1009,9 +1008,9 @@ export function ProblemCreator() {
 
     if (problemsData.length === 0) {
       return (
-        <div className="flex items-center justify-center h-96 text-gray-500">
+        <div className="flex items-center justify-center h-96 text-muted-foreground">
           <div className="text-center">
-            <CheckCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+            <CheckCircle className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
             <p>왼쪽에서 문제를 선택해주세요</p>
           </div>
         </div>
@@ -1027,26 +1026,26 @@ export function ProblemCreator() {
 
         <div className="grid grid-cols-2 gap-4">
           {problemsData.map((problem) => (
-            <div key={problem.id} className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm border-gray-200">
+            <div key={problem.id} className="flex flex-col gap-6 rounded-xl py-6 border">
               <div className="px-6 p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-lg">{problem.id}</span>
-                    <Badge variant="outline" className="text-xs">
+                    <span className="text-xs text-muted-foreground">
                       {problem.title}
-                    </Badge>
+                    </span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Badge className="bg-blue-100 text-blue-800 text-xs">쉬움</Badge>
-                    <Badge className="bg-gray-100 text-gray-800 text-xs">객관</Badge>
+                    <span className="text-blue-600 dark:text-blue-400 text-xs font-medium">쉬움</span>
+                    <span className="text-muted-foreground dark:text-gray-400 text-xs font-medium">객관</span>
                   </div>
                 </div>
                 <div className="mb-3 relative">
                   <Input value={problem.equation} className="text-center font-mono text-sm pr-16" readOnly />
                   <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-                    <Badge className="bg-green-100 text-green-800 font-bold text-lg px-3 py-1">
+                    <span className="text-green-600 dark:text-green-400 font-bold text-lg px-3 py-1">
                       {problem.quickAnswer}
-                    </Badge>
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1062,9 +1061,9 @@ export function ProblemCreator() {
 
     if (problemsData.length === 0) {
       return (
-        <div className="flex items-center justify-center h-96 text-gray-500">
+        <div className="flex items-center justify-center h-96 text-muted-foreground">
           <div className="text-center">
-            <BookOpenCheck className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+            <BookOpenCheck className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
             <p>왼쪽에서 문제를 선택해주세요</p>
           </div>
         </div>
@@ -1079,16 +1078,16 @@ export function ProblemCreator() {
         </div>
 
         {problemsData.map((problem) => (
-          <div key={problem.id} className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm border-gray-200">
+          <div key={problem.id} className="flex flex-col gap-6 rounded-xl py-6 border">
             <div className="px-6 p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-xl">{problem.id}</span>
-                  <Badge variant="outline" className="text-sm">
+                  <span className="text-sm text-muted-foreground">
                     {problem.title}
-                  </Badge>
-                  <Badge className="bg-blue-100 text-blue-800 text-xs">쉬움</Badge>
-                  <Badge className="bg-gray-100 text-gray-800 text-xs">객관</Badge>
+                  </span>
+                  <span className="text-blue-600 dark:text-blue-400 text-xs font-medium">쉬움</span>
+                  <span className="text-muted-foreground dark:text-gray-400 text-xs font-medium">객관</span>
                 </div>
               </div>
 
@@ -1097,7 +1096,7 @@ export function ProblemCreator() {
                   <FileText className="w-4 h-4" />
                   문제
                 </h4>
-                <p className="text-gray-700 leading-relaxed mb-3">{problem.content}</p>
+                <p className="text-muted-foreground leading-relaxed mb-3">{problem.content}</p>
                 <div className="p-3 bg-gray-50 rounded-lg border">
                   <div className="text-center font-mono text-lg">{problem.equation}</div>
                 </div>
@@ -1148,7 +1147,7 @@ export function ProblemCreator() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">문제출제</h1>
-            <p className="text-gray-600">맞춤형 시험지와 문제집을 쉽게 만들어보세요</p>
+            <p className="text-muted-foreground">맞춤형 시험지와 문제집을 쉽게 만들어보세요</p>
           </div>
           <div className="flex items-center gap-3">
             <Button variant="outline">
@@ -1168,7 +1167,7 @@ export function ProblemCreator() {
         <div className="col-span-4">
           <div className="space-y-6">
             {/* 강좌명 선택 */}
-            <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+            <div className="flex flex-col gap-6 rounded-xl py-6 border">
               <div className="grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
                 <h3 className="leading-none font-semibold text-lg">강좌명</h3>
               </div>
@@ -1189,7 +1188,7 @@ export function ProblemCreator() {
             </div>
 
             {/* 과목을 선택해 주세요 */}
-            <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+            <div className="flex flex-col gap-6 rounded-xl py-6 border">
               <div className="grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
                 <h3 className="leading-none font-semibold text-lg flex items-center gap-2">
                   <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
@@ -1200,19 +1199,19 @@ export function ProblemCreator() {
               </div>
               <div className="px-6">
                 <div className="flex flex-wrap gap-2 mb-4">
-                  <Badge variant="outline" className="bg-blue-100 text-blue-800">
+                  <span className="text-blue-600 dark:text-blue-400 font-medium">
                     중학교 1학년 수학
-                  </Badge>
-                  <Badge variant="outline" className="bg-gray-100 text-gray-600">
+                  </span>
+                  <span className="text-muted-foreground dark:text-gray-400 font-medium">
                     중학교 2학년 수학
-                  </Badge>
+                  </span>
                 </div>
 
                 <ScrollArea className="h-64">
                   <div className="space-y-2">
                     {Object.entries(getCurrentCurriculumData()).map(([categoryName, subcategories]) => (
                       <div key={categoryName}>
-                        <div className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-gray-50">
+                        <div className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-muted/50">
                           <div className="flex items-center gap-2">
                             <Checkbox />
                             <span className="font-medium text-sm">{categoryName}</span>
@@ -1235,7 +1234,7 @@ export function ProblemCreator() {
                           <div className="ml-6 mt-2 space-y-1">
                             {Object.entries(subcategories).map(([subName, problems]) => (
                               <div key={subName}>
-                                <div className="flex items-center gap-2 p-2 text-sm text-gray-600 hover:bg-gray-50 rounded">
+                                <div className="flex items-center gap-2 p-2 text-sm text-muted-foreground hover:bg-muted/50 rounded">
                                   <ChevronRight className="w-3 h-3" />
                                   <span className="font-medium">{subName}</span>
                                 </div>
@@ -1251,20 +1250,20 @@ export function ProblemCreator() {
             </div>
 
             {/* 항목을 선택해 주세요 */}
-            <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+            <div className="flex flex-col gap-6 rounded-xl py-6 border">
               <div className="grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
                 <h3 className="leading-none font-semibold text-lg flex items-center gap-2">
                   <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
                     2
                   </span>
                   항목을 선택해 주세요
-                  <span className="text-sm text-gray-500 ml-auto">* 자동출제용</span>
+                  <span className="text-sm text-muted-foreground ml-auto">* 자동출제용</span>
                 </h3>
               </div>
               <div className="px-6">
                 <div className="mb-4">
                   <div className="font-medium text-sm mb-2">1.1.1 유리수와 순환소수</div>
-                  <div className="text-right text-sm text-gray-500 mb-2">전체 선택</div>
+                  <div className="text-right text-sm text-muted-foreground mb-2">전체 선택</div>
                 </div>
 
                 <ScrollArea className="h-48">
@@ -1286,8 +1285,8 @@ export function ProblemCreator() {
                             <span className="text-sm">{problem.title}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Badge className="bg-blue-100 text-blue-800 text-xs">{problem.selected}</Badge>
-                            <span className="text-xs text-gray-500">{problem.total}</span>
+                            <span className="text-blue-600 dark:text-blue-400 text-xs font-medium">{problem.selected}</span>
+                            <span className="text-xs text-muted-foreground">{problem.total}</span>
                           </div>
                         </div>
                       )
@@ -1298,14 +1297,14 @@ export function ProblemCreator() {
             </div>
 
             {/* 문항수를 선택해 주세요 */}
-            <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+            <div className="flex flex-col gap-6 rounded-xl py-6 border">
               <div className="grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
                 <h3 className="leading-none font-semibold text-lg flex items-center gap-2">
                   <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
                     3
                   </span>
                   문항수를 선택해 주세요
-                  <span className="text-sm text-gray-500 ml-auto">(최대 200문항)</span>
+                  <span className="text-sm text-muted-foreground ml-auto">(최대 200문항)</span>
                 </h3>
               </div>
               <div className="px-6">
@@ -1334,7 +1333,7 @@ export function ProblemCreator() {
                 </Tabs>
 
                 <div className="flex justify-center gap-2 mt-4">
-                  <Button size="sm" className="bg-blue-100 text-blue-800 hover:bg-blue-200">
+                  <Button size="sm" className="text-blue-600 dark:text-blue-400 hover:bg-accent">
                     <Edit3 className="w-4 h-4 mr-1" />
                     자동출제
                   </Button>
@@ -1359,7 +1358,7 @@ export function ProblemCreator() {
 
         {/* Right Side - Exam Paper */}
         <div className="col-span-8">
-          <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+          <div className="flex flex-col gap-6 rounded-xl py-6 border">
             <div className="grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
               {/* Tab Navigation */}
               <div className="relative w-full">
@@ -1374,8 +1373,8 @@ export function ProblemCreator() {
                         onClick={() => setActiveTab(tab.id)}
                         className={`px-4 py-2 text-sm font-medium rounded-t-lg border border-b-0 transition-all duration-200 flex items-center gap-2 relative h-auto ${
                           activeTab === tab.id
-                            ? "bg-white text-gray-900 border-gray-200 shadow-sm"
-                            : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+                            ? "bg-white text-gray-900 border-gray-200"
+                            : "bg-gray-50 text-muted-foreground border-gray-200 hover:bg-accent"
                         }`}
                       >
                         <IconComponent className="w-4 h-4" />
@@ -1399,7 +1398,7 @@ export function ProblemCreator() {
               <Separator className="my-6" />
 
               <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-muted-foreground">
                   총 <span className="font-medium">{selectedProblems.length}</span>개 문제 선택됨
                 </div>
                 <div className="flex items-center gap-2">
@@ -1465,24 +1464,24 @@ export function ProblemCreator() {
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-medium text-sm">1.1.1 소수와 합성수</h4>
-                      <span className="text-xs text-gray-500">전체 선택</span>
+                      <span className="text-xs text-muted-foreground">전체 선택</span>
                     </div>
                     <div className="space-y-1">
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span className="text-blue-600">A01. 물과 나머지 ✓</span>
-                        <span className="text-gray-500">65</span>
+                        <span className="text-muted-foreground">65</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span className="text-blue-600">A02. 소수의 합성수 ✓</span>
-                        <span className="text-gray-500">131</span>
+                        <span className="text-muted-foreground">131</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span className="text-blue-600">A03. 소수의 성질 ✓</span>
-                        <span className="text-gray-500">105</span>
+                        <span className="text-muted-foreground">105</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>A04. 기둥제곱</span>
-                        <span className="text-gray-500">175</span>
+                        <span className="text-muted-foreground">175</span>
                       </div>
                     </div>
                   </div>
@@ -1491,48 +1490,48 @@ export function ProblemCreator() {
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-medium text-sm">1.1.2 소인수분해</h4>
-                      <span className="text-xs text-gray-500">전체 선택</span>
+                      <span className="text-xs text-muted-foreground">전체 선택</span>
                     </div>
                     <div className="space-y-1">
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>A05. 소인수분해하기</span>
-                        <span className="text-gray-500">140</span>
+                        <span className="text-muted-foreground">140</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>A06. 소인수 구하기</span>
-                        <span className="text-gray-500">135</span>
+                        <span className="text-muted-foreground">135</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>A07. 소인수분해의 결과에서 지수구하기</span>
-                        <span className="text-gray-500">63</span>
+                        <span className="text-muted-foreground">63</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>A08. 약수 구하기</span>
-                        <span className="text-gray-500">138</span>
+                        <span className="text-muted-foreground">138</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>A09. 약수의 개수 구하기</span>
-                        <span className="text-gray-500">142</span>
+                        <span className="text-muted-foreground">142</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>A10. 약수의 개수가 주어질 때 지수 구하기</span>
-                        <span className="text-gray-500">42</span>
+                        <span className="text-muted-foreground">42</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>A11. 약수의 개수가 주어질 때 미지수 구하기</span>
-                        <span className="text-gray-500">41</span>
+                        <span className="text-muted-foreground">41</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>A12. 약수의 개수가 가장 작은값 구하기</span>
-                        <span className="text-gray-500">48</span>
+                        <span className="text-muted-foreground">48</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>A13. 제곱인 수 만들기</span>
-                        <span className="text-gray-500">164</span>
+                        <span className="text-muted-foreground">164</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>A14. 기둥제곱한 수의 일의 자리 소수</span>
-                        <span className="text-gray-500">22</span>
+                        <span className="text-muted-foreground">22</span>
                       </div>
                     </div>
                   </div>
@@ -1541,24 +1540,24 @@ export function ProblemCreator() {
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-medium text-sm">1.1.3 최대공약수와 최소공배수</h4>
-                      <span className="text-xs text-gray-500">전체 선택</span>
+                      <span className="text-xs text-muted-foreground">전체 선택</span>
                     </div>
                     <div className="space-y-1">
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>A15. 최대공약수 구하기</span>
-                        <span className="text-gray-500">120</span>
+                        <span className="text-muted-foreground">120</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>A16. 최소공배수 구하기</span>
-                        <span className="text-gray-500">115</span>
+                        <span className="text-muted-foreground">115</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>A17. 최대공약수와 최소공배수의 관계</span>
-                        <span className="text-gray-500">89</span>
+                        <span className="text-muted-foreground">89</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>A18. 서로소인 수 찾기</span>
-                        <span className="text-gray-500">76</span>
+                        <span className="text-muted-foreground">76</span>
                       </div>
                     </div>
                   </div>
@@ -1567,40 +1566,40 @@ export function ProblemCreator() {
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-medium text-sm">3.1.1 문자를 사용한 식</h4>
-                      <span className="text-xs text-gray-500">전체 선택</span>
+                      <span className="text-xs text-muted-foreground">전체 선택</span>
                     </div>
                     <div className="space-y-1">
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>C01. 곱셈의 나눗셈 기호의 생략</span>
-                        <span className="text-gray-500">271</span>
+                        <span className="text-muted-foreground">271</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>C02. 곱셈의 나눗셈 기호를 사용하여 나타내기</span>
-                        <span className="text-gray-500">42</span>
+                        <span className="text-muted-foreground">42</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>C03. 문자를 사용한 식: 가격, 할인</span>
-                        <span className="text-gray-500">109</span>
+                        <span className="text-muted-foreground">109</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>C04. 문자를 사용한 식: 속력</span>
-                        <span className="text-gray-500">50</span>
+                        <span className="text-muted-foreground">50</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>C05. 문자를 사용한 식: 농도</span>
-                        <span className="text-gray-500">35</span>
+                        <span className="text-muted-foreground">35</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>C06. 문자를 사용한 식: 지연수, 단위, 평균</span>
-                        <span className="text-gray-500">69</span>
+                        <span className="text-muted-foreground">69</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>C07. 문자를 사용한 식: 도형</span>
-                        <span className="text-gray-500">108</span>
+                        <span className="text-muted-foreground">108</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>C08. 문자를 사용한 식: 종합</span>
-                        <span className="text-gray-500">110</span>
+                        <span className="text-muted-foreground">110</span>
                       </div>
                     </div>
                   </div>
@@ -1609,20 +1608,20 @@ export function ProblemCreator() {
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-medium text-sm">3.1.2 식의 값</h4>
-                      <span className="text-xs text-gray-500">전체 선택</span>
+                      <span className="text-xs text-muted-foreground">전체 선택</span>
                     </div>
                     <div className="space-y-1">
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>C09. 식의 값 구하기</span>
-                        <span className="text-gray-500">95</span>
+                        <span className="text-muted-foreground">95</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>C10. 문자의 값이 주어질 때 식의 값</span>
-                        <span className="text-gray-500">87</span>
+                        <span className="text-muted-foreground">87</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>C11. 식의 값이 주어질 때 문자의 값</span>
-                        <span className="text-gray-500">73</span>
+                        <span className="text-muted-foreground">73</span>
                       </div>
                     </div>
                   </div>
@@ -1631,24 +1630,24 @@ export function ProblemCreator() {
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-medium text-sm">3.2.1 일차방정식의 풀이</h4>
-                      <span className="text-xs text-gray-500">전체 선택</span>
+                      <span className="text-xs text-muted-foreground">전체 선택</span>
                     </div>
                     <div className="space-y-1">
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>C12. 일차방정식의 해</span>
-                        <span className="text-gray-500">156</span>
+                        <span className="text-muted-foreground">156</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>C13. 일차방정식 풀이</span>
-                        <span className="text-gray-500">142</span>
+                        <span className="text-muted-foreground">142</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>C14. 계수가 분수인 일차방정식</span>
-                        <span className="text-gray-500">98</span>
+                        <span className="text-muted-foreground">98</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 hover:bg-gray-100 rounded text-sm">
+                      <div className="flex items-center justify-between p-2 hover:bg-accent rounded text-sm">
                         <span>C15. 계수가 소수인 일차방정식</span>
-                        <span className="text-gray-500">67</span>
+                        <span className="text-muted-foreground">67</span>
                       </div>
                     </div>
                   </div>
@@ -1674,7 +1673,7 @@ export function ProblemCreator() {
                         <SelectItem value="문자를 사용한 식">문자를 사용한 식</SelectItem>
                       </SelectContent>
                     </Select>
-                    <span className="text-sm text-gray-600">(291 / 291)</span>
+                    <span className="text-sm text-muted-foreground">(291 / 291)</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button variant="ghost" size="sm">
@@ -1738,20 +1737,20 @@ export function ProblemCreator() {
                   {(() => {
                     const isAlreadyAdded = selectedProblemsPreview.some((p) => p.id === "A01")
                     return (
-                      <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm border-gray-200">
+                      <div className="flex flex-col gap-6 rounded-xl py-6 border">
                         <div className="px-6 p-4">
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
                               <span className="font-bold text-lg">A01. 물과 나머지</span>
                             </div>
                             <div className="flex items-center gap-1">
-                              <Badge className="bg-blue-100 text-blue-800 text-xs">하</Badge>{" "}
-                              <Badge className="bg-blue-100 text-blue-800 text-xs">하</Badge>
-                              <Badge className="bg-gray-100 text-gray-800 text-xs">이해</Badge>
+                              <span className="text-blue-600 dark:text-blue-400 text-xs font-medium">하</span>{" "}
+                              <span className="text-blue-600 dark:text-blue-400 text-xs font-medium">하</span>
+                              <span className="text-muted-foreground dark:text-gray-400 text-xs font-medium">이해</span>
                             </div>
                           </div>
                           <div className="mb-4">
-                            <p className="text-sm text-gray-700 leading-relaxed">
+                            <p className="text-sm text-muted-foreground leading-relaxed">
                               100 이하의 자연수 중 15의 배수는 모두 몇 개인지 구하시오.
                             </p>
                           </div>
@@ -1767,7 +1766,7 @@ export function ProblemCreator() {
                             className={`mt-3 p-2 rounded text-center text-sm cursor-pointer ${
                               isAlreadyAdded
                                 ? "bg-green-100 text-green-800 font-medium"
-                                : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                                : "bg-gray-50 text-muted-foreground hover:bg-accent"
                             }`}
                             onClick={() => !isAlreadyAdded && addProblemToPreview({ id: "A01", title: "물과 나머지" })}
                           >
@@ -1782,19 +1781,19 @@ export function ProblemCreator() {
                   {(() => {
                     const isAlreadyAdded = selectedProblemsPreview.some((p) => p.id === "A02")
                     return (
-                      <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm border-gray-200">
+                      <div className="flex flex-col gap-6 rounded-xl py-6 border">
                         <div className="px-6 p-4">
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
                               <span className="font-bold text-lg">A02. 소수의 합성수</span>
                             </div>
                             <div className="flex items-center gap-1">
-                              <Badge className="bg-blue-100 text-blue-800 text-xs">하</Badge>
-                              <Badge className="bg-gray-100 text-gray-800 text-xs">이해</Badge>
+                              <span className="text-blue-600 dark:text-blue-400 text-xs font-medium">하</span>
+                              <span className="text-muted-foreground dark:text-gray-400 text-xs font-medium">이해</span>
                             </div>
                           </div>
                           <div className="mb-4">
-                            <p className="text-sm text-gray-700 leading-relaxed">
+                            <p className="text-sm text-muted-foreground leading-relaxed">
                               40 미만의 자연수 중 8의 배수이면서 6의 배수가 아닌 것의 개수를 구하시오.
                             </p>
                           </div>
@@ -1810,7 +1809,7 @@ export function ProblemCreator() {
                             className={`mt-3 p-2 rounded text-center text-sm cursor-pointer ${
                               isAlreadyAdded
                                 ? "bg-green-100 text-green-800 font-medium"
-                                : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                                : "bg-gray-50 text-muted-foreground hover:bg-accent"
                             }`}
                             onClick={() =>
                               !isAlreadyAdded && addProblemToPreview({ id: "A02", title: "소수의 합성수" })
@@ -1827,19 +1826,19 @@ export function ProblemCreator() {
                   {(() => {
                     const isAlreadyAdded = selectedProblemsPreview.some((p) => p.id === "A03")
                     return (
-                      <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm border-gray-200">
+                      <div className="flex flex-col gap-6 rounded-xl py-6 border">
                         <div className="px-6 p-4">
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
                               <span className="font-bold text-lg">A03. 소수의 성질</span>
                             </div>
                             <div className="flex items-center gap-1">
-                              <Badge className="bg-green-100 text-green-800 text-xs">중</Badge>
-                              <Badge className="bg-gray-100 text-gray-800 text-xs">이해</Badge>
+                              <span className="text-green-600 dark:text-green-400 text-xs font-medium">중</span>
+                              <span className="text-muted-foreground dark:text-gray-400 text-xs font-medium">이해</span>
                             </div>
                           </div>
                           <div className="mb-4">
-                            <p className="text-sm text-gray-700 leading-relaxed">
+                            <p className="text-sm text-muted-foreground leading-relaxed">
                               자연수 A를 5로 나누었더니 몫이 8이고, 나머지가 3이었다. A를 7로 나눈 나머지를 구하시오.
                             </p>
                           </div>
@@ -1855,7 +1854,7 @@ export function ProblemCreator() {
                             className={`mt-3 p-2 rounded text-center text-sm cursor-pointer ${
                               isAlreadyAdded
                                 ? "bg-green-100 text-green-800 font-medium"
-                                : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                                : "bg-gray-50 text-muted-foreground hover:bg-accent"
                             }`}
                             onClick={() => !isAlreadyAdded && addProblemToPreview({ id: "A03", title: "소수의 성질" })}
                           >
@@ -1870,19 +1869,19 @@ export function ProblemCreator() {
                   {(() => {
                     const isAlreadyAdded = selectedProblemsPreview.some((p) => p.id === "A04")
                     return (
-                      <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm border-gray-200">
+                      <div className="flex flex-col gap-6 rounded-xl py-6 border">
                         <div className="px-6 p-4">
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
                               <span className="font-bold text-lg">A04. 기둥제곱</span>
                             </div>
                             <div className="flex items-center gap-1">
-                              <Badge className="bg-green-100 text-green-800 text-xs">중</Badge>
-                              <Badge className="bg-gray-100 text-gray-800 text-xs">이해</Badge>
+                              <span className="text-green-600 dark:text-green-400 text-xs font-medium">중</span>
+                              <span className="text-muted-foreground dark:text-gray-400 text-xs font-medium">이해</span>
                             </div>
                           </div>
                           <div className="mb-4">
-                            <p className="text-sm text-gray-700 leading-relaxed">
+                            <p className="text-sm text-muted-foreground leading-relaxed">
                               56을 어떤 자연수로 나누면 몫이 아이어지면서 6의 배수가 아닌 것의 개수를 구하시오.
                             </p>
                           </div>
@@ -1898,7 +1897,7 @@ export function ProblemCreator() {
                             className={`mt-3 p-2 rounded text-center text-sm cursor-pointer ${
                               isAlreadyAdded
                                 ? "bg-green-100 text-green-800 font-medium"
-                                : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                                : "bg-gray-50 text-muted-foreground hover:bg-accent"
                             }`}
                             onClick={() => !isAlreadyAdded && addProblemToPreview({ id: "A04", title: "기둥제곱" })}
                           >
@@ -1963,7 +1962,7 @@ export function ProblemCreator() {
                       </div>
                     </div>
                   </div>
-                  <div className="text-xs text-gray-500 text-center">
+                  <div className="text-xs text-muted-foreground text-center">
                     {selectedProblemsPreview.length > 0
                       ? `${selectedProblemsPreview.length}개 문제 추가됨`
                       : "문제를 추가해주세요"}
