@@ -9,8 +9,6 @@ import { DetailedTables } from "@/components/detailed-tables"
 
 export default function Dashboard() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header />
       <main className="container mx-auto px-6 py-8">
         <div className="mb-8">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">학원 관리 대시보드</h1>
@@ -54,6 +52,5 @@ export default function Dashboard() {
           </div>
         </div>
       </main>
-    </div>
   )
 }

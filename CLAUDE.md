@@ -55,3 +55,10 @@ The project uses shadcn/ui components configured with:
 - Icon library: lucide-react
 
 Components follow a consistent pattern with TypeScript interfaces and className utilities via `cn()` from `@/lib/utils`.
+
+## Workflow Guidance
+
+- Git and Issue Management:
+  - Always create a git commit after completing a task
+  - Create a corresponding git issue to track progress and document the task
+  - Example workflow: `요청사항을 완료하면 git commit 과 git issue로 등록해줘.`
