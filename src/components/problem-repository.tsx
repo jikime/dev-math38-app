@@ -452,8 +452,8 @@ export function ProblemRepository() {
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
-                    variant="outline"
-                    className={`px-4 py-2 ${dateFrom || dateTo ? "text-blue-600 dark:text-blue-400" : ""}`}
+                    variant="ghost"
+                    className="px-4 py-2"
                   >
                     <CalendarIcon className="w-4 h-4 mr-2" />
                     <span>
