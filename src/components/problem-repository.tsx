@@ -474,7 +474,7 @@ export function ProblemRepository() {
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 border-border" align="start">
+                <PopoverContent className="w-auto p-0" align="start">
                   <div className="p-4 space-y-4">
                     <div className="text-sm font-medium">출제일 범위 선택</div>
                     <div className="grid grid-cols-2 gap-4">
@@ -483,20 +483,22 @@ export function ProblemRepository() {
                         <Popover>
                           <PopoverTrigger asChild>
                             <Button
-                              variant="outline"
-                              className="w-full justify-start text-left font-normal"
+                              variant="ghost"
+                              size="sm"
+                              className="w-full justify-start text-left font-normal h-8 px-2 hover:bg-accent"
                             >
                               <CalendarIcon className="mr-2 h-4 w-4" />
                               {dateFrom ? format(dateFrom, "yyyy/MM/dd", { locale: ko }) : "선택"}
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0">
+                          <PopoverContent className="w-auto p-0" align="start">
                             <Calendar
                               mode="single"
                               selected={dateFrom}
                               onSelect={setDateFrom}
                               initialFocus
                               locale={ko}
+                              className="rounded-md"
                             />
                           </PopoverContent>
                         </Popover>
@@ -506,26 +508,34 @@ export function ProblemRepository() {
                         <Popover>
                           <PopoverTrigger asChild>
                             <Button
-                              variant="outline"
-                              className="w-full justify-start text-left font-normal"
+                              variant="ghost"
+                              size="sm"
+                              className="w-full justify-start text-left font-normal h-8 px-2 hover:bg-accent"
                             >
                               <CalendarIcon className="mr-2 h-4 w-4" />
                               {dateTo ? format(dateTo, "yyyy/MM/dd", { locale: ko }) : "선택"}
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0">
-                            <Calendar mode="single" selected={dateTo} onSelect={setDateTo} initialFocus locale={ko} />
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar 
+                              mode="single" 
+                              selected={dateTo} 
+                              onSelect={setDateTo} 
+                              initialFocus 
+                              locale={ko}
+                              className="rounded-md" 
+                            />
                           </PopoverContent>
                         </Popover>
                       </div>
                     </div>
-                    <div className="flex justify-between">
-                      <Button variant="outline" size="sm" onClick={clearDateFilter}>
+                    <div className="flex justify-between pt-2 border-t">
+                      <Button variant="ghost" size="sm" onClick={clearDateFilter} className="h-8">
                         초기화
                       </Button>
                       <div className="flex gap-2">
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           size="sm"
                           onClick={() => {
                             const today = new Date()
@@ -533,11 +543,12 @@ export function ProblemRepository() {
                             setDateFrom(weekAgo)
                             setDateTo(today)
                           }}
+                          className="h-8 hover:bg-accent"
                         >
                           최근 7일
                         </Button>
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           size="sm"
                           onClick={() => {
                             const today = new Date()
@@ -545,6 +556,7 @@ export function ProblemRepository() {
                             setDateFrom(monthAgo)
                             setDateTo(today)
                           }}
+                          className="h-8 hover:bg-accent"
                         >
                           최근 30일
                         </Button>
