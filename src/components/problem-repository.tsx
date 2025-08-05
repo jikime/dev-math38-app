@@ -704,7 +704,7 @@ export function ProblemRepository() {
         /* Grid View */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProblems.map((problem) => (
-            <div key={problem.id} className="flex flex-col gap-6 p-6 rounded-lg hover:bg-muted/50 transition-colors duration-200">
+            <div key={problem.id} className="flex flex-col gap-6 p-6 rounded-lg border hover:bg-muted/50 transition-colors duration-200">
               <div>
                 {/* Header */}
                 <div className="flex items-start justify-between mb-4">
