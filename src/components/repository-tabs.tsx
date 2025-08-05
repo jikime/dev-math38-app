@@ -4,13 +4,14 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { ProblemRepository } from "@/components/problem-repository"
 import { PrescriptionRepository } from "@/components/prescription-repository"
+import { FileText, Clipboard } from "lucide-react"
 
 export function RepositoryTabs() {
   const [activeTab, setActiveTab] = useState("problems")
 
   const tabs = [
-    { id: "problems", label: "문제저장소", component: ProblemRepository },
-    { id: "prescriptions", label: "처방저장소", component: PrescriptionRepository },
+    { id: "problems", label: "문제저장소", icon: FileText, component: ProblemRepository },
+    { id: "prescriptions", label: "처방저장소", icon: Clipboard, component: PrescriptionRepository },
   ]
 
   const ActiveComponent = tabs.find((tab) => tab.id === activeTab)?.component || ProblemRepository
@@ -36,14 +37,12 @@ export function RepositoryTabs() {
                     px-4 py-2 text-sm font-medium rounded-t-lg border border-b-0 transition-all duration-200 flex items-center gap-2 relative
                     ${
                       activeTab === tab.id
-                        ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-white border-gray-200 dark:border-gray-700 shadow-sm"
+                        ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-white border-gray-200 dark:border-gray-700"
                         : "bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
                     }
                   `}
                 >
-                  {activeTab === tab.id && (
-                    <span className="text-green-600 dark:text-green-400 font-semibold text-xs">GET</span>
-                  )}
+                  <tab.icon className="w-4 h-4" />
                   {tab.label}
 
                   {/* Bottom border to hide the line for active tab */}
