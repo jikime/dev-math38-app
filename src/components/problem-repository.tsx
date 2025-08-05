@@ -722,7 +722,7 @@ export function ProblemRepository() {
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-bold">#{problem.id}</span>
-                    <Badge className={`text-xs ${getSubjectColor(problem.subject)}`}>{problem.subject}</Badge>
+                    <span className={`text-xs font-medium ${getSubjectColor(problem.subject)}`}>{problem.subject}</span>
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -763,7 +763,7 @@ export function ProblemRepository() {
 
                 {/* Status and Type */}
                 <div className="flex items-center gap-2 mb-4">
-                  <Badge className={`text-xs ${getStatusColor(problem.status)}`}>{problem.status}</Badge>
+                  <span className={`text-xs font-medium ${getStatusColor(problem.status)}`}>{problem.status}</span>
                   <span className="text-xs text-blue-600 dark:text-blue-400">
                     {problem.type}
                   </span>
