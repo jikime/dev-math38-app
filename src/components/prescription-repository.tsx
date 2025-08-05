@@ -247,15 +247,15 @@ export function PrescriptionRepository() {
           <Button
             variant="ghost"
             size="sm"
-            className={`h-6 px-2 ${hasActiveFilter ? "bg-blue-50 text-blue-700" : "text-gray-500 hover:text-gray-700"}`}
+            className={`h-6 px-2 ${hasActiveFilter ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground hover:text-foreground"}`}
           >
             <Filter className="w-3 h-3" />
             {hasActiveFilter && (
-              <Badge className="ml-1 bg-blue-100 text-blue-800 text-xs px-1 py-0 h-4">{selectedValues.length}</Badge>
+              <span className="ml-1 text-blue-600 dark:text-blue-400 text-xs px-1">{selectedValues.length}</span>
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-64 p-0" align="start">
+        <PopoverContent className="w-64 p-0 border-border" align="start">
           <div className="p-3">
             <div className="flex items-center justify-between mb-3">
               <h4 className="font-medium text-sm">{title} 필터</h4>
@@ -264,7 +264,7 @@ export function PrescriptionRepository() {
                   variant="ghost"
                   size="sm"
                   onClick={() => clearColumnFilter(column)}
-                  className="h-6 px-2 text-xs text-gray-500"
+                  className="h-6 px-2 text-xs text-muted-foreground"
                 >
                   초기화
                 </Button>
@@ -288,7 +288,7 @@ export function PrescriptionRepository() {
               ))}
             </div>
             {uniqueValues.length === 0 && (
-              <div className="text-sm text-gray-500 text-center py-4">필터할 항목이 없습니다</div>
+              <div className="text-sm text-muted-foreground text-center py-4">필터할 항목이 없습니다</div>
             )}
           </div>
         </PopoverContent>
@@ -299,33 +299,33 @@ export function PrescriptionRepository() {
   const getSubjectColor = (subject: string) => {
     switch (subject) {
       case "고등":
-        return "bg-pink-100 text-pink-800"
+        return "text-pink-600 dark:text-pink-400"
       case "중등":
-        return "bg-purple-100 text-purple-800"
+        return "text-purple-600 dark:text-purple-400"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "text-gray-600 dark:text-gray-400"
     }
   }
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "완료":
-        return "bg-green-100 text-green-800"
+        return "text-green-600 dark:text-green-400"
       case "발행됨":
-        return "bg-blue-100 text-blue-800"
+        return "text-blue-600 dark:text-blue-400"
       case "진행중":
-        return "bg-yellow-100 text-yellow-800"
+        return "text-yellow-600 dark:text-yellow-400"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "text-gray-600 dark:text-gray-400"
     }
   }
 
   const getTypeColor = (type: string) => {
     switch (type) {
       case "기간 유지":
-        return "bg-orange-100 text-orange-800"
+        return "text-orange-600 dark:text-orange-400"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "text-gray-600 dark:text-gray-400"
     }
   }
 
@@ -367,7 +367,7 @@ export function PrescriptionRepository() {
 
   const renderDifficultyGraph = (prescription: any) => (
     <div className="relative group">
-      <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+      <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
         <div className="flex h-full">
           <div
             className="bg-green-500 transition-all duration-200"
@@ -385,7 +385,7 @@ export function PrescriptionRepository() {
       </div>
 
       <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
-        <div className="bg-gray-900 text-white text-xs rounded-lg px-3 py-2 shadow-lg whitespace-nowrap">
+        <div className="bg-popover text-popover-foreground text-xs rounded-lg px-3 py-2 border whitespace-nowrap">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -409,7 +409,7 @@ export function PrescriptionRepository() {
               </span>
             </div>
           </div>
-          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-popover"></div>
         </div>
       </div>
     </div>
@@ -418,14 +418,14 @@ export function PrescriptionRepository() {
   return (
     <>
       {/* Filter Section */}
-      <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm mb-6">
+      <div className="flex flex-col gap-6 mb-6">
         <div className="px-6 p-6">
           <div className="flex items-center justify-between">
             {/* Left side - Grade, Subject and Date filters */}
             <div className="flex items-center gap-4">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="px-4 py-2 bg-transparent">
+                  <Button variant="ghost" className="px-4 py-2">
                     <span>학년: {gradeOptions.find((g) => g.value === selectedGrade)?.label}</span>
                     <ChevronDown className="w-4 h-4 ml-2" />
                   </Button>
@@ -435,7 +435,7 @@ export function PrescriptionRepository() {
                     <DropdownMenuItem
                       key={grade.value}
                       onClick={() => setSelectedGrade(grade.value)}
-                      className={selectedGrade === grade.value ? "bg-blue-50" : ""}
+                      className={selectedGrade === grade.value ? "bg-accent" : ""}
                     >
                       {grade.label}
                     </DropdownMenuItem>
@@ -445,7 +445,7 @@ export function PrescriptionRepository() {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="px-4 py-2 bg-transparent">
+                  <Button variant="ghost" className="px-4 py-2">
                     <span>강좌: {subjectOptions.find((s) => s.value === selectedSubject)?.label}</span>
                     <ChevronDown className="w-4 h-4 ml-2" />
                   </Button>
@@ -455,7 +455,7 @@ export function PrescriptionRepository() {
                     <DropdownMenuItem
                       key={subject.value}
                       onClick={() => setSelectedSubject(subject.value)}
-                      className={selectedSubject === subject.value ? "bg-blue-50" : ""}
+                      className={selectedSubject === subject.value ? "bg-accent" : ""}
                     >
                       {subject.label}
                     </DropdownMenuItem>
@@ -468,7 +468,7 @@ export function PrescriptionRepository() {
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className={`px-4 py-2 bg-transparent ${dateFrom || dateTo ? "border-blue-500 bg-blue-50" : ""}`}
+                    className={`px-4 py-2 ${dateFrom || dateTo ? "text-blue-600 dark:text-blue-400" : ""}`}
                   >
                     <CalendarIcon className="w-4 h-4 mr-2" />
                     <span>
@@ -480,7 +480,7 @@ export function PrescriptionRepository() {
                     </span>
                     {(dateFrom || dateTo) && (
                       <X
-                        className="w-4 h-4 ml-2 hover:bg-blue-200 rounded-full p-0.5"
+                        className="w-4 h-4 ml-2 hover:bg-accent rounded-full p-0.5"
                         onClick={(e) => {
                           e.stopPropagation()
                           clearDateFilter()
@@ -489,17 +489,17 @@ export function PrescriptionRepository() {
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0 border-border" align="start">
                   <div className="p-4 space-y-4">
-                    <div className="text-sm font-medium text-gray-900">출제일 범위 선택</div>
+                    <div className="text-sm font-medium">출제일 범위 선택</div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-xs text-gray-600 mb-1 block">시작일</label>
+                        <label className="text-xs text-muted-foreground mb-1 block">시작일</label>
                         <Popover>
                           <PopoverTrigger asChild>
                             <Button
                               variant="outline"
-                              className="w-full justify-start text-left font-normal bg-transparent"
+                              className="w-full justify-start text-left font-normal"
                             >
                               <CalendarIcon className="mr-2 h-4 w-4" />
                               {dateFrom ? format(dateFrom, "yyyy/MM/dd", { locale: ko }) : "선택"}
@@ -517,12 +517,12 @@ export function PrescriptionRepository() {
                         </Popover>
                       </div>
                       <div>
-                        <label className="text-xs text-gray-600 mb-1 block">종료일</label>
+                        <label className="text-xs text-muted-foreground mb-1 block">종료일</label>
                         <Popover>
                           <PopoverTrigger asChild>
                             <Button
                               variant="outline"
-                              className="w-full justify-start text-left font-normal bg-transparent"
+                              className="w-full justify-start text-left font-normal"
                             >
                               <CalendarIcon className="mr-2 h-4 w-4" />
                               {dateTo ? format(dateTo, "yyyy/MM/dd", { locale: ko }) : "선택"}
@@ -573,7 +573,7 @@ export function PrescriptionRepository() {
             {/* Right side - Search and controls */}
             <div className="flex items-center gap-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
                   placeholder="처방명, 학생명, 내용으로 검색..."
                   value={searchTerm}
@@ -581,7 +581,7 @@ export function PrescriptionRepository() {
                   className="pl-10 w-80"
                 />
               </div>
-              <div className="flex items-center gap-1 border rounded-lg p-1">
+              <div className="flex items-center gap-1 rounded-lg p-1">
                 <Button
                   variant={viewMode === "table" ? "default" : "ghost"}
                   size="sm"
@@ -607,11 +607,11 @@ export function PrescriptionRepository() {
       {/* Content Area */}
       {viewMode === "table" ? (
         /* Table View */
-        <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+        <div className="flex flex-col gap-6">
           <div className="px-6 p-0">
             <Table>
               <TableHeader>
-                <TableRow className="bg-gray-50">
+                <TableRow className="border-b">
                   <TableHead className="w-16 text-center font-semibold">번호</TableHead>
                   <TableHead className="w-24 text-center font-semibold">출제일</TableHead>
                   <TableHead className="w-32 text-center font-semibold">
@@ -639,46 +639,46 @@ export function PrescriptionRepository() {
               </TableHeader>
               <TableBody>
                 {filteredPrescriptions.map((prescription) => (
-                  <TableRow key={prescription.id} className="hover:bg-gray-50 transition-colors">
+                  <TableRow key={prescription.id} className="hover:bg-muted/50 transition-colors">
                     <TableCell className="text-center font-medium">{prescription.id}</TableCell>
-                    <TableCell className="text-center text-sm text-gray-600">{prescription.date}</TableCell>
+                    <TableCell className="text-center text-sm text-muted-foreground">{prescription.date}</TableCell>
                     <TableCell className="text-center">
                       <div className="space-y-1">
-                        <Badge className={`text-xs ${getSubjectColor(prescription.subject)}`}>
+                        <span className={`text-xs font-medium ${getSubjectColor(prescription.subject)}`}>
                           {prescription.subject}
-                        </Badge>
-                        <div className="text-xs text-gray-500">{prescription.category}</div>
+                        </span>
+                        <div className="text-xs text-muted-foreground">{prescription.category}</div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="font-medium text-gray-900 leading-tight pr-4 text-base line-clamp-1">
+                      <div className="font-medium leading-tight pr-4 text-base line-clamp-1">
                         {prescription.title}
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge className={`text-xs ${getTypeColor(prescription.type)}`}>{prescription.type}</Badge>
+                      <span className={`text-xs font-medium ${getTypeColor(prescription.type)}`}>{prescription.type}</span>
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge className={`text-xs ${getStatusColor(prescription.status)}`}>{prescription.status}</Badge>
+                      <span className={`text-xs font-medium ${getStatusColor(prescription.status)}`}>{prescription.status}</span>
                     </TableCell>
                     <TableCell>
                       <div className="space-y-2">
-                        <div className="text-xs text-gray-600 mb-1 text-center">
+                        <div className="text-xs text-muted-foreground mb-1 text-center">
                           총 {prescription.totalQuestions}문항
                         </div>
                         {renderDifficultyGraph(prescription)}
                         <div className="flex items-center justify-center gap-3 text-xs">
                           <div className="flex items-center gap-1">
                             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span className="text-gray-600">쉬움</span>
+                            <span className="text-muted-foreground">쉬움</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                            <span className="text-gray-600">보통</span>
+                            <span className="text-muted-foreground">보통</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                            <span className="text-gray-600">어려움</span>
+                            <span className="text-muted-foreground">어려움</span>
                           </div>
                         </div>
                       </div>
@@ -716,13 +716,13 @@ export function PrescriptionRepository() {
         /* Grid View */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredPrescriptions.map((prescription) => (
-            <div key={prescription.id} className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm hover:shadow-lg transition-shadow duration-200">
-              <div className="px-6 p-6">
+            <div key={prescription.id} className="flex flex-col gap-6 p-6 rounded-lg hover:bg-muted/50 transition-colors duration-200">
+              <div>
                 {/* Header */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold text-gray-900">#{prescription.id}</span>
-                    <Badge className={`text-xs ${getSubjectColor(prescription.subject)}`}>{prescription.subject}</Badge>
+                    <span className="text-lg font-bold">#{prescription.id}</span>
+                    <span className={`text-xs font-medium ${getSubjectColor(prescription.subject)}`}>{prescription.subject}</span>
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -749,28 +749,28 @@ export function PrescriptionRepository() {
 
                 {/* Title */}
                 <div className="mb-4">
-                  <h3 className="font-semibold text-gray-900 text-base leading-tight mb-2 line-clamp-1">
+                  <h3 className="font-semibold text-base leading-tight mb-2 line-clamp-1">
                     {prescription.title}
                   </h3>
                 </div>
 
                 {/* Category and Date */}
-                <div className="flex items-center justify-between mb-4 text-xs text-gray-500">
+                <div className="flex items-center justify-between mb-4 text-xs text-muted-foreground">
                   <span>{prescription.category}</span>
                   <span>{prescription.date}</span>
                 </div>
 
                 {/* Status and Type */}
                 <div className="flex items-center gap-2 mb-4">
-                  <Badge className={`text-xs ${getStatusColor(prescription.status)}`}>{prescription.status}</Badge>
-                  <Badge className={`text-xs ${getTypeColor(prescription.type)}`}>{prescription.type}</Badge>
+                  <span className={`text-xs font-medium ${getStatusColor(prescription.status)}`}>{prescription.status}</span>
+                  <span className={`text-xs font-medium ${getTypeColor(prescription.type)}`}>{prescription.type}</span>
                 </div>
 
                 {/* Questions Count */}
                 <div className="mb-3">
                   <div className="text-center mb-2">
-                    <span className="text-2xl font-bold text-gray-900">{prescription.totalQuestions}</span>
-                    <span className="text-sm text-gray-500 ml-1">문항</span>
+                    <span className="text-2xl font-bold">{prescription.totalQuestions}</span>
+                    <span className="text-sm text-muted-foreground ml-1">문항</span>
                   </div>
                 </div>
 
@@ -780,15 +780,15 @@ export function PrescriptionRepository() {
                   <div className="flex items-center justify-center gap-2 text-xs">
                     <div className="flex items-center gap-1">
                       <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-gray-600">{prescription.easyQuestions}</span>
+                      <span className="text-muted-foreground">{prescription.easyQuestions}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span className="text-gray-600">{prescription.mediumQuestions}</span>
+                      <span className="text-muted-foreground">{prescription.mediumQuestions}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                      <span className="text-gray-600">{prescription.hardQuestions}</span>
+                      <span className="text-muted-foreground">{prescription.hardQuestions}</span>
                     </div>
                   </div>
                 </div>
@@ -800,14 +800,14 @@ export function PrescriptionRepository() {
 
       {/* Pagination */}
       <div className="flex items-center justify-between mt-6">
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-muted-foreground">
           총 {filteredPrescriptions.length}개의 처방 중 1-{filteredPrescriptions.length}개 표시
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" disabled>
             이전
           </Button>
-          <Button variant="outline" size="sm" className="bg-blue-600 text-white">
+          <Button variant="default" size="sm">
             1
           </Button>
           <Button variant="outline" size="sm">

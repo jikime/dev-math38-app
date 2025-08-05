@@ -1,4 +1,3 @@
-import { Header } from "@/components/header"
 import { RepositoryTabs } from "@/components/repository-tabs"
 
 export default function RepositoryPage() {
