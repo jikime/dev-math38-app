@@ -320,41 +320,45 @@ export function ProblemRepository() {
     
     return (
       <div className="relative group">
-        <div className="w-full bg-muted rounded-full h-3 overflow-hidden flex">
-          {easyPercent > 0 && (
+        <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+          <div className="flex h-full">
             <div
-              className="bg-green-500 transition-all duration-200 flex items-center justify-center"
+              className="bg-green-500 transition-all duration-200"
               style={{ width: `${easyPercent}%` }}
-            >
-              {easyPercent >= 15 && (
-                <span className="text-[10px] text-white font-medium">{easyPercent}%</span>
-              )}
-            </div>
-          )}
-          {mediumPercent > 0 && (
+            ></div>
             <div
-              className="bg-blue-500 transition-all duration-200 flex items-center justify-center"
+              className="bg-blue-500 transition-all duration-200"
               style={{ width: `${mediumPercent}%` }}
-            >
-              {mediumPercent >= 15 && (
-                <span className="text-[10px] text-white font-medium">{mediumPercent}%</span>
-              )}
-            </div>
-          )}
-          {hardPercent > 0 && (
+            ></div>
             <div
-              className="bg-purple-500 transition-all duration-200 flex items-center justify-center"
+              className="bg-purple-500 transition-all duration-200"
               style={{ width: `${hardPercent}%` }}
-            >
-              {hardPercent >= 15 && (
-                <span className="text-[10px] text-white font-medium">{hardPercent}%</span>
-              )}
-            </div>
-          )}
+            ></div>
+          </div>
+        </div>
+        <div className="flex items-center justify-center gap-3 text-xs mt-1">
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            <span className="text-gray-600">
+              {easyPercent}%
+            </span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            <span className="text-gray-600">
+              {mediumPercent}%
+            </span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+            <span className="text-gray-600">
+              {hardPercent}%
+            </span>
+          </div>
         </div>
 
         <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
-          <div className="bg-popover text-popover-foreground text-xs rounded-lg px-3 py-2 border">
+          <div className="bg-gray-900 text-white text-xs rounded-lg px-3 py-2 shadow-lg">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -375,7 +379,7 @@ export function ProblemRepository() {
                 </span>
               </div>
             </div>
-            <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-popover"></div>
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
           </div>
         </div>
       </div>
@@ -678,20 +682,19 @@ export function ProblemRepository() {
                   </TableHead>
                   <TableHead className="w-16 text-center py-2">
                     <div className="flex items-center justify-center">
-                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">No.</span>
+                      <span className="text-sm font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">번호</span>
                     </div>
                   </TableHead>
                   <TableHead className="w-24 text-center py-2">
                     <div className="flex items-center justify-center gap-1">
                       <CalendarIcon className="w-3 h-3 text-gray-600 dark:text-gray-300" />
-                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">Date</span>
+                      <span className="text-sm font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">출제일</span>
                     </div>
                   </TableHead>
                   <TableHead className="w-32 text-center py-2">
                     <div className="flex items-center justify-center gap-1.5">
                       <div className="flex items-center gap-1">
-                        <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-blue-600 to-purple-600"></div>
-                        <span className="text-xs font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">출제</span>
+                        <span className="text-sm font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">출제</span>
                       </div>
                       {renderColumnFilter("출제", "출제")}
                     </div>
@@ -699,20 +702,19 @@ export function ProblemRepository() {
                   <TableHead className="py-2">
                     <div className="flex items-center gap-1.5">
                       <FileText className="w-3 h-3 text-gray-600 dark:text-gray-300" />
-                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">범위/문제명</span>
+                      <span className="text-sm font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">범위/문제명</span>
                     </div>
                   </TableHead>
                   <TableHead className="w-24 text-center py-2">
                     <div className="flex items-center justify-center gap-1.5">
-                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">유형</span>
+                      <span className="text-sm font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">문제종류</span>
                       {renderColumnFilter("문제종류", "문제 종류")}
                     </div>
                   </TableHead>
                   <TableHead className="w-20 text-center py-2">
                     <div className="flex items-center justify-center gap-1.5">
                       <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                        <span className="text-xs font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">상태</span>
+                        <span className="text-sm font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">상태</span>
                       </div>
                       {renderColumnFilter("상태", "상태")}
                     </div>
@@ -720,7 +722,7 @@ export function ProblemRepository() {
                   <TableHead className="w-48 text-center py-2">
                     <div className="flex items-center justify-center gap-1.5">
                       <Grid3X3 className="w-3 h-3 text-gray-600 dark:text-gray-300" />
-                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">문항 분포</span>
+                      <span className="text-sm font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">문항수 (주관식/객관식)</span>
                     </div>
                   </TableHead>
                   <TableHead className="w-16"></TableHead>
@@ -756,7 +758,7 @@ export function ProblemRepository() {
                     <TableCell>
                       <div className="space-y-1">
                         <div 
-                          className="font-medium text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 cursor-pointer hover:underline"
+                          className="font-bold text-md text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 cursor-pointer hover:underline"
                           onClick={() => handleTitleClick(problem.paperRefId)}
                         >
                           {problem.title}
@@ -771,9 +773,7 @@ export function ProblemRepository() {
                     </TableCell>
                     <TableCell className="text-center">
                       <div className={`inline-flex items-center gap-1 ${getStatusColor(problem.status)}`}>
-                        <div 
-                          className={`w-2 h-2 rounded-full ${getProgressColor(problem.color)}`}
-                        ></div>
+                        <div className={`w-2 h-2 rounded-full ${getProgressColor(problem.color)}`}></div>
                         <span className="text-sm font-medium">{problem.status_label}</span>
                       </div>
                     </TableCell>
