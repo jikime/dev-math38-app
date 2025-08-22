@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { PrescriptionSheet } from "@/components/repository/prescription-sheet"
-import PaperModal from "@/components/repository/paper-modal"
+import PaperModal from "@/components/new_paper/PaperModal"
 import { format } from "date-fns"
 import { ko } from "date-fns/locale"
 import {
@@ -971,9 +971,15 @@ export function ProblemRepository() {
       />
 
       {/* 시험지 보기 모달 */}
-      <PaperModal
+      {/* <PaperModal
         paperViewVisible={showPaperModal}
         deselectPaper={handleCloseModal}
+        paperId={selectedPaperId}
+        useAcademyContents={false}
+      /> */}
+            <PaperModal
+        isOpen={showPaperModal}
+        onClose={handleCloseModal}
         paperId={selectedPaperId}
         useAcademyContents={false}
       />
