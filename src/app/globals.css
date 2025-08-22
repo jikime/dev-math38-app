@@ -160,3 +160,14 @@
     @apply bg-background text-foreground;
   }
 }
+
+@font-face {
+  font-family: 'KakaoBigSans-Regular';
+  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/2503@1.0/KakaoBigSans-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+}
+
+body {
+  font-family: 'KakaoBigSans-Regular', 'Pretendard', 'Malgun Gothic', '맑은 고딕', 'Apple SD Gothic Neo', 'dotum', '돋움', sans-serif;
+}

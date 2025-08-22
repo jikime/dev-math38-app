@@ -1,5 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
+import localFont from 'next/font/local';
+
 import { Inter } from "next/font/google"
 import "./globals.css"
 import "katex/dist/katex.min.css";
@@ -21,6 +23,28 @@ export const metadata: Metadata = {
   description: "학원 운영을 위한 통합 관리 대시보드",
 }
 
+const pretendard = localFont({
+  src: '../../public/fonts/PretendardVariable.woff2',
+  display: 'swap',
+  weight: '45 920',
+  variable: '--font-pretendard',
+  fallback: [
+    '-apple-system',
+    'BlinkMacSystemFont',
+    'system-ui',
+    'Roboto',
+    'Helvetica Neue',
+    'Segoe UI',
+    'Apple SD Gothic Neo',
+    'Noto Sans KR',
+    'Malgun Gothic',
+    'Apple Color Emoji',
+    'Segoe UI Emoji',
+    'Segoe UI Symbol',
+    'sans-serif'
+  ]
+})
+
 export default function RootLayout({
   children,
 }: {
@@ -28,7 +52,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={`${pretendard.variable} ${inter.className}`}>
         <QueryProvider>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
             {children}
