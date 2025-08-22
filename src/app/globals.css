@@ -1,6 +1,12 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+
+/* AG-Grid 스타일 import */
+@import "ag-grid-community/styles/ag-grid.css";
+@import "ag-grid-community/styles/ag-theme-quartz.css";
+@import "ag-grid-community/styles/ag-theme-alpine.css";
+
 @custom-variant dark (&:is(.dark *));
 
 :root {

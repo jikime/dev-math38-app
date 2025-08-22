@@ -129,52 +129,55 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* 통계 카드 섹션 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatsCard
-          title="등록 강사 수"
-          value={2}
-          maxValue={3}
-          subtitle="명"
-        />
-        <StatsCard
-          title="등록 강좌 수"
-          value={16}
-          subtitle="개 강좌"
-        />
-        <StatsCard
-          title="등록 학생 수"
-          value={19}
-          maxValue={20}
-          subtitle="명"
-        />
-        <StatsCard
-          title="TOTAL DB 문제 수"
-          value={3869}
-          subtitle="문제"
-        />
-      </div>
+      {/* 3컬럼 메인 레이아웃 */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+        {/* 왼쪽 사이드바 - 통계 카드들과 결산 금액 */}
+        <div className="xl:col-span-3 space-y-4">
+          {/* 통계 카드들 */}
+          <StatsCard
+            title="등록 강사 수"
+            value={2}
+            maxValue={3}
+            subtitle="명"
+          />
+          <StatsCard
+            title="등록 강좌 수"
+            value={16}
+            subtitle="개 강좌"
+          />
+          <StatsCard
+            title="등록 학생 수"
+            value={19}
+            maxValue={20}
+            subtitle="명"
+          />
+          <StatsCard
+            title="TOTAL DB 문제 수"
+            value={3869}
+            subtitle="문제"
+          />
+          
+          {/* 결산 금액 */}
+          <SettlementAmount
+            receivables={100000}
+            usageFee={289500}
+            dbProblemsFee={0}
+          />
+        </div>
 
-      {/* 차트 및 테이블 섹션 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* 시험지 출제수 차트 */}
-        <ExamPapersChart data={examPapersData} />
-        
-        {/* 사용 문제수 차트 */}
-        <ProblemUsageChart data={problemUsageData} />
-      </div>
+        {/* 가운데 영역 - 차트들 */}
+        <div className="xl:col-span-6 space-y-6">
+          {/* 시험지 출제수 차트 */}
+          <ExamPapersChart data={examPapersData} />
+          
+          {/* 사용 문제수 차트 */}
+          <ProblemUsageChart data={problemUsageData} />
+        </div>
 
-      {/* DB 문제수 테이블 및 결산 금액 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* DB 문제수 테이블 */}
-        <DBProblemsTable data={dbProblemsData} />
-        
-        {/* 결산 금액 */}
-        <SettlementAmount
-          receivables={100000}
-          usageFee={289500}
-          dbProblemsFee={0}
-        />
+        {/* 오른쪽 영역 - DB 문제수 테이블 */}
+        <div className="xl:col-span-3">
+          <DBProblemsTable data={dbProblemsData} />
+        </div>
       </div>
     </main>
   )

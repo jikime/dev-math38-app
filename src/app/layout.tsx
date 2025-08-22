@@ -5,13 +5,7 @@ import localFont from 'next/font/local';
 import { Inter } from "next/font/google"
 import "./globals.css"
 import "katex/dist/katex.min.css";
-import '@/styles/main.css';
-import '@/styles/bogi.scss';
-import '@/styles/pagemap.scss';
-import '@/styles/paper.scss';
-import '@/styles/problem.scss';
-import '@/styles/print.css';
-import '@/styles/spacingToPx.scss';
+import "@/styles/main.scss";
 
 import { ThemeProvider } from "@/components/common/theme-provider"
 import { QueryProvider } from "@/providers/query-provider"

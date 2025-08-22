@@ -1,0 +1,88 @@
+// Sass 3.0 호환성을 위해 @use 사용
+@use "./ag-grid-custom";
+@use "./pagemap";
+@use "./paper";
+@use "./print";
+@use "./problem";
+
+/* Base Styles */
+body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-family-sans);
+    font-feature-settings: "rlig" 1, "calt" 1;
+    margin: 0;
+    padding: 0;
+
+}
+  
+* {
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+}
+
+/* Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-scrollbar);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-text-2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-1);
+}
+  
+/* Custom scrollbar utilities */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-text-2) var(--color-scrollbar);
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+  
+  
+/* Enhanced Table Styles */
+.enhanced-table {
+  width: 100%;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: white;
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid;
+      transition: background-color 0.3s ease;
+    
+      &:hover {
+        background-color: #f0f0f0;
+      }
+    }
+  }
+}
+  
+ 

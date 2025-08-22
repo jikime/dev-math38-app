@@ -1,6 +1,13 @@
 "use client"
 
 import { cn } from "@/lib/utils"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface PeriodSelectorProps {
   selectedYear: number
@@ -25,17 +32,18 @@ export function PeriodSelector({
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <select
-          value={selectedYear}
-          onChange={(e) => onYearChange(Number(e.target.value))}
-          className="px-3 py-1.5 text-sm border rounded-md bg-white dark:bg-gray-800"
-        >
-          {years.map((year) => (
-            <option key={year} value={year}>
-              {year}
-            </option>
-          ))}
-        </select>
+        <Select value={selectedYear.toString()} onValueChange={(value) => onYearChange(Number(value))}>
+          <SelectTrigger className="w-[120px]">
+            <SelectValue placeholder="년도 선택" />
+          </SelectTrigger>
+          <SelectContent>
+            {years.map((year) => (
+              <SelectItem key={year} value={year.toString()}>
+                {year}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       
       <div className="flex gap-2 flex-wrap">

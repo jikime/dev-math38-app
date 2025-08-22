@@ -1,0 +1,126 @@
+@page {
+  size: A4;
+  margin: 0;
+  padding: 0;
+}
+
+@media print {
+  html,
+  body {
+    height: 100%;
+    -webkit-print-color-adjust: exact;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  body #__next {
+    display: none;
+  }
+
+
+  html,
+  body,
+  .sp-paper-print-area {
+    width: 100%;
+    height: auto !important;
+    overflow: visible !important;
+    position: static !important;
+    background-color: white;
+  }
+
+  .no-print-area,
+  ::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+  }
+
+  /* Firefox용 */
+  * {
+    scrollbar-width: none !important;
+  }
+
+  /* IE와 Edge용 */
+  * {
+    -ms-overflow-style: none !important;
+  }
+
+  /* 특정 요소(예: #printableArea)에 대해 스크롤 허용하되 스크롤바 숨기기 */
+  #printableArea {
+    overflow: visible !important;
+  }
+
+  #printableArea,
+  .paper-printer {
+    top: 0;
+    margin: 0mm 0mm;
+    position: relative !important;
+    width: 210mm;
+    height: auto;
+    overflow: visible !important;
+    /*display: relative !important;*/
+    contain: strict;
+    display: table;
+  }
+
+  .answer-area {
+    display: none;
+  }
+
+  .page {
+    padding: 10.5mm 8mm 4mm 8mm;
+
+    margin: 0 !important;
+    width: 21cm !important;
+    min-height: 29.7cm !important;
+    max-height: 29.7cm !important;
+    /*border: initial;*/
+    /*border-radius: initial;*/
+    /*width: initial;*/
+
+    border: none;
+    border-width: 0;
+    border-radius: initial;
+    box-shadow: initial;
+    background: initial;
+    /* page-break-after: auto; */
+    page-break-inside: avoid !important;
+    page-break-before: unset !important;
+    overflow: hidden;
+
+    .p-answer-num {
+      color: #000;
+    }
+  }
+  
+  .page .p-answer-num {
+    color: #000;
+  }
+
+  .printable-page * {
+    visibility: visible;
+  }
+
+  .printable-page .page:first-child {
+    margin-top: 0px;
+  }
+
+  .paper-printer {
+    display: block;
+    position: relative;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 0px !important;
+    margin: 0px !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+
+}
+
+

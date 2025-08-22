@@ -29,6 +29,9 @@ import {
   Copy,
   FileText,
   Loader2,
+  Printer,
+  CheckSquare,
+  Trash2,
 } from "lucide-react"
 
 export function ProblemRepository() {
@@ -795,22 +798,26 @@ export function ProblemRepository() {
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent align="end" className="w-40">
                           <DropdownMenuItem>
-                            <Eye className="mr-2 h-4 w-4" />
-                            보기
+                            <Copy className="mr-2 h-4 w-4" />
+                            사본 만들기
                           </DropdownMenuItem>
                           <DropdownMenuItem>
                             <Edit className="mr-2 h-4 w-4" />
-                            편집
+                            시험지 수정
                           </DropdownMenuItem>
                           <DropdownMenuItem>
-                            <Copy className="mr-2 h-4 w-4" />
-                            복사
+                            <Printer className="mr-2 h-4 w-4" />
+                            출력
                           </DropdownMenuItem>
                           <DropdownMenuItem>
-                            <Download className="mr-2 h-4 w-4" />
-                            다운로드
+                            <CheckSquare className="mr-2 h-4 w-4" />
+                            답안입력
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            삭제
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

@@ -1,0 +1,32 @@
+
+/* AG-Grid Custom Styles */
+.ag-theme-quartz {
+
+  --ag-header-background-color: #f9f9ff;
+  --ag-header-foreground-color: #000;
+  
+  .ag-header-cell, .ag-header-group-cell {
+    background-color: #f9f9ff !important;
+  }
+  
+  .average-score-cell {
+    background-color: var(--color-background2);
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .center-header {
+    text-align: center;
+  }
+  
+  .center-cell {
+    text-align: center;
+  }
+  
+  .score-cell {
+    text-align: center;
+  }
+  
+}

@@ -1,6 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Table,
   TableBody,
@@ -21,22 +22,26 @@ interface DBProblemsTableProps {
 
 export function DBProblemsTable({ data }: DBProblemsTableProps) {
   return (
-    <Card>
+    <Card className="h-full flex flex-col">
       <CardHeader>
         <CardTitle className="text-base font-medium">DB 문제 수</CardTitle>
         <p className="text-sm text-gray-600 dark:text-gray-400">TOTAL</p>
       </CardHeader>
-      <CardContent>
-        <div className="mb-4">
-          <div className="text-3xl font-bold">
-            {data.reduce((sum, item) => sum + item.dbProblems, 0).toLocaleString()}문제
+      <CardContent className="flex-1 flex flex-col">
+        <div className="mb-4 flex justify-between items-center">
+          <div className="text-left">
+            <div className="text-3xl font-bold">
+              {data.reduce((sum, item) => sum + item.dbProblems, 0).toLocaleString()}문제
+            </div>
           </div>
-          <div className="text-2xl font-semibold text-gray-700 dark:text-gray-300 mt-2">
-            {data.reduce((sum, item) => sum + parseInt(item.amount.replace(/[^0-9]/g, '')), 0).toLocaleString()}원
+          <div className="text-right">
+            <div className="text-2xl font-semibold text-gray-700 dark:text-gray-300">
+              {data.reduce((sum, item) => sum + parseInt(item.amount.replace(/[^0-9]/g, '')), 0).toLocaleString()}원
+            </div>
           </div>
         </div>
         
-        <div className="overflow-x-auto">
+        <ScrollArea className="h-[calc(100vh-350px)]">
           <Table>
             <TableHeader>
               <TableRow>
@@ -55,7 +60,7 @@ export function DBProblemsTable({ data }: DBProblemsTableProps) {
               ))}
             </TableBody>
           </Table>
-        </div>
+        </ScrollArea>
       </CardContent>
     </Card>
   )
