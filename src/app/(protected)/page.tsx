@@ -1,11 +1,10 @@
-import { Header } from "@/components/header"
-import { AcademyMetrics } from "@/components/academy-metrics"
-import { StudentDistribution } from "@/components/student-distribution"
-import { PerformanceAcquisition } from "@/components/performance-acquisition"
-import { ClassSessions } from "@/components/class-sessions"
-import { TopPerformingSubject } from "@/components/top-performing-subject"
-import { ConversionMetrics } from "@/components/conversion-metrics"
-import { DetailedTables } from "@/components/detailed-tables"
+import { AcademyMetrics } from "@/components/dashboard/academy-metrics"
+import { StudentDistribution } from "@/components/dashboard/student-distribution"
+import { PerformanceAcquisition } from "@/components/dashboard/performance-acquisition"
+import { ClassSessions } from "@/components/dashboard/class-sessions"
+import { TopPerformingSubject } from "@/components/dashboard/top-performing-subject"
+import { ConversionMetrics } from "@/components/dashboard/conversion-metrics"
+import { DetailedTables } from "@/components/dashboard/detailed-tables"
 
 export default function Dashboard() {
   return (

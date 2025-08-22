@@ -1,6 +1,6 @@
 import type React from "react"
 
-import { Header } from "@/components/header"
+import { Header } from "@/components/common/header"
 
 export default function ProtectedLayout({
   children,

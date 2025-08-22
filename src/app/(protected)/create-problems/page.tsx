@@ -1,9 +1,8 @@
-import { Header } from "@/components/header"
-import { ProblemCreator } from "@/components/problem-creator"
+import { ProblemCreator } from "@/components/create-problems/problem-creator"
 
 export default function CreateProblemsPage() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50">
       <ProblemCreator />
     </div>
   )

@@ -1,3 +1,5 @@
+"use client"
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -8,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { ThemeToggle } from "@/components/common/theme-toggle"
 import {
   Bell,
   Mail,
@@ -28,10 +30,12 @@ import {
   HelpCircle,
   LogOut,
 } from "lucide-react"
+import { usePathname } from "next/navigation"
 
 export function Header() {
+  const pathname = usePathname()
   const menuItems = [
-    { name: "대시보드", href: "/", active: true, icon: LayoutDashboard, color: "blue" },
+    { name: "대시보드", href: "/", icon: LayoutDashboard, color: "blue" },
     { name: "저장소", href: "/repository", icon: Database, color: "green" },
     { name: "문제출제", href: "/create-problems", icon: PenTool, color: "orange" },
     { name: "학원 자료", href: "/materials", icon: FolderOpen, color: "teal" },
@@ -77,11 +81,12 @@ export function Header() {
           <nav className="hidden lg:flex items-center space-x-2 leading-5 py-2">
             {menuItems.map((item) => {
               const IconComponent = item.icon
+              const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href)
               return (
                 <Button
                   key={item.name}
                   variant="ghost"
-                  className={`flex flex-col items-center gap-1 h-auto py-3 px-4 rounded-xl transition-colors duration-200 ${getMenuColor(item.color, item.active)} ${!item.active ? "dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-700" : ""}`}
+                  className={`flex flex-col items-center gap-1 h-auto py-3 px-4 rounded-xl transition-colors duration-200 ${getMenuColor(item.color, isActive)} ${!isActive ? "dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-700" : ""}`}
                   asChild
                 >
                   <a href={item.href}>

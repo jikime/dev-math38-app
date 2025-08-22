@@ -1,0 +1,259 @@
+@charset "utf-8";
+
+.ql-formula {
+  display: inline-block;
+}
+
+.problem {
+  .problem-content {
+    p {
+      margin: 0.5em 0em;
+    }
+    > div {
+      margin: 0.5em 0em;
+    }
+  }
+
+  table {
+    border-collapse: collapse;
+  }
+
+  .ql-formula {
+    display: inline-block;
+  }
+}
+
+ul.samplebox {
+  margin: 1em 0.5em;
+  padding: 0.5em !important;
+  border: 1px solid #7b7b7b;
+  // padding: 0.5em 0.5em 0.5em 0.5em !important;
+  border-radius: 0.3em;
+  position: relative;
+  font-size: var(--size-problem-font);
+  text-align: left;
+
+  li {
+    padding-right: 1em;
+    // list-style-type: circle;
+    list-style-type: none;
+  }
+}
+
+ol.proof {
+  position: relative;
+  border: 1px solid red;
+  margin-top: 15px !important;
+  // border-radius: 5px;
+  padding: 10px !important;
+  padding-left: 10px;
+
+  &::before {
+    content: "< 증명 >";
+    display: block;
+    position: absolute;
+    left: calc(50% - 25px);
+    top: -0.7em;
+    background-color: white;
+    font-size: var(--size-problem-font);
+    color: #000;
+  }
+
+  li {
+    list-style-type: hangul-consonant;
+  }
+}
+
+ol.bogi {
+  position: relative;
+  width: 100%;
+  border: 1px solid #7b7b7b;
+  margin: 1em 0.5em;
+  border-radius: 5px;
+  padding: 0.5em !important;
+
+  &::before {
+    content: "< 보기 >";
+    display: block;
+    position: absolute;
+    left: calc(50% - 25px);
+    top: -0.7em;
+    background-color: white;
+    font-size: var(--size-problem-font);
+  }
+
+  li {
+    list-style-type: hangul-consonant;
+    padding-right: 1em;
+    margin: 0.5em 0em 0.5em 1.5em;
+  }
+}
+
+ol.bogi,
+ol.proof,
+ul.samplebox {
+  list-style: none;
+
+  &.half {
+    width: 44%;
+    margin-right: 4%;
+  }
+
+  li {
+    width: 100%;
+  }
+}
+
+.ql-editor {
+  ul.samplebox {
+    margin: 1em 0.5em;
+    padding: 0.5em !important;
+    li {
+      margin: 0.5em 0em;
+    }
+  }
+  ol.bogi {
+    margin: 1em 0.5em;
+    width: 100%;
+    border-radius: 5px;
+    padding: 0.5em !important;
+    li {
+      list-style-type: hangul-consonant;
+      padding-right: 1em;
+      margin: 0.5em 0em 0.5em 1.5em;
+    }
+  }
+  ul > li,
+  ol > li {
+    margin-left: 0.5em;
+    padding-left: 0px !important;
+
+    &::before {
+      content: "" !important;
+      margin: 0px !important;
+      padding: 0px !important;
+      margin-left: 0px !important;
+      margin-right: 0px !important;
+      width: 0px;
+    }
+  }
+}
+
+.problem {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 2em;
+  .content {
+    display: table;
+    margin-bottom: 10px;
+    padding-left: 10px;
+
+    .problem-number {
+      display: table-cell;
+      font-size: 1.2em;
+      font-weight: bold;
+      // font-family: fantasy;
+      padding-right: 5px;
+      vertical-align: top;
+      padding-top: 10px;
+
+      &.edit {
+        cursor: pointer;
+        &:hover {
+          background-color: #ccc;
+        }
+      }
+      &::after {
+        content: ".";
+      }
+      &.answer-view {
+        font-size: 1em;
+        padding-top: 0px;
+      }
+      .editable {
+        cursor: pointer;
+        &:hover {
+          background-color: #ccc;
+        }
+      }
+    }
+    .problem-content {
+      display: table-cell;
+      width: 100%;
+      &.solution {
+        font-size: 0.8em;
+      }
+    }
+  }
+  .problem-solution {
+    margin-top: 1em;
+    border-top: 1px dashed #999;
+    p {
+      margin: 0.3em;
+      line-height: 1.6em;
+    }
+  }
+
+  table {
+    border: 1px solid black;
+    border-spacing: 0;
+    tr {
+      td {
+        text-align: center;
+        p {
+          margin: 0;
+          padding: 0;
+        }
+      }
+    }
+  }
+
+  .choice-list {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding-left: 1em;
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  .choice {
+    display: flex;
+    justify-content: flex-start;
+    flex-direction: row;
+    margin-bottom: 5px;
+    p {
+      margin: 0;
+      padding: 0;
+    }
+    &.num-center {
+      align-items: center;
+      .choice-num {
+        margin-top: 0em;
+      }
+    }
+    &.line1 {
+      width: 19%;
+    }
+    &.line2 {
+      width: 32%;
+    }
+    &.line3 {
+      width: 45%;
+    }
+    &.line5 {
+      width: 100%;
+    }
+
+    .choice-num {
+      font-size: 1.3em;
+      margin-right: 10px;
+      margin-top: 0.6em;
+    }
+  }
+
+  img {
+    max-width: 100%;
+  }
+}

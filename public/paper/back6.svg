@@ -1,0 +1,10 @@
+<!-- header-diamond-ribbon.svg -->
+<svg width="980" height="260" viewBox="0 0 980 260" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin slice">
+  <!-- 메인 다이아몬드 -->
+  <rect x="0"  y="70" width="110" height="110" transform="rotate(45 0 70)" fill="#22D3EE"/>
+  <!-- 보조 다이아몬드들 -->
+  <rect x="80" y="-30" width="60"  height="60" transform="rotate(45 80 -30)" fill="#3B82F6"/>
+  <rect x="165" y="55" width="60"  height="60" transform="rotate(45 165 55)" fill="#94A3B8"/>
+  <rect x="0"  y="170" width="60"  height="60" transform="rotate(45 0 170)" fill="#4ADE80"/>
+
+</svg>

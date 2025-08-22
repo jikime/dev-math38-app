@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ProblemRepository } from "@/components/problem-repository"
-import { PrescriptionRepository } from "@/components/prescription-repository"
+import { ProblemRepository } from "@/components/repository/problem-repository"
+import { PrescriptionRepository } from "@/components/repository/prescription-repository"
 import { FileText, Clipboard } from "lucide-react"
 
 export function RepositoryTabs() {

@@ -2,7 +2,17 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
+import "katex/dist/katex.min.css";
+import '@/styles/main.css';
+import '@/styles/bogi.scss';
+import '@/styles/pagemap.scss';
+import '@/styles/paper.scss';
+import '@/styles/problem.scss';
+import '@/styles/print.css';
+import '@/styles/spacingToPx.scss';
+
+import { ThemeProvider } from "@/components/common/theme-provider"
+import { QueryProvider } from "@/providers/query-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -19,9 +29,11 @@ export default function RootLayout({
   return (
     <html lang="ko" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          {children}
-        </ThemeProvider>
+        <QueryProvider>
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+            {children}
+          </ThemeProvider>
+        </QueryProvider>
       </body>
     </html>
   )

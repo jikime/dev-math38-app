@@ -1,0 +1,15 @@
+<!-- header-soft-wave.svg -->
+<svg width="600" height="220" viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin slice">
+  <defs>
+    <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"  stop-color="#14B8A6"/>
+      <stop offset="100%" stop-color="#0EA5E9"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 메인 웨이브 -->
+  <path d="M0 80 C120 0, 320 0, 600 80 L600 0 L0 0 Z" fill="url(#waveGrad)" opacity="0.85"/>
+  <!-- 얇은 서브 웨이브 -->
+  <path d="M0 130 C160 50, 380 40, 600 120 L600 90 C380 10, 160 20, 0 100 Z"
+        fill="white" opacity="0.12"/>
+</svg>

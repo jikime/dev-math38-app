@@ -1,0 +1,67 @@
+.pages-map {
+  font-size: smaller;
+  padding: 0em 0.5em;
+  height: calc(100vh - 66px);
+  overflow-y: auto;
+
+  h4 {
+    text-align: center;
+    margin: 0px;
+    padding: 1em;
+  }
+
+  .page-map {
+    border: 1px solid black;
+    padding: 0.5em;
+    margin: 0.5em;
+    display: flex;
+    min-width: 0;
+    max-width: 100%;
+    flex-direction: row;
+    background-color: #fff;
+
+    .left-map {
+      display: flex;
+      flex-direction: column;
+      border-right: 1px dashed black;
+      width: 41px;
+      min-height: 20px;
+    }
+    .right-map {
+      display: flex;
+      flex-direction: column;
+      width: 40px;
+      min-height: 20px;
+    }
+
+    .p-map {
+      margin-bottom: 1px;
+      text-align: center;
+      min-width: 30px;
+      height: 24px;
+      cursor: pointer;
+
+      .drag-area {
+        cursor: move;
+      }
+      .p-move {
+        &:hover {
+          background-color: #ddd;
+
+          svg {
+            visibility: visible;
+            display: inline-block;
+          }
+          .p-num {
+            visibility: hidden;
+            display: none;
+          }
+        }
+        svg {
+          visibility: hidden;
+          display: none;
+        }
+      }
+    }
+  }
+}

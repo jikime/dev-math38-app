@@ -1,0 +1,20 @@
+<!-- header-hexa-cluster.svg -->
+<svg width="280" height="220" viewBox="0 0 940 220" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin slice">
+  <defs>
+    <polygon id="hex" points="50 0 100 28.9 100 86.7 50 115.6 0 86.7 0 28.9"/>
+  </defs>
+
+  <!-- 1열 -->
+  <use href="#hex" x="-10" y="-20" fill="#38BDF8"/>
+  <use href="#hex" x="-10" y="75"  fill="#0EA5E9" transform="scale(0.85)"/>
+
+  <!-- 2열 -->
+  <use href="#hex" x="70"  y="30"  fill="#22D3EE" transform="scale(0.95)"/>
+  <use href="#hex" x="70"  y="125" fill="#4ADE80" transform="scale(0.85)"/>
+
+  <!-- 3열 -->
+  <use href="#hex" x="150" y="-10" fill="#94A3B8" transform="scale(0.8)"/>
+  <use href="#hex" x="150" y="85"  fill="#67E8F9" transform="scale(0.7)"/>
+
+
+</svg>
