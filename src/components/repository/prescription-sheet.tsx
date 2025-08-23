@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo } from "react"
 import { useLectureStudents, usePaperSolveCounts } from "@/hooks/use-repository"
 import type { LectureStudentWrongsVO, PaperSolveCountsParams } from "@/types/repository"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -37,8 +36,6 @@ interface ExtendedStudent extends Student {
 }
 
 interface PrescriptionSheetProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
   selectedItemsCount: number
   lectureId?: string
   paperIds: string[]
@@ -46,8 +43,6 @@ interface PrescriptionSheetProps {
 }
 
 export function PrescriptionSheet({ 
-  open, 
-  onOpenChange, 
   selectedItemsCount, 
   lectureId,
   paperIds,
@@ -55,7 +50,6 @@ export function PrescriptionSheet({
 }: PrescriptionSheetProps) {
   const [selectedStudents, setSelectedStudents] = useState<string[]>([])
   const [selectAllStudents, setSelectAllStudents] = useState(false)
-  const [isGeneratingStats, setIsGeneratingStats] = useState(true)
   const [viewMode, setViewMode] = useState<"table" | "grid">("table")
   const [students, setStudents] = useState<Student[]>([])
   
@@ -169,11 +163,6 @@ export function PrescriptionSheet({
     return includeWrongAnswer || includePartialWrong || includePartialCorrect || includeCorrect
   })
 
-  const ratio = (value: number, total: number) => {
-    if (total === 0) return "0%"
-    return ((value / total) * 100).toFixed(0) + "%"
-  }
-
   // 학생 체크박스 관련 함수들
   const handleSelectAllStudents = (checked: boolean) => {
     if (checked) {
@@ -197,94 +186,28 @@ export function PrescriptionSheet({
     setSelectAllStudents(newSelectedIds.length === filteredStudents.length && filteredStudents.length > 0)
   }
 
+  // 비율 계산 함수
+  const ratio = (value: number, total: number) => {
+    if (total === 0) return "0%"
+    return ((value / total) * 100).toFixed(0) + "%"
+  }
+
   // multiplies가 변경될 때마다 선택 상태 초기화
   useEffect(() => {
     setSelectedStudents([])
     setSelectAllStudents(false)
   }, [wrongAnswerMultiplies])
 
-  // Sheet가 열릴 때 통계 생성 시뮬레이션
-  useEffect(() => {
-    if (open) {
-      setIsGeneratingStats(true)
-      const timer = setTimeout(() => {
-        setIsGeneratingStats(false)
-      }, 1500) // 1.5초 로딩
-      
-      return () => clearTimeout(timer)
-    }
-  }, [open])
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="!w-1/2 !max-w-[50vw] bg-gray-50 dark:bg-gray-950 p-0">
-        {isGeneratingStats ? (
-          /* 로딩 화면 */
-          <>
-            <SheetTitle className="sr-only">처방 생성</SheetTitle>
-            <div className="h-full flex flex-col items-center justify-center bg-white dark:bg-gray-900">
-              <div className="text-center space-y-6">
-              {/* 차트 생성 애니메이션 */}
-              <div className="relative w-32 h-32 mx-auto">
-                <div className="absolute inset-0 border-4 border-gray-200 dark:border-gray-700 rounded-full"></div>
-                <div className="absolute inset-0 border-4 border-transparent border-t-blue-600 rounded-full animate-spin"></div>
-                
-                {/* 데이터 분석 아이콘들 */}
-                <div className="absolute inset-4 flex items-center justify-center">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="w-6 h-6 bg-red-500 rounded animate-pulse" style={{ animationDelay: '0s' }}></div>
-                    <div className="w-6 h-6 bg-orange-500 rounded animate-pulse" style={{ animationDelay: '0.5s' }}></div>
-                    <div className="w-6 h-6 bg-yellow-500 rounded animate-pulse" style={{ animationDelay: '1s' }}></div>
-                    <div className="w-6 h-6 bg-green-500 rounded animate-pulse" style={{ animationDelay: '1.5s' }}></div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* 로딩 메시지 */}
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                  처방 통계 생성 중...
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  학생별 성과 데이터를 분석하고 있습니다
-                </p>
-              </div>
-              
-              {/* 진행률 바 */}
-              <div className="w-64 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-green-500 rounded-full transition-all duration-[2500ms] ease-out"
-                     style={{ width: '100%', transform: 'translateX(-100%)', animation: 'slide-right 2.5s ease-out forwards' }}>
-                </div>
-              </div>
-              
-              {/* 분석 단계 표시 */}
-              <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-                <div className="flex items-center justify-center gap-2">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-                  <span>성과 데이터 분석 중...</span>
-                </div>
-              </div>
-            </div>
-            
-            {/* Tailwind로 구현하기 어려운 애니메이션을 위한 인라인 스타일 */}
-            <style dangerouslySetInnerHTML={{
-              __html: `
-                @keyframes slide-right {
-                  from { transform: translateX(-100%); }
-                  to { transform: translateX(0%); }
-                }
-              `
-            }} />
-            </div>
-          </>
-        ) : (
-          /* 메인 콘텐츠 */
-          <div className="h-full flex flex-col">
-          <SheetHeader className="flex-shrink-0 bg-white dark:bg-gray-900 px-6 pt-6 pb-4">
-            <SheetTitle className="text-lg">처방 생성</SheetTitle>
-            <SheetDescription className="text-sm">
+    <div className="h-full bg-gray-50 dark:bg-gray-950 p-0">
+      {/* 메인 콘텐츠 */}
+      <div className="h-full flex flex-col">
+          <div className="flex-shrink-0 bg-white dark:bg-gray-900 px-6 pt-6 pb-4">
+            <h2 className="text-lg font-semibold">처방 생성</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               선택된 {selectedItemsCount}개 항목을 기반으로 처방을 생성합니다.
-            </SheetDescription>
+            </p>
             
             {/* 에러 표시 */}
             {error && (
@@ -292,7 +215,7 @@ export function PrescriptionSheet({
                 학생 목록을 불러오는 중 오류가 발생했습니다.
               </div>
             )}
-          </SheetHeader>
+          </div>
           
           {/* 상세 필터 - 항상 표시 */}
           <div className="flex-shrink-0 px-6 py-4 bg-gray-25 dark:bg-gray-950/30 border-b border-gray-200 dark:border-gray-700">
@@ -518,39 +441,7 @@ export function PrescriptionSheet({
 
           {/* Student List - Table or Grid View */}
           <div className="flex-1 overflow-y-auto px-4 py-3">
-            {(isLoading || solveCountsLoading) ? (
-              // Loading skeleton
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-16 text-center">번호</TableHead>
-                    <TableHead className="w-12 text-center">
-                      <Skeleton className="w-4 h-4 mx-auto" />
-                    </TableHead>
-                    <TableHead className="w-40">이름 / 학교</TableHead>
-                    <TableHead className="w-16 text-center">출제</TableHead>
-                    <TableHead className="w-20 text-center">오답</TableHead>
-                    <TableHead className="w-20 text-center">부분오답</TableHead>
-                    <TableHead className="w-20 text-center">부분정답</TableHead>
-                    <TableHead className="w-20 text-center">정답</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <TableRow key={index}>
-                      <TableCell><Skeleton className="w-8 h-4" /></TableCell>
-                      <TableCell><Skeleton className="w-4 h-4" /></TableCell>
-                      <TableCell><Skeleton className="w-32 h-4" /></TableCell>
-                      <TableCell><Skeleton className="w-12 h-4" /></TableCell>
-                      <TableCell><Skeleton className="w-16 h-4" /></TableCell>
-                      <TableCell><Skeleton className="w-16 h-4" /></TableCell>
-                      <TableCell><Skeleton className="w-16 h-4" /></TableCell>
-                      <TableCell><Skeleton className="w-16 h-4" /></TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : viewMode === "table" ? (
+            {viewMode === "table" ? (
               // Table View
               <Table>
                 <TableHeader className="sticky top-0 bg-slate-50 z-10">
@@ -706,9 +597,7 @@ export function PrescriptionSheet({
               </div>
             )}
           </div>
-        </div>
-        )}
-      </SheetContent>
-    </Sheet>
+      </div>
+    </div>
   )
 }

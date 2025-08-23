@@ -561,7 +561,7 @@ export function usePaperSolveCounts(params: PaperSolveCountsParams | null) {
     API_ENDPOINTS.REPOSITORY.PAPER_SOLVE_COUNTS,
     {
       method: 'POST',
-      params,
+      params: params || undefined,
       enabled: !!params && !!params.lectureId && params.studentIds.length > 0 && params.paperIds.length > 0,
     }
   );
