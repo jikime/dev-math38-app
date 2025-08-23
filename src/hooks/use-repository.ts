@@ -21,7 +21,12 @@ import type {
   RepositoryExportOptions,
   RepositoryStatistics,
   LecturePaper,
-  LecturePaperSearchParams
+  LecturePaperSearchParams,
+  SimpleStudentVO,
+  StudentStudyPaperId,
+  M38UserStudyPaper,
+  M38UserStudyPaperVO,
+  PaperAnswerSheet
 } from '@/types/repository';
 import { M38GeneratedPaper } from '@/components/math-paper/domains/paper';
 
@@ -41,18 +46,18 @@ const repositoryKeys = {
 // ===== 문제 저장소 =====
 
 // 저장소 문제 목록 조회 (실제 API)
-export function useRepositoryProblems(params?: LecturePaperSearchParams) {
+export function useRepositoryProblems(params: LecturePaperSearchParams) {
   const defaultParams = {
-    lectureId: '67c819e7a1c82407f1a9bf8d',
     ...params
   };
 
   return useApiQuery<LecturePaper[]>(
     [...repositoryKeys.problems(), defaultParams],
-    API_ENDPOINTS.REPOSITORY.LECTURE_PAPERS(defaultParams.lectureId),
+    API_ENDPOINTS.REPOSITORY.LECTURE_PAPERS(defaultParams.lectureId!),
     {
       method: 'POST',
       params: defaultParams,
+      enabled: !!defaultParams.lectureId,
     }
   );
 }
@@ -399,6 +404,133 @@ export function useAcademyStaticPaper(paperId: string | undefined) {
     API_ENDPOINTS.REPOSITORY.ACADEMY_STATIC_PAPER(paperId!),
     {
       enabled: !!paperId,
+    }
+  );
+}
+
+// 시험지 복사
+export function useCopyPaper() {
+  const queryClient = useQueryClient();
+
+  return useApiMutation<void, {
+    lectureId: string;
+    paperId: string;
+    paperName: string;
+    similar?: boolean;
+  }>(
+    API_ENDPOINTS.REPOSITORY.COPY_PAPER,
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: repositoryKeys.problems() });
+        // queryClient.invalidateQueries({ queryKey: repositoryKeys.statistics() });
+      },
+    }
+  );
+}
+
+// 강의 학생 목록 조회
+export function useLectureStudents(lectureId: string) {
+  return useApiQuery<SimpleStudentVO[]>(
+    [...repositoryKeys.all, 'lecture-students', lectureId],
+    API_ENDPOINTS.REPOSITORY.STUDENTS(lectureId),
+    {
+      enabled: !!lectureId,
+    }
+  );
+}
+
+// 학생별 시험지 ID 조회
+export function useStudentPaperIds(lecturePaperId: string) {
+  return useApiQuery<StudentStudyPaperId[]>(
+    [...repositoryKeys.all, 'student-paper-ids', lecturePaperId],
+    API_ENDPOINTS.REPOSITORY.USER_STUDY_PAPER_IDS(lecturePaperId),
+    {
+      enabled: !!lecturePaperId,
+    }
+  );
+}
+
+// 시험지 배포
+export function usePublishPaper() {
+  const queryClient = useQueryClient();
+
+  return useApiMutation<{ message?: string }, {
+    lectureId: string;
+    lecturePaperId: string;
+    userId: string;
+    paperType?: string;
+    isWorkbook?: boolean;
+  }>(
+    API_ENDPOINTS.REPOSITORY.PUBLISH_PAPER, // 기본값, 실제로는 PaperPrintModal에서 동적으로 처리
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: [...repositoryKeys.all, 'student-paper-ids'] });
+      },
+    }
+  );
+}
+
+// 학생 이미지 조회 (Blob 응답)
+export function useStudentImage(userId: string) {
+  return useApiQuery<Blob>(
+    [...repositoryKeys.all, 'student-image', userId],
+    API_ENDPOINTS.REPOSITORY.STUDENT_IMAGE(userId),
+    {
+      enabled: !!userId,
+      // Blob 응답을 위한 설정 필요
+    }
+  );
+}
+
+// ===== 답안입력 관련 =====
+
+// 학생별 시험지 목록 조회
+export function useStudyPaperList(lecturePaperId: string, type: string) {
+  return useApiQuery<M38UserStudyPaperVO[]>(
+    [...repositoryKeys.all, 'study-paper-list', lecturePaperId, type],
+    API_ENDPOINTS.REPOSITORY.STUDY_PAPER_LIST(lecturePaperId, type),
+    {
+      enabled: !!lecturePaperId && !!type,
+    }
+  );
+}
+
+// 답안지 조회
+export function useAnswerSheet(paperId: string) {
+  return useApiQuery<PaperAnswerSheet>(
+    [...repositoryKeys.all, 'answer-sheet', paperId],
+    API_ENDPOINTS.REPOSITORY.ANSWER_SHEET(paperId),
+    {
+      enabled: !!paperId,
+    }
+  );
+}
+
+// 답안지 채점
+export function useGradePaper() {
+  const queryClient = useQueryClient();
+
+  return useApiMutation<{ score: number }, PaperAnswerSheet>(
+    API_ENDPOINTS.REPOSITORY.GRADE_PAPER,
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: [...repositoryKeys.all, 'study-paper-list'] });
+      },
+    }
+  );
+}
+
+// 시험지 초기화
+export function useResetPaper() {
+  const queryClient = useQueryClient();
+
+  return useApiMutation<{ result: boolean }, string>(
+    '', // URL will be determined dynamically
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: [...repositoryKeys.all, 'study-paper-list'] });
+        queryClient.invalidateQueries({ queryKey: [...repositoryKeys.all, 'answer-sheet'] });
+      },
     }
   );
 }

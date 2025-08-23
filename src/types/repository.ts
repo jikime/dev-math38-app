@@ -203,3 +203,70 @@ export interface RepositoryStatistics {
   };
   lastUpdated: string;
 }
+
+// Print Modal 관련 타입들
+export interface SimpleStudentVO {
+  userId: string;
+  name: string;
+  schoolName: string;
+  userStudyPaperId?: string;
+}
+
+export interface StudentStudyPaperId {
+  userId: string;
+  userStudyPaperId: string;
+}
+
+export interface M38UserStudyPaper {
+  id: string;
+  userId: string;
+  lecturePaperId: string;
+  data?: any;
+  created: string;
+  updated: string;
+}
+
+export enum PrintType {
+  paper = "paper",
+  quickanswer = "quickanswer", 
+  answers = "answers"
+}
+
+// Answer Input Modal 관련 타입들
+export interface M38UserStudyPaperVO {
+  userStudyPaperId: string;
+  userId: string;
+  studentName: string;
+  userLoginId: string;
+  lectureName: string;
+  state: PaperState;
+  score: number;
+}
+
+export interface PaperAnswerSheet {
+  userStudyPaperId: string;
+  studentName: string;
+  lectureName: string;
+  paperName: string;
+  answerList: ProblemAnswer[];
+}
+
+export interface ProblemAnswer {
+  problemId: string;
+  problemNumber: number;
+  value?: {
+    answers: Answer[];
+  };
+  correct: number; // -2: 오답, -1: 부분오답, 0: 미채점, 1: 부분정답, 2: 정답
+}
+
+export interface Answer {
+  dataType: "mathTex" | "math" | "choice" | "katex" | "text";
+  value: string;
+}
+
+export enum PaperState {
+  ready = "ready",
+  started = "started", 
+  finished = "finished"
+}

@@ -5,6 +5,7 @@ import { SpProblem, NUM } from "../typings";
 import ProblemTitle from './problem-title';
 import { Badge } from "@/components/ui/badge";
 import ErrorReportModal from './error-report-modal';
+import Image from "next/image";
 
 const printImage = false;
 
@@ -72,7 +73,7 @@ const ProblemView = ({
 
       {printImage ? (
       <div className="flex justify-center items-center p-2">
-        <img src={`https://image3.suzag.com/open/image/problem/${problem.problemId}?v=1`} alt="problem" width={width} height={100} />
+        <Image src={`https://image3.suzag.com/open/image/problem/${problem.problemId}?v=1`} alt="problem" width={width} height={100} />
       </div>
       ): (
         <>

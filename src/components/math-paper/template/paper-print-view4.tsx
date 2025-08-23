@@ -69,7 +69,7 @@ const PaperPrintView4 = ({
   return (
     <div className="paper w-full text-left flex flex-col">
       {pages &&
-        pages.map((page, index) => (
+        pages.map((page, index) => ( 
           <PaperTemplate
             key={index}
             title={title}
