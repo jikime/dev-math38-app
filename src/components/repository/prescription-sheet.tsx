@@ -77,11 +77,19 @@ export function PrescriptionSheet({
   // 학생 목록 가져오기 (React Query 사용)
   const { data: studentList, isLoading, error } = useLectureStudents(lectureId || "")
 
-  // 선택된 학생들의 성과 데이터 가져오기
+  // 선택된 학생들의 성과 데이터 가져오기 - 선택된 학생이 있을 때만 API 호출
   const paperSolveCountsParams: PaperSolveCountsParams | null = useMemo(() => {
+    // 선택된 학생이 없으면 API 호출하지 않음
     if (!lectureId || selectedStudents.length === 0 || paperIds.length === 0) {
       return null
     }
+    
+    console.log('🔄 API 재호출: 선택된 학생 변경됨', {
+      lectureId,
+      selectedStudentIds: selectedStudents,
+      paperCount: paperIds.length
+    })
+    
     return {
       lectureId,
       studentIds: selectedStudents,
@@ -89,11 +97,20 @@ export function PrescriptionSheet({
     }
   }, [lectureId, selectedStudents, paperIds])
 
-  const { data: studentSolveCounts, isLoading: solveCountsLoading } = usePaperSolveCounts(paperSolveCountsParams)
+  const { data: studentSolveCounts, isLoading: solveCountsLoading, refetch: refetchSolveCounts } = usePaperSolveCounts(paperSolveCountsParams)
 
   // 학생 데이터 처리 (실제 API 데이터 기반)
   const studentsWithIndex = useMemo(() => {
     if (!studentList) return []
+
+    // 선택된 학생들의 데이터 로딩 상태 체크
+    if (selectedStudents.length > 0) {
+      if (solveCountsLoading) {
+        console.log('⏳ 선택된 학생들의 성과 데이터 로딩 중...')
+      } else if (studentSolveCounts) {
+        console.log('✅ 성과 데이터 로드 완료:', Object.keys(studentSolveCounts.studentSkillSolveCountMap).length + '명')
+      }
+    }
 
     return studentList.map((student, index) => {
       let correct2 = 0
@@ -141,7 +158,7 @@ export function PrescriptionSheet({
         targets
       }
     }) as ExtendedStudent[]
-  }, [studentList, studentSolveCounts, selectedStudents, wrongAnswerMultiplies])
+  }, [studentList, studentSolveCounts, selectedStudents, wrongAnswerMultiplies, solveCountsLoading])
 
   // 필터링된 학생 목록 (오답 설정 기반)
   const filteredStudents = studentsWithIndex.filter((student) => {
@@ -167,9 +184,11 @@ export function PrescriptionSheet({
   const handleSelectAllStudents = (checked: boolean) => {
     if (checked) {
       const allFilteredStudentIds = filteredStudents.map(student => student.userId)
+      console.log('✅ 전체 학생 선택:', allFilteredStudentIds.length + '명')
       setSelectedStudents(allFilteredStudentIds)
       setSelectAllStudents(true)
     } else {
+      console.log('❌ 전체 학생 선택 해제')
       setSelectedStudents([])
       setSelectAllStudents(false)
     }
@@ -179,8 +198,10 @@ export function PrescriptionSheet({
     let newSelectedIds: string[]
     if (checked) {
       newSelectedIds = [...selectedStudents, userId]
+      console.log('✅ 학생 선택 추가:', userId, '총', newSelectedIds.length + '명')
     } else {
       newSelectedIds = selectedStudents.filter(id => id !== userId)
+      console.log('❌ 학생 선택 제거:', userId, '총', newSelectedIds.length + '명')
     }
     setSelectedStudents(newSelectedIds)
     setSelectAllStudents(newSelectedIds.length === filteredStudents.length && filteredStudents.length > 0)
@@ -451,7 +472,7 @@ export function PrescriptionSheet({
             {viewMode === "table" ? (
               // Table View
               <div className="overflow-x-auto">
-                <Table className="min-w-[600px]">
+                <Table className="w-full">
                   <TableHeader className="sticky top-0 bg-slate-50 z-10">
                     <TableRow>
                       <TableHead className="w-12 text-center">번호</TableHead>
@@ -461,12 +482,12 @@ export function PrescriptionSheet({
                           onCheckedChange={handleSelectAllStudents}
                         />
                       </TableHead>
-                      <TableHead className="min-w-[120px]">이름 / 학교</TableHead>
+                      <TableHead className="w-20">이름 / 학교</TableHead>
                       <TableHead className="w-12 text-center">출제</TableHead>
-                      <TableHead className="w-16 text-center">오답</TableHead>
-                      <TableHead className="w-16 text-center hidden sm:table-cell">부분오답</TableHead>
-                      <TableHead className="w-16 text-center hidden sm:table-cell">부분정답</TableHead>
-                      <TableHead className="w-16 text-center">정답</TableHead>
+                      <TableHead className="w-14 text-center">오답</TableHead>
+                      <TableHead className="w-14 text-center hidden sm:table-cell">부분오답</TableHead>
+                      <TableHead className="w-14 text-center hidden sm:table-cell">부분정답</TableHead>
+                      <TableHead className="w-14 text-center">정답</TableHead>
                     </TableRow>
                   </TableHeader>
                 <TableBody>
@@ -495,42 +516,62 @@ export function PrescriptionSheet({
                       </TableCell>
                       <TableCell className="text-center">
                         {selectedStudents.includes(student.userId) && (
-                          <div className="text-red-500 font-bold animate-pulse">
-                            {student.targets || 0}
-                          </div>
+                          solveCountsLoading ? (
+                            <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                          ) : (
+                            <div className="text-red-500 font-bold">
+                              {student.targets || 0}
+                            </div>
+                          )
                         )}
                       </TableCell>
                       <TableCell className="text-center text-xs">
-                        {selectedStudents.includes(student.userId) && student.totalQuestions ? (
-                          <div className="flex flex-col">
-                            <span className="font-medium">{ratio(student.wrongAnswers || 0, student.totalQuestions)}</span>
-                            <span className="text-gray-500">({student.wrongAnswers || 0})</span>
-                          </div>
-                        ) : null}
+                        {selectedStudents.includes(student.userId) && (
+                          solveCountsLoading ? (
+                            <div className="w-4 h-4 border-2 border-gray-300 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                          ) : student.totalQuestions ? (
+                            <div className="flex flex-col">
+                              <span className="font-medium">{ratio(student.wrongAnswers || 0, student.totalQuestions)}</span>
+                              <span className="text-gray-500">({student.wrongAnswers || 0})</span>
+                            </div>
+                          ) : null
+                        )}
                       </TableCell>
                       <TableCell className="text-center text-xs hidden sm:table-cell">
-                        {selectedStudents.includes(student.userId) && student.totalQuestions ? (
-                          <div className="flex flex-col">
-                            <span className="font-medium">{ratio(student.partialWrong || 0, student.totalQuestions)}</span>
-                            <span className="text-gray-500">({student.partialWrong || 0})</span>
-                          </div>
-                        ) : null}
+                        {selectedStudents.includes(student.userId) && (
+                          solveCountsLoading ? (
+                            <div className="w-4 h-4 border-2 border-gray-300 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                          ) : student.totalQuestions ? (
+                            <div className="flex flex-col">
+                              <span className="font-medium">{ratio(student.partialWrong || 0, student.totalQuestions)}</span>
+                              <span className="text-gray-500">({student.partialWrong || 0})</span>
+                            </div>
+                          ) : null
+                        )}
                       </TableCell>
                       <TableCell className="text-center text-xs hidden sm:table-cell">
-                        {selectedStudents.includes(student.userId) && student.totalQuestions ? (
-                          <div className="flex flex-col">
-                            <span className="font-medium">{ratio(student.partialCorrect || 0, student.totalQuestions)}</span>
-                            <span className="text-gray-500">({student.partialCorrect || 0})</span>
-                          </div>
-                        ) : null}
+                        {selectedStudents.includes(student.userId) && (
+                          solveCountsLoading ? (
+                            <div className="w-4 h-4 border-2 border-gray-300 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                          ) : student.totalQuestions ? (
+                            <div className="flex flex-col">
+                              <span className="font-medium">{ratio(student.partialCorrect || 0, student.totalQuestions)}</span>
+                              <span className="text-gray-500">({student.partialCorrect || 0})</span>
+                            </div>
+                          ) : null
+                        )}
                       </TableCell>
                       <TableCell className="text-center text-xs">
-                        {selectedStudents.includes(student.userId) && student.totalQuestions ? (
-                          <div className="flex flex-col">
-                            <span className="font-medium">{ratio(student.correct || 0, student.totalQuestions)}</span>
-                            <span className="text-gray-500">({student.correct || 0})</span>
-                          </div>
-                        ) : null}
+                        {selectedStudents.includes(student.userId) && (
+                          solveCountsLoading ? (
+                            <div className="w-4 h-4 border-2 border-gray-300 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                          ) : student.totalQuestions ? (
+                            <div className="flex flex-col">
+                              <span className="font-medium">{ratio(student.correct || 0, student.totalQuestions)}</span>
+                              <span className="text-gray-500">({student.correct || 0})</span>
+                            </div>
+                          ) : null
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -564,9 +605,15 @@ export function PrescriptionSheet({
                     </div>
 
                     {/* Performance Grid - Only show when selected */}
-                    {selectedStudents.includes(student.userId) && student.totalQuestions ? (
+                    {selectedStudents.includes(student.userId) && (
                       <div className="p-3">
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {solveCountsLoading ? (
+                          <div className="flex items-center justify-center py-8">
+                            <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                            <span className="ml-2 text-sm text-gray-500">데이터 로딩중...</span>
+                          </div>
+                        ) : student.totalQuestions ? (
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                           {/* 오답 */}
                           <div className="bg-red-50 dark:bg-red-950/30 rounded p-2 text-center min-w-0">
                             <div className="text-lg font-bold text-red-600 dark:text-red-400">{student.wrongAnswers || 0}</div>
@@ -598,11 +645,12 @@ export function PrescriptionSheet({
                               {ratio(student.correct || 0, student.totalQuestions)}
                             </div>
                           </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="p-3 text-center text-sm text-gray-500">
-                        선택하면 성과 데이터가 표시됩니다
+                          </div>
+                        ) : (
+                          <div className="p-3 text-center text-sm text-gray-500">
+                            선택하면 성과 데이터가 표시됩니다
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
