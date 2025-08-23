@@ -141,6 +141,7 @@ export const API_ENDPOINTS = {
     RESET_PAPER: (paperAnswerSheetId: string) => `/m38api/m38/study/paper/reset/${paperAnswerSheetId}`,
     STUDY_PAPER_LIST: (lecturePaperId: string, type: string) => `/api/m38/study/paper/volist/${lecturePaperId}/${type}`,
     LECTURE_PAPERS: (lectureId: string) => `/api/m38/lecture/${lectureId}/paper/search`,
+    PRESCRIPTION_PAPERS: (lectureId: string) => `/api/m38/lecture/${lectureId}/paper/bytype/addon_ps`,
     MANUAL_PAPER: (paperId: string) => `/api/m38/paper/manual/${paperId}`,
     ACADEMY_STATIC_PAPER: (paperId: string) => `/api/cms/academy/static-paper/${paperId}`,
   },

@@ -62,6 +62,23 @@ export function useRepositoryProblems(params: LecturePaperSearchParams) {
   );
 }
 
+// 처방 저장소 목록 조회 (addon_ps 타입)
+export function useRepositoryPrescriptionProblems(params: LecturePaperSearchParams) {
+  const defaultParams = {
+    ...params
+  };
+
+  return useApiQuery<LecturePaper[]>(
+    [...repositoryKeys.problems(), 'prescriptions', defaultParams],
+    API_ENDPOINTS.REPOSITORY.PRESCRIPTION_PAPERS(defaultParams.lectureId!),
+    {
+      method: 'POST',
+      params: defaultParams,
+      enabled: !!defaultParams.lectureId,
+    }
+  );
+}
+
 // 저장소 문제 상세 조회
 export function useRepositoryProblem(id: string) {
   return useApiQuery<RepositoryProblem>(

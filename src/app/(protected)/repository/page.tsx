@@ -1,11 +1,9 @@
-import { ProblemRepository } from "@/components/repository/problem-repository"
+import { RepositoryTabs } from "@/components/repository/repository-tabs"
 
 export default function RepositoryPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-6 py-8">
-        <ProblemRepository />
-      </div>
+      <RepositoryTabs />
     </div>
   )
 }

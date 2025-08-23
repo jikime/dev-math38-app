@@ -13,7 +13,6 @@ import { Calendar } from "@/components/ui/calendar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
-import { PrescriptionSheet } from "@/components/repository/prescription-sheet"
 import PaperModal from "@/components/math-paper/paper-modal"
 import PaperCopyModal from "@/components/repository/paper-copy-modal"
 import PaperPrintModal from "@/components/repository/paper-print-modal"
@@ -54,7 +53,6 @@ function ProblemRepositoryComponent() {
   })
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [selectAll, setSelectAll] = useState(false)
-  const [showPrescriptionSheet, setShowPrescriptionSheet] = useState(false)
   const [showPaperModal, setShowPaperModal] = useState(false)
   const [selectedLectureId, setSelectedLectureId] = useState<string | undefined>(undefined)
 
@@ -805,39 +803,6 @@ function ProblemRepositoryComponent() {
           </div>
         </div>
 
-        {/* Selection Actions Bar - 선택된 항목이 있을 때만 표시 */}
-        {selectedItems.length > 0 && (
-          <div className="px-6 py-3 bg-blue-50/50 dark:bg-blue-950/20 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {selectedItems.length}개 항목이 선택되었습니다
-                </span>
-                <Button 
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedItems([])
-                    setSelectAll(false)
-                  }}
-                  className="h-7 px-2 text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-                >
-                  선택 해제
-                </Button>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="default"
-                  size="sm"
-                  className="h-8 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium"
-                  onClick={() => setShowPrescriptionSheet(true)}
-                >
-                  처방 생성
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Content Area */}
@@ -858,12 +823,12 @@ function ProblemRepositoryComponent() {
                   </TableHead>
                   <TableHead style={{ width: "64px" }} className="text-center py-2">
                     <div className="flex items-center justify-center">
-                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">No.</span>
+                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">번호</span>
                     </div>
                   </TableHead>
                   <TableHead style={{ width: "96px" }} className="text-center py-2">
                     <div className="flex items-center justify-center gap-1">
-                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">Date</span>
+                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">출제일</span>
                     </div>
                   </TableHead>
                   <TableHead style={{ width: "140px" }} className="text-center py-2">
@@ -880,7 +845,7 @@ function ProblemRepositoryComponent() {
                   </TableHead>
                   <TableHead style={{ width: "100px" }} className="text-center py-2">
                     <div className="flex items-center justify-center gap-1.5">
-                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">유형</span>
+                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">문제 종류</span>
                     </div>
                   </TableHead>
                   <TableHead style={{ width: "90px" }} className="text-center py-2">
@@ -1132,64 +1097,6 @@ function ProblemRepositoryComponent() {
         </div>
       )}
 
-      {/* 처방전 시트 */}
-      <PrescriptionSheet 
-        open={showPrescriptionSheet} 
-        onOpenChange={setShowPrescriptionSheet}
-        selectedItemsCount={selectedItems.length}
-        students={[
-          {
-            id: 1,
-            name: "김지민",
-            school: "서울고등학교",
-            totalQuestions: 15,
-            wrongAnswers: 3,
-            partialWrong: 2,
-            partialCorrect: 4,
-            correct: 6,
-          },
-          {
-            id: 2,
-            name: "이수진",
-            school: "부산여고",
-            totalQuestions: 12,
-            wrongAnswers: 1,
-            partialWrong: 3,
-            partialCorrect: 2,
-            correct: 6,
-          },
-          {
-            id: 3,
-            name: "박민수",
-            school: "대구중학교",
-            totalQuestions: 18,
-            wrongAnswers: 4,
-            partialWrong: 1,
-            partialCorrect: 5,
-            correct: 8,
-          },
-          {
-            id: 4,
-            name: "정하영",
-            school: "인천고등학교",
-            totalQuestions: 20,
-            wrongAnswers: 2,
-            partialWrong: 4,
-            partialCorrect: 6,
-            correct: 8,
-          },
-          {
-            id: 5,
-            name: "최도현",
-            school: "광주과학고",
-            totalQuestions: 25,
-            wrongAnswers: 5,
-            partialWrong: 3,
-            partialCorrect: 7,
-            correct: 10,
-          },
-        ]}
-      />
 
       {/* 시험지 보기 모달 */}
       <PaperModal
