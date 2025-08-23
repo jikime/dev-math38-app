@@ -563,9 +563,11 @@ export function PrescriptionSheet({
                           solveCountsLoading ? (
                             <div className="w-4 h-4 border-2 border-gray-300 border-t-transparent rounded-full animate-spin mx-auto"></div>
                           ) : student.totalQuestions ? (
-                            <div className="flex flex-col">
-                              <span className="font-medium">{ratio(student.wrongAnswers || 0, student.totalQuestions)}</span>
-                              <span className="text-gray-500">({student.wrongAnswers || 0})</span>
+                            <div className="flex flex-col gap-1 items-center">
+                              <span className="inline-block bg-white dark:bg-gray-800 border border-red-400 rounded px-2 py-0.5 font-bold text-red-600">
+                                {student.wrongAnswers || 0}
+                              </span>
+                              <span className="text-gray-500 text-xs">{ratio(student.wrongAnswers || 0, student.totalQuestions)}</span>
                             </div>
                           ) : null
                         )}
@@ -575,9 +577,11 @@ export function PrescriptionSheet({
                           solveCountsLoading ? (
                             <div className="w-4 h-4 border-2 border-gray-300 border-t-transparent rounded-full animate-spin mx-auto"></div>
                           ) : student.totalQuestions ? (
-                            <div className="flex flex-col">
-                              <span className="font-medium">{ratio(student.partialWrong || 0, student.totalQuestions)}</span>
-                              <span className="text-gray-500">({student.partialWrong || 0})</span>
+                            <div className="flex flex-col gap-1 items-center">
+                              <span className="inline-block bg-white dark:bg-gray-800 border border-orange-400 rounded px-2 py-0.5 font-bold text-orange-600">
+                                {student.partialWrong || 0}
+                              </span>
+                              <span className="text-gray-500 text-xs">{ratio(student.partialWrong || 0, student.totalQuestions)}</span>
                             </div>
                           ) : null
                         )}
@@ -587,9 +591,11 @@ export function PrescriptionSheet({
                           solveCountsLoading ? (
                             <div className="w-4 h-4 border-2 border-gray-300 border-t-transparent rounded-full animate-spin mx-auto"></div>
                           ) : student.totalQuestions ? (
-                            <div className="flex flex-col">
-                              <span className="font-medium">{ratio(student.partialCorrect || 0, student.totalQuestions)}</span>
-                              <span className="text-gray-500">({student.partialCorrect || 0})</span>
+                            <div className="flex flex-col gap-1 items-center">
+                              <span className="inline-block bg-white dark:bg-gray-800 border border-yellow-400 rounded px-2 py-0.5 font-bold text-yellow-600">
+                                {student.partialCorrect || 0}
+                              </span>
+                              <span className="text-gray-500 text-xs">{ratio(student.partialCorrect || 0, student.totalQuestions)}</span>
                             </div>
                           ) : null
                         )}
@@ -599,9 +605,11 @@ export function PrescriptionSheet({
                           solveCountsLoading ? (
                             <div className="w-4 h-4 border-2 border-gray-300 border-t-transparent rounded-full animate-spin mx-auto"></div>
                           ) : student.totalQuestions ? (
-                            <div className="flex flex-col">
-                              <span className="font-medium">{ratio(student.correct || 0, student.totalQuestions)}</span>
-                              <span className="text-gray-500">({student.correct || 0})</span>
+                            <div className="flex flex-col gap-1 items-center">
+                              <span className="inline-block bg-white dark:bg-gray-800 border border-green-400 rounded px-2 py-0.5 font-bold text-green-600">
+                                {student.correct || 0}
+                              </span>
+                              <span className="text-gray-500 text-xs">{ratio(student.correct || 0, student.totalQuestions)}</span>
                             </div>
                           ) : null
                         )}
@@ -648,34 +656,50 @@ export function PrescriptionSheet({
                         ) : student.totalQuestions ? (
                           <div className="grid grid-cols-4 gap-2">
                           {/* 오답 */}
-                          <div className="bg-red-50 dark:bg-red-950/30 rounded p-2 text-center min-w-0">
-                            <div className="text-lg font-bold text-red-600 dark:text-red-400">{student.wrongAnswers || 0}</div>
-                            <div className="text-xs text-red-500 dark:text-red-400">
-                              {ratio(student.wrongAnswers || 0, student.totalQuestions)}
+                          <div className="flex flex-col gap-1 text-center min-w-0">
+                            <div className="bg-white dark:bg-gray-800 border-2 border-red-500 rounded-lg px-2 py-1">
+                              <div className="text-lg font-bold text-red-600 dark:text-red-400">{student.wrongAnswers || 0}</div>
+                            </div>
+                            <div className="bg-red-50 dark:bg-red-950/30 rounded px-1 py-0.5">
+                              <div className="text-xs text-red-600 dark:text-red-400 font-medium">
+                                {ratio(student.wrongAnswers || 0, student.totalQuestions)}
+                              </div>
                             </div>
                           </div>
 
                           {/* 부분오답 */}
-                          <div className="bg-orange-50 dark:bg-orange-950/30 rounded p-2 text-center min-w-0">
-                            <div className="text-lg font-bold text-orange-600 dark:text-orange-400">{student.partialWrong || 0}</div>
-                            <div className="text-xs text-orange-500 dark:text-orange-400">
-                              {ratio(student.partialWrong || 0, student.totalQuestions)}
+                          <div className="flex flex-col gap-1 text-center min-w-0">
+                            <div className="bg-white dark:bg-gray-800 border-2 border-orange-500 rounded-lg px-2 py-1">
+                              <div className="text-lg font-bold text-orange-600 dark:text-orange-400">{student.partialWrong || 0}</div>
+                            </div>
+                            <div className="bg-orange-50 dark:bg-orange-950/30 rounded px-1 py-0.5">
+                              <div className="text-xs text-orange-600 dark:text-orange-400 font-medium">
+                                {ratio(student.partialWrong || 0, student.totalQuestions)}
+                              </div>
                             </div>
                           </div>
 
                           {/* 부분정답 */}
-                          <div className="bg-yellow-50 dark:bg-yellow-950/30 rounded p-2 text-center min-w-0">
-                            <div className="text-lg font-bold text-yellow-600 dark:text-yellow-500">{student.partialCorrect || 0}</div>
-                            <div className="text-xs text-yellow-600 dark:text-yellow-500">
-                              {ratio(student.partialCorrect || 0, student.totalQuestions)}
+                          <div className="flex flex-col gap-1 text-center min-w-0">
+                            <div className="bg-white dark:bg-gray-800 border-2 border-yellow-500 rounded-lg px-2 py-1">
+                              <div className="text-lg font-bold text-yellow-600 dark:text-yellow-500">{student.partialCorrect || 0}</div>
+                            </div>
+                            <div className="bg-yellow-50 dark:bg-yellow-950/30 rounded px-1 py-0.5">
+                              <div className="text-xs text-yellow-600 dark:text-yellow-500 font-medium">
+                                {ratio(student.partialCorrect || 0, student.totalQuestions)}
+                              </div>
                             </div>
                           </div>
 
                           {/* 정답 */}
-                          <div className="bg-green-50 dark:bg-green-950/30 rounded p-2 text-center min-w-0">
-                            <div className="text-lg font-bold text-green-600 dark:text-green-400">{student.correct || 0}</div>
-                            <div className="text-xs text-green-500 dark:text-green-400">
-                              {ratio(student.correct || 0, student.totalQuestions)}
+                          <div className="flex flex-col gap-1 text-center min-w-0">
+                            <div className="bg-white dark:bg-gray-800 border-2 border-green-500 rounded-lg px-2 py-1">
+                              <div className="text-lg font-bold text-green-600 dark:text-green-400">{student.correct || 0}</div>
+                            </div>
+                            <div className="bg-green-50 dark:bg-green-950/30 rounded px-1 py-0.5">
+                              <div className="text-xs text-green-500 dark:text-green-400 font-medium">
+                                {ratio(student.correct || 0, student.totalQuestions)}
+                              </div>
                             </div>
                           </div>
                           </div>
