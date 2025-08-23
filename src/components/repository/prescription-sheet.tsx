@@ -613,7 +613,7 @@ export function PrescriptionSheet({
               </div>
             ) : (
               // Grid View
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 {filteredStudents.map((student) => (
                   <div key={student.userId} className={cn(
                     "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors",
@@ -646,7 +646,7 @@ export function PrescriptionSheet({
                             <span className="ml-2 text-sm text-gray-500">데이터 로딩중...</span>
                           </div>
                         ) : student.totalQuestions ? (
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          <div className="grid grid-cols-4 gap-2">
                           {/* 오답 */}
                           <div className="bg-red-50 dark:bg-red-950/30 rounded p-2 text-center min-w-0">
                             <div className="text-lg font-bold text-red-600 dark:text-red-400">{student.wrongAnswers || 0}</div>
