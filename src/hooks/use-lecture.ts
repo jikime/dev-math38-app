@@ -10,17 +10,21 @@ import { useQueryClient } from '@tanstack/react-query';
 
 // Lecture 타입 정의 (필요에 따라 types 파일로 분리 가능)
 export interface Lecture {
-  id: string;
+  index: number | null;
+  lectureId: string;
+  grade: number;
+  academyId: string | null;
+  subjectId: number;
+  subjectName: string | null;
+  teacherId: string;
+  teacherName: string;
   name: string;
-  description?: string;
-  teacherId?: string;
-  studentIds?: string[];
-  startDate?: string;
-  endDate?: string;
-  isActive?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-  [key: string]: any; // 추가 필드를 위한 인덱스 시그니처
+  state: string;
+  paperCount: number;
+  startDate: string;
+  endDate: string;
+  studentCount: number;
+  studentIdList: string[] | null;
 }
 
 // 강의 쿼리 키

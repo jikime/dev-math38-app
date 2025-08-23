@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRepositoryProblems } from "@/hooks/use-repository"
+import { useMyLectures } from "@/hooks/use-lecture"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -51,12 +52,27 @@ export function ProblemRepository() {
   const [showPrescriptionSheet, setShowPrescriptionSheet] = useState(false)
   const [showPaperModal, setShowPaperModal] = useState(false)
   const [selectedPaperId, setSelectedPaperId] = useState<string | undefined>(undefined)
+  const [selectedLectureId, setSelectedLectureId] = useState<string | undefined>(undefined)
 
-  // 실제 API 호출
+  // 강좌 목록 가져오기
+  const { data: lectures, isLoading: lecturesLoading } = useMyLectures()
+
+  // 첫 번째 강좌를 기본값으로 설정
+  useEffect(() => {
+    if (lectures && lectures.length > 0 && !selectedLectureId) {
+      setSelectedLectureId(lectures[0].lectureId)
+    }
+  }, [lectures, selectedLectureId])
+
+  // 선택된 강좌에 대한 문제 목록 가져오기
   const { data: lecturePapers, isLoading, error } = useRepositoryProblems({
+    lectureId: selectedLectureId,
     from: dateFrom ? format(dateFrom, 'yyyy-MM-dd') : undefined,
     to: dateTo ? format(dateTo, 'yyyy-MM-dd') : undefined,
   })
+
+  // 현재 선택된 강좌 정보
+  const currentLecture = lectures?.find(l => l.lectureId === selectedLectureId)
 
   // 컬럼별 필터 상태
   const [columnFilters, setColumnFilters] = useState({
@@ -318,11 +334,13 @@ export function ProblemRepository() {
   }
 
   // 로딩 상태
-  if (isLoading) {
+  if (lecturesLoading || (isLoading && selectedLectureId)) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin" />
-        <span className="ml-2">저장소 데이터를 불러오는 중...</span>
+        <span className="ml-2">
+          {lecturesLoading ? '강좌 목록을 불러오는 중...' : '저장소 데이터를 불러오는 중...'}
+        </span>
       </div>
     )
   }
@@ -354,14 +372,37 @@ export function ProblemRepository() {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="h-9 px-3 min-w-[180px] justify-between font-normal">
-                      <span className="text-sm">교과서 쌍둥이 유사(조혜진)</span>
-                      <ChevronDown className="w-4 h-4 ml-2 text-gray-400" />
+                      {lecturesLoading ? (
+                        <span className="text-sm">강좌 로딩중...</span>
+                      ) : (
+                        <span className="text-sm truncate">
+                          {currentLecture ? currentLecture.name : '강좌를 선택하세요'}
+                        </span>
+                      )}
+                      <ChevronDown className="w-4 h-4 ml-2 text-gray-400 flex-shrink-0" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-[200px]">
-                    <DropdownMenuItem>교과서 쌍둥이 유사(조혜진)</DropdownMenuItem>
-                    <DropdownMenuItem>기본 수학 과정</DropdownMenuItem>
-                    <DropdownMenuItem>심화 수학 과정</DropdownMenuItem>
+                  <DropdownMenuContent className="w-[280px] max-h-[400px] overflow-y-auto">
+                    {lectures && lectures.length > 0 ? (
+                      lectures.map((lecture) => (
+                        <DropdownMenuItem
+                          key={lecture.lectureId}
+                          onClick={() => setSelectedLectureId(lecture.lectureId)}
+                          className={selectedLectureId === lecture.lectureId ? 'bg-gray-100 dark:bg-gray-800' : ''}
+                        >
+                          <div className="flex flex-col">
+                            <span className="font-medium">{lecture.name}</span>
+                            <span className="text-xs text-gray-500">
+                              {lecture.teacherName} | 학생 {lecture.studentCount}명 | 시험지 {lecture.paperCount}개
+                            </span>
+                          </div>
+                        </DropdownMenuItem>
+                      ))
+                    ) : (
+                      <DropdownMenuItem disabled>
+                        강좌가 없습니다
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
