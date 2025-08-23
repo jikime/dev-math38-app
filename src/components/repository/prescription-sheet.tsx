@@ -81,23 +81,44 @@ export function PrescriptionSheet({
   const paperSolveCountsParams: PaperSolveCountsParams | null = useMemo(() => {
     // 선택된 학생이 없으면 API 호출하지 않음
     if (!lectureId || selectedStudents.length === 0 || paperIds.length === 0) {
+      console.log('❌ API 호출 조건 미충족:', {
+        lectureId: !!lectureId,
+        selectedStudentsCount: selectedStudents.length,
+        paperIdsCount: paperIds.length
+      })
       return null
     }
     
-    console.log('🔄 API 재호출: 선택된 학생 변경됨', {
-      lectureId,
-      selectedStudentIds: selectedStudents,
-      paperCount: paperIds.length
-    })
-    
-    return {
+    const params = {
       lectureId,
       studentIds: selectedStudents,
       paperIds
     }
+    
+    console.log('✅ API 호출 파라미터 생성:', {
+      lectureId,
+      selectedStudentIds: selectedStudents,
+      paperCount: paperIds.length,
+      params
+    })
+    
+    return params
   }, [lectureId, selectedStudents, paperIds])
 
-  const { data: studentSolveCounts, isLoading: solveCountsLoading, refetch: refetchSolveCounts } = usePaperSolveCounts(paperSolveCountsParams)
+  const { data: studentSolveCounts, isLoading: solveCountsLoading, error: solveCountsError, refetch: refetchSolveCounts } = usePaperSolveCounts(paperSolveCountsParams)
+  
+  // API 호출 상태 로깅
+  useEffect(() => {
+    if (paperSolveCountsParams) {
+      if (solveCountsLoading) {
+        console.log('⏳ API 호출 중...')
+      } else if (solveCountsError) {
+        console.error('❌ API 호출 실패:', solveCountsError)
+      } else if (studentSolveCounts) {
+        console.log('✅ API 응답 수신:', studentSolveCounts)
+      }
+    }
+  }, [paperSolveCountsParams, solveCountsLoading, solveCountsError, studentSolveCounts])
 
   // 학생 데이터 처리 (실제 API 데이터 기반)
   const studentsWithIndex = useMemo(() => {
