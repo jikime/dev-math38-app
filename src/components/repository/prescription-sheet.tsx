@@ -297,12 +297,14 @@ export function PrescriptionSheet({
           
           {/* 오답 설정 - WrongAnswerSettings 스타일 */}
           <div className="flex-shrink-0 bg-white dark:bg-gray-900 px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            {/* 데스크톱: 가로 1줄, 태블릿: 2x2, 모바일: 세로 4줄 */}
-            <div className="flex flex-col md:flex-row md:flex-wrap xl:flex-nowrap gap-3 md:gap-4">
+            {/* 2x2 그리드로 배치, 각 항목은 라벨(위) + 선택박스(아래) */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {/* 오답 설정 */}
-              <div className="flex items-center gap-2 min-w-0">
-                <div className="w-3 h-3 bg-red-500 rounded-sm flex-shrink-0"></div>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap min-w-[60px]">오답</span>
+              <div className="flex flex-col items-center gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-red-500 rounded-sm flex-shrink-0"></div>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">오답</span>
+                </div>
                 <Select
                   value={wrongAnswerMultiplies[0].toString()}
                   onValueChange={(value) => setMultiply(0, Number(value))}
@@ -321,9 +323,11 @@ export function PrescriptionSheet({
               </div>
               
               {/* 부분 오답 설정 */}
-              <div className="flex items-center gap-2 min-w-0">
-                <div className="w-3 h-3 bg-orange-500 rounded-sm flex-shrink-0"></div>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap min-w-[60px]">부분오답</span>
+              <div className="flex flex-col items-center gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-orange-500 rounded-sm flex-shrink-0"></div>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">부분오답</span>
+                </div>
                 <Select
                   value={wrongAnswerMultiplies[1].toString()}
                   onValueChange={(value) => setMultiply(1, Number(value))}
@@ -342,9 +346,11 @@ export function PrescriptionSheet({
               </div>
               
               {/* 부분 정답 설정 */}
-              <div className="flex items-center gap-2 min-w-0">
-                <div className="w-3 h-3 bg-yellow-500 rounded-sm flex-shrink-0"></div>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap min-w-[60px]">부분정답</span>
+              <div className="flex flex-col items-center gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-yellow-500 rounded-sm flex-shrink-0"></div>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">부분정답</span>
+                </div>
                 <Select
                   value={wrongAnswerMultiplies[2].toString()}
                   onValueChange={(value) => setMultiply(2, Number(value))}
@@ -363,9 +369,11 @@ export function PrescriptionSheet({
               </div>
               
               {/* 정답 설정 */}
-              <div className="flex items-center gap-2 min-w-0">
-                <div className="w-3 h-3 bg-green-500 rounded-sm flex-shrink-0"></div>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap min-w-[60px]">정답</span>
+              <div className="flex flex-col items-center gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-sm flex-shrink-0"></div>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">정답</span>
+                </div>
                 <Select
                   value={wrongAnswerMultiplies[3].toString()}
                   onValueChange={(value) => setMultiply(3, Number(value))}
