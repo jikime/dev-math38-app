@@ -132,4 +132,17 @@ export const API_ENDPOINTS = {
     LECTURE_PAPERS: (lectureId: string) => `/api/m38/lecture/${lectureId}/paper/search`,
     MANUAL_PAPER: (paperId: string) => `/api/m38/paper/manual/${paperId}`,
   },
+
+  // 강의 관련
+  LECTURES: {
+    MY_LECTURES: '/api/m38/lecture/mylectures',
+    LIST: '/api/m38/lecture',
+    DETAIL: (id: string) => `/api/m38/lecture/${id}`,
+    CREATE: '/api/m38/lecture',
+    UPDATE: (id: string) => `/api/m38/lecture/${id}`,
+    DELETE: (id: string) => `/api/m38/lecture/${id}`,
+    STATUS: (id: string) => `/api/m38/lecture/${id}/status`,
+    STUDENTS: (id: string) => `/api/m38/lecture/${id}/students`,
+    CLONE: '/api/m38/lecture/clone',
+  },
 } as const;
