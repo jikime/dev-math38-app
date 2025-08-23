@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Skeleton } from "@/components/ui/skeleton"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { PrescriptionSheet } from "@/components/repository/prescription-sheet"
 import PaperModal from "@/components/math-paper/paper-modal"
 import PaperCopyModal from "@/components/repository/paper-copy-modal"
@@ -62,6 +63,8 @@ function ProblemRepositoryComponent() {
     const [isAcademyPaper, setIsAcademyPaper] = useState(false);
     const [isPaperModalOpen, setIsPaperModalOpen] = useState(false);
     const [isSaveLectureOpen, setIsSaveLectureOpen] = useState(false);
+    const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+    const [paperToDelete, setPaperToDelete] = useState<{name: string, id: string} | null>(null);
     
     // 사본 만들기 모달 상태
     const [isCopyModalOpen, setIsCopyModalOpen] = useState(false);
@@ -80,6 +83,9 @@ function ProblemRepositoryComponent() {
     const [answerInputPaperId, setAnswerInputPaperId] = useState<string>("");
     const [answerInputPaperType, setAnswerInputPaperType] = useState<PaperType>(PaperType.manual);
 
+    // 드롭다운 상태 관리
+    const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+
   // 강좌 목록 가져오기
   const { data: lectures, isLoading: lecturesLoading } = useMyLectures()
 
@@ -89,6 +95,11 @@ function ProblemRepositoryComponent() {
       setSelectedLectureId(lectures[0].lectureId)
     }
   }, [lectures, selectedLectureId])
+
+  // 필터가 변경되면 열린 드롭다운 닫기
+  useEffect(() => {
+    setOpenDropdownId(null)
+  }, [selectedLectureId, searchTerm, selectedSubject, dateFrom, dateTo])
 
   // 선택된 강좌에 대한 문제 목록 가져오기
   const { data: lecturePapers, isLoading, error } = useRepositoryProblems({
@@ -261,6 +272,8 @@ function ProblemRepositoryComponent() {
         setCopyPaperName(paper.name);
         setCopyLectureId(selectedLectureId);
         setIsCopyModalOpen(true);
+        // 드롭다운 닫기
+        setOpenDropdownId(null);
       } else {
         toast.error("문제지를 찾을 수 없습니다.");
       }
@@ -281,6 +294,8 @@ function ProblemRepositoryComponent() {
   
     const handleEditPaper = (paperRefId: string) => {
       router.push(`/tutor/problemmng/paperedit/${selectedLectureId}/${paperRefId}`);
+      // 드롭다운 닫기
+      setOpenDropdownId(null);
     };
   
     const handlePrintPaper = (paper: {lecturePaperId: string, type: PaperType, subjectId: number}) => {
@@ -288,12 +303,16 @@ function ProblemRepositoryComponent() {
       setPrintPaperType(paper.type as PaperType);
       setPrintSubjectId(paper.subjectId || undefined);
       setIsPrintModalOpen(true);
+      // 드롭다운 닫기
+      setOpenDropdownId(null);
     };
   
     const handleOpenAnswerSheet = (paper: {lecturePaperId: string, type: PaperType}) => {
       setAnswerInputPaperId(paper.lecturePaperId);
       setAnswerInputPaperType(paper.type as PaperType);
       setIsAnswerInputOpen(true);
+      // 드롭다운 닫기
+      setOpenDropdownId(null);
     };
   
     const showPaper = (paperId: string) => {
@@ -329,9 +348,25 @@ function ProblemRepositoryComponent() {
     };
 
   const handleDeleteClick = (paper: {name: string, id: string}) => {
-    if (window.confirm(`"${paper.name}" 시험지를 삭제하시겠습니까?\n\n삭제된 시험지는 휴지통으로 이동합니다.\n휴지통의 시험지는 일주일 후에 완전히 삭제됩니다.`)) {
-      handleRemovePaper({name: paper.name, lecturePaperId: paper.id});
+    // 드롭다운 닫기
+    setOpenDropdownId(null);
+    
+    // AlertDialog로 확인 요청
+    setPaperToDelete(paper);
+    setIsDeleteAlertOpen(true);
+  };
+  
+  const confirmDelete = () => {
+    if (paperToDelete) {
+      handleRemovePaper({name: paperToDelete.name, lecturePaperId: paperToDelete.id});
+      setPaperToDelete(null);
     }
+    setIsDeleteAlertOpen(false);
+  };
+  
+  const cancelDelete = () => {
+    setPaperToDelete(null);
+    setIsDeleteAlertOpen(false);
   };
 
   const renderDifficultyGraph = useCallback((problem: {
@@ -929,7 +964,10 @@ function ProblemRepositoryComponent() {
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <DropdownMenu>
+                      <DropdownMenu 
+                        open={openDropdownId === problem.id} 
+                        onOpenChange={(open) => setOpenDropdownId(open ? problem.id : null)}
+                      >
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon">
                             <MoreVertical className="h-4 w-4" />
@@ -985,13 +1023,59 @@ function ProblemRepositoryComponent() {
             {filteredProblems.map((problem) => (
               <div key={problem.id} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
                 <div className="space-y-3">
-                  {/* 헤더: 학교급, 번호, 날짜 */}
+                  {/* 헤더: 학교급, 번호, 날짜, 더보기 */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         {problem.subject}
                       <span className="text-xs font-medium text-gray-600 dark:text-gray-400">#{problem.paperIndex}</span>
                     </div>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">{problem.date}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">{problem.date}</span>
+                      <DropdownMenu 
+                        open={openDropdownId === problem.id} 
+                        onOpenChange={(open) => setOpenDropdownId(open ? problem.id : null)}
+                      >
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <MoreVertical className="h-3 w-3" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {(problem.type === PaperType.manual || problem.type === PaperType.workbook_addon) && (
+                            <>
+                              <DropdownMenuItem onClick={() => handleCopyPaper(problem.id)}>
+                                <Copy className="mr-2 h-4 w-4" />
+                                사본 만들기
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleEditPaper(problem.id)}
+                                disabled={problem.paperCount > 0}
+                              >
+                                <Edit className="mr-2 h-4 w-4" />
+                                시험지 수정
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                            </>
+                          )}
+                          <DropdownMenuItem onClick={() => handlePrintPaper({lecturePaperId: problem.id, type: problem.type, subjectId: problem.subjectId})}>
+                            <Printer className="mr-2 h-4 w-4" />
+                            출력
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleOpenAnswerSheet({lecturePaperId: problem.id, type: problem.type})}>
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            답안입력
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            className="text-red-600"
+                            onClick={() => handleDeleteClick({name: problem.name, id: problem.id})}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            삭제
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
 
                   {/* 제목과 설명 */}
@@ -1142,6 +1226,25 @@ function ProblemRepositoryComponent() {
         lecturePaperId={answerInputPaperId}
         type={answerInputPaperType}
       />
+      
+      {/* 삭제 확인 AlertDialog */}
+      <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>시험지 삭제</AlertDialogTitle>
+            <AlertDialogDescription>
+              "{paperToDelete?.name}" 시험지를 삭제하시겠습니까?
+              <br /><br />
+              삭제된 시험지는 휴지통으로 이동합니다.
+              휴지통의 시험지는 일주일 후에 완전히 삭제됩니다.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDelete}>취소</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700 text-white">삭제</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }
