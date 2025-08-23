@@ -17,7 +17,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { SpProblem } from "../typings";
-import { PaperEditContext } from "./PaperEditContext";
+import { PaperEditContext } from "./paper-edit-context";
 import { cn } from "@/lib/utils";
 
 interface ProblemTitleProps {

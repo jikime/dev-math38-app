@@ -16,10 +16,10 @@ export * from './useCmsApiHooks';
 export * from './useVectorApiHooks';
 
 // 네임스페이스 export (선택적 사용)
-import * as mainHooks from '@/net/hooks/registry/useMainApiHooks';
-import * as appHooks from '@/net/hooks/registry/useAppApiHooks';
-import * as cmsHooks from '@/net/hooks/registry/useCmsApiHooks';
-import * as vectorHooks from '@/net/hooks/registry/useVectorApiHooks';
+import * as mainHooks from '@/components/math-paper/net/hooks/registry/useMainApiHooks';
+import * as appHooks from '@/components/math-paper/net/hooks/registry/useAppApiHooks';
+import * as cmsHooks from '@/components/math-paper/net/hooks/registry/useCmsApiHooks';
+import * as vectorHooks from '@/components/math-paper/net/hooks/registry/useVectorApiHooks';
 
 export const registryHooks = {
   main: mainHooks,

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import ProblemView from "./ProblemView";
+import ProblemView from "./problem-view";
 import { cn } from "@/lib/utils";
 import { PaperProblem } from "../typings";
 

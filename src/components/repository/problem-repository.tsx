@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { PrescriptionSheet } from "@/components/repository/prescription-sheet"
-import PaperModal from "@/components/math-paper/PaperModal"
+import PaperModal from "@/components/math-paper/paper-modal"
 import { format } from "date-fns"
 import { ko } from "date-fns/locale"
 import {
@@ -74,13 +74,6 @@ export function ProblemRepository() {
   // 현재 선택된 강좌 정보
   const currentLecture = lectures?.find(l => l.lectureId === selectedLectureId)
 
-  // 컬럼별 필터 상태
-  const [columnFilters, setColumnFilters] = useState({
-    출제: [] as string[],
-    문제종류: [] as string[],
-    상태: [] as string[],
-  })
-
 
   const getSubject = (subjectId: number) => {
     const { title, color, tag } = getSubjectTitle(subjectId);
@@ -119,29 +112,6 @@ export function ProblemRepository() {
     countChoice: paper.countChoice,
   })) || []
 
-
-  // 컬럼 필터 초기화 함수
-  const clearColumnFilter = (column: string) => {
-    setColumnFilters((prev) => ({
-      ...prev,
-      [column]: [],
-    }))
-  }
-
-  const getProgressColor = (color: string) => {
-    switch (color) {
-      case "green":
-        return "bg-green-500"
-      case "blue":
-        return "bg-blue-500"
-      case "orange":
-        return "bg-orange-500"
-      case "purple":
-        return "bg-purple-500"
-      default:
-        return "bg-gray-500"
-    }
-  }
 
   const getStatusColor = (state: ProgressState) => {
     switch (state) {
@@ -650,8 +620,8 @@ export function ProblemRepository() {
                       <div className="space-y-1">
                         {problem.range != 'null' && <div className="text-sm text-gray-600 dark:text-gray-400 break-words whitespace-normal">{problem.range}</div>}
                         <div 
-                          className="font-medium text-lg text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 cursor-pointer hover:underline break-words whitespace-normal"
-                          onClick={() => handleTitleClick(problem.paperRefId)}
+                          className={`font-medium text-lg ${problem.paperRefId ? "text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 cursor-pointer hover:underline" : "text-gray-800 dark:text-gray-200"} break-words whitespace-normal`}
+                          onClick={problem.paperRefId ? () => handleTitleClick(problem.paperRefId) : undefined}
                         >
                           <span className="text-lg text-gray-600 dark:text-gray-400 break-words whitespace-normal">{problem.bookTitle}</span> {problem.title}
                         </div>
@@ -678,15 +648,19 @@ export function ProblemRepository() {
                     </TableCell>
                     <TableCell className="px-4">
                       <div className="space-y-2 w-full">
-                        {problem.type === PaperType.addon_ps ? (
-                          <div className="text-center text-sm font-medium text-blue-600 dark:text-blue-400">개별시험지</div>
-                        ) : (
+                        {(problem.type === PaperType.manual ||
+                          problem.type === PaperType.workbook_paper ||
+                          problem.type === PaperType.workbook_addon ||
+                          problem.type === PaperType.personal_addon || 
+                          problem.type === PaperType.academy_contents)  ? (
                           <>
                             {renderDifficultyGraph(problem)}
                             <div className="flex justify-center text-xs text-gray-600 dark:text-gray-400 mt-1">
                               <span>총 {problem.totalQuestions}문항 ({problem.countEasy}/{problem.countChoice})</span>
                             </div>
                           </>
+                        ) : (
+                          <div className="text-center text-sm font-medium text-blue-600 dark:text-blue-400">개별시험지</div>
                         )}
                       </div>
                     </TableCell>

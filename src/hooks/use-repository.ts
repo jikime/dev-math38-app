@@ -391,3 +391,14 @@ export function useManualPaper(paperId: string | undefined) {
     }
   );
 }
+
+// 아카데미 정적 시험지 조회
+export function useAcademyStaticPaper(paperId: string | undefined) {
+  return useApiQuery<any>(
+    [...repositoryKeys.all, 'academy-static-paper', paperId],
+    API_ENDPOINTS.REPOSITORY.ACADEMY_STATIC_PAPER(paperId!),
+    {
+      enabled: !!paperId,
+    }
+  );
+}

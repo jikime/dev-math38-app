@@ -3,12 +3,12 @@
  * API Registry 기반으로 자동 생성된 Vector 서버 전용 Hooks
  */
 
-import { createGetHook, createPostHook } from '@/net/registry/ApiHookFactory';
-import { API_REGISTRY } from '@/net/registry/ApiRegistry';
+import { createGetHook, createPostHook } from '@/components/math-paper/net/registry/ApiHookFactory';
+import { API_REGISTRY } from '@/components/math-paper/net/registry/ApiRegistry';
 import type { 
   ProblemListSearch,
   ProblemSearchResult,
-} from '@/types/typings';
+} from '@/components/math-paper/typings';
 
 // ===== 유사 문제 검색 관련 Hooks =====
 

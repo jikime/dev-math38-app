@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { SpProblem, NUM } from "../typings";
 import ProblemTitle from './problem-title';
 import { Badge } from "@/components/ui/badge";
-import ErrorReportModal from './ErrorReportModal';
+import ErrorReportModal from './error-report-modal';
 
 const printImage = false;
 

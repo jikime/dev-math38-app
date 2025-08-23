@@ -1,8 +1,8 @@
 import { PaperProblem } from "../typings";
-import StartHeader from './StartHeader4';
-import Footer from './Footer4';
-import PaperBody from './PaperBody4';
-import SimpleHeader from "./SimpleHeader";
+import StartHeader from './start-header4';
+import Footer from './footer4';
+import PaperBody from './paper-body4';
+import SimpleHeader from "./simple-header";
 
 // Main PaperTemplate Component
 type PaperTemplateProps = {

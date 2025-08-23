@@ -3,8 +3,8 @@
  * API Registry 기반으로 자동 생성된 App 서버 전용 Hooks
  */
 
-import { createGetHook, createPostHook } from '@/net/registry/ApiHookFactory';
-import { API_REGISTRY } from '@/net/registry/ApiRegistry';
+import { createGetHook, createPostHook } from '@/components/math-paper/net/registry/ApiHookFactory';
+import { API_REGISTRY } from '@/components/math-paper/net/registry/ApiRegistry';
 import type { 
   SpSubjectVO,
   GradeChaptersDto,
@@ -13,7 +13,7 @@ import type {
   GeneratedPaper,
   PastExamDTO,
   SpProblem,
-} from '@/types/typings';
+} from '@/components/math-paper/typings';
 
 // ===== 과목 관련 Hooks =====
 

@@ -131,6 +131,7 @@ export const API_ENDPOINTS = {
     EXPORT: '/repository/export',
     LECTURE_PAPERS: (lectureId: string) => `/api/m38/lecture/${lectureId}/paper/search`,
     MANUAL_PAPER: (paperId: string) => `/api/m38/paper/manual/${paperId}`,
+    ACADEMY_STATIC_PAPER: (paperId: string) => `/api/cms/academy/static-paper/${paperId}`,
   },
 
   // 강의 관련

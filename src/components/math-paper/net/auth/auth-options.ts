@@ -1,7 +1,7 @@
 import { NextAuthOptions, User } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import KakaoProvider from "next-auth/providers/kakao"
-import { authService } from "./authService"
+import { authService } from "./auth-service"
 
 /**
  * NextAuth 설정

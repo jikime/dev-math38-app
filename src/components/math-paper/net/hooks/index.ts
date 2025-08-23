@@ -10,9 +10,9 @@ export * from './useApiSWR';
 export * from './registry';
 
 // 편의를 위한 네임스페이스 export
-import * as mainApiHooks from '@/net/hooks/useMainApi';
-import * as cmsApiHooks from '@/net/hooks/useCmsApi';
-import * as vectorApiHooks from '@/net/hooks/useVectorApi';
+import * as mainApiHooks from '@/components/math-paper/net/hooks/useMainApi';
+import * as cmsApiHooks from '@/components/math-paper/net/hooks/useCmsApi';
+import * as vectorApiHooks from '@/components/math-paper/net/hooks/useVectorApi';
 
 export const hooks = {
   main: mainApiHooks,

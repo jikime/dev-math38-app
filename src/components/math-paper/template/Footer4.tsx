@@ -1,5 +1,5 @@
 import React from "react";
-import designOptions from './designOptions';
+import designOptions from './design-options';
 
 // Footer Component with customizable styles
 type FooterProps = {

@@ -15,3 +15,7 @@ export * from './domains/skill';
 export * from './domains/study';
 export * from './domains/lecture';
 export * from './domains/user';
+export * from './domains/school';
+export * from './domains/statistics';
+export * from './domains/book';
+export * from './domains/error-report';

@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { PaperPage } from "../typings";
 import BlankPaper from "../academy/BlankPaper";
-import PaperTemplate from './PaperTemplate4';
-import StartHeader from './StartHeader4';
+import PaperTemplate from './paper-template4';
+import StartHeader from './start-header4';
 
 interface PaperPrintViewProps {
   title: string;

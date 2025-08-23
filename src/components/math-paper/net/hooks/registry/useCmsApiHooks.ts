@@ -3,13 +3,13 @@
  * API Registry 기반으로 자동 생성된 CMS 서버 전용 Hooks
  */
 
-import { createGetHook } from '@/net/registry/ApiHookFactory';
-import { API_REGISTRY } from '@/net/registry/ApiRegistry';
+import { createGetHook } from '@/components/math-paper/net/registry/ApiHookFactory';
+import { API_REGISTRY } from '@/components/math-paper/net/registry/ApiRegistry';
 import type { 
   PaperGroupDataNode,
   AcademyStaticPaper,
   AcademyStaticPaperDTO,
-} from '@/types/typings';
+} from '@/components/math-paper/typings';
 
 // ===== 학원 시험지 그룹 관련 Hooks =====
 

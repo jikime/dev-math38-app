@@ -1,6 +1,6 @@
 import { PaperProblem } from "../typings";
 import React from "react";
-import ProblemColumn from "./ProblemColumn";
+import ProblemColumn from "./problem-column";
 
 interface Props {
   leftSet: PaperProblem[];

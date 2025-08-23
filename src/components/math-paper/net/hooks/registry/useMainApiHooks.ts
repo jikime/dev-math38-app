@@ -3,8 +3,8 @@
  * API Registry 기반으로 자동 생성된 Main 서버 전용 Hooks
  */
 
-import { createGetHook, createPostHook } from '@/net/registry/ApiHookFactory';
-import { API_REGISTRY } from '@/net/registry/ApiRegistry';
+import { createGetHook, createPostHook } from '@/components/math-paper/net/registry/ApiHookFactory';
+import { API_REGISTRY } from '@/components/math-paper/net/registry/ApiRegistry';
 import type { 
   LectureStatVO,
   UserStudyPaperStatVO,
@@ -27,7 +27,7 @@ import type {
   SkillCounts,
   ErrorReport,
   PageResponse,
-} from '@/types/typings';
+} from '@/components/math-paper/typings';
 
 // ===== 통계 관련 Hooks =====
 

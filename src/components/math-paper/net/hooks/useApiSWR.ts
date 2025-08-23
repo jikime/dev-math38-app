@@ -6,7 +6,6 @@
 import useSWR, { SWRConfiguration, SWRResponse } from 'swr';
 import { useSession } from 'next-auth/react';
 import { ApiServiceFactory } from '../core/ApiServiceFactory';
-import { BaseApiService } from '../core/BaseApiService';
 import { ApiRequestOptions } from '../types';
 
 // SWR Key 타입

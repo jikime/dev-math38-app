@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PlusIcon, X } from "lucide-react";
-import { PaperEditContext } from "./PaperEditContext";
+import { PaperEditContext } from "./paper-edit-context";
 import { M38UserStudyPaper } from "../typings";
 import { api } from "../net";
 import { useApiSWR } from "../net/hooks/useApiSWR";

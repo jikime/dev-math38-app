@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import designOptions from './designOptions';
+import designOptions from './design-options';
 import { Nanum_Gothic } from "next/font/google";
 
 type HeaderProps = {

@@ -2,8 +2,7 @@
 
 import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { ApiServiceFactory } from '@/net/core/ApiServiceFactory';
-import { syncSessionToken } from '@/net/utils/session';
+import { ApiServiceFactory } from '@/components/math-paper/net/core/ApiServiceFactory';
 
 /**
  * 세션 토큰 제공자 컴포넌트

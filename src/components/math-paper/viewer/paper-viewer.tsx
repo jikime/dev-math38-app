@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { AcademyStaticPaper, M38GeneratedPaper } from "../typings";
-import { api } from "../net";
+import { useManualPaper, useAcademyStaticPaper } from "@/hooks/use-repository";
 import { Loader2 } from "lucide-react";
-import PaperPrintView4 from "../template/PaperPrintView4";
+import PaperPrintView4 from "../template/paper-print-view4";
 import AcademyPaperPrintView from "../academy/academy-paper-view";
 
 interface PaperViewerProps {
@@ -32,42 +32,43 @@ const PaperViewer: React.FC<PaperViewerProps> = ({
   onLoadComplete,
   onError,
 }) => {
-  const [paper, setPaper] = useState<M38GeneratedPaper | AcademyStaticPaper | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  // React Query 훅 사용 - 조건부로 하나만 활성화
+  const {
+    data: manualPaper,
+    isLoading: isLoadingManual,
+    error: manualError,
+  } = useManualPaper(useAcademyContents ? undefined : paperId);
 
+  const {
+    data: academyPaper,
+    isLoading: isLoadingAcademy,
+    error: academyError,
+  } = useAcademyStaticPaper(useAcademyContents ? paperId : undefined);
+
+  // 현재 활성화된 데이터와 상태 선택
+  const paper = useAcademyContents ? academyPaper : manualPaper;
+  const isLoading = useAcademyContents ? isLoadingAcademy : isLoadingManual;
+  const error = useAcademyContents ? academyError : manualError;
+
+  // 로드 완료 콜백 호출
   useEffect(() => {
-    if (!paperId) {
-      setPaper(null);
-      return;
+    if (paper && !isLoading) {
+      onLoadComplete?.(paper);
     }
+  }, [paper, isLoading, onLoadComplete]);
 
-    const loadPaper = async () => {
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        let loadedPaper: M38GeneratedPaper | AcademyStaticPaper;
-        
-        if (useAcademyContents) {
-          loadedPaper = await api.cms.getAcademyStaticPaper(paperId);
-        } else {
-          loadedPaper = await api.main.getManualPaper(paperId) as M38GeneratedPaper;
-        }
-        
-        setPaper(loadedPaper);
-        onLoadComplete?.(loadedPaper);
-      } catch (err) {
-        const error = err instanceof Error ? err : new Error('시험지를 불러오는데 실패했습니다');
-        setError(error);
-        onError?.(error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // 에러 콜백 호출
+  useEffect(() => {
+    if (error) {
+      const errorObj = error instanceof Error ? error : new Error('시험지를 불러오는데 실패했습니다');
+      onError?.(errorObj);
+    }
+  }, [error, onError]);
 
-    loadPaper();
-  }, [paperId, useAcademyContents]);
+  // paperId가 없는 경우
+  if (!paperId) {
+    return null;
+  }
 
   if (isLoading) {
     return (
@@ -79,10 +80,11 @@ const PaperViewer: React.FC<PaperViewerProps> = ({
   }
 
   if (error) {
+    const errorMessage = error instanceof Error ? error.message : '시험지를 불러오는데 실패했습니다';
     return (
       <div className={`w-full h-full flex flex-col justify-center items-center ${className}`}>
         <p className="text-red-500 mb-2">시험지를 불러오는데 실패했습니다</p>
-        <p className="text-gray-500 text-sm">{error.message}</p>
+        <p className="text-gray-500 text-sm">{errorMessage}</p>
       </div>
     );
   }
@@ -93,24 +95,24 @@ const PaperViewer: React.FC<PaperViewerProps> = ({
 
   // 아카데미 시험지 렌더링
   if (useAcademyContents) {
-    const academyPaper = paper as AcademyStaticPaper;
+    const academyPaperData = paper as AcademyStaticPaper;
     return (
       <div className={`paper-printer ${className}`}>
         <AcademyPaperPrintView
-          title={academyPaper.title}
-          lectureTitle={academyPaper.paperGroupName ?? ""}
+          title={academyPaperData.title}
+          lectureTitle={academyPaperData.paperGroupName ?? ""}
           chapterFrom={""}
           chapterTo={""}
-          pages={academyPaper.pages ?? []}
-          minMargin={academyPaper.minMargin ?? 0}
-          columns={academyPaper.columns ?? 2}
-          subjectName={academyPaper.subjectName ?? ""}
+          pages={academyPaperData.pages ?? []}
+          minMargin={academyPaperData.minMargin ?? 0}
+          columns={academyPaperData.columns ?? 2}
+          subjectName={academyPaperData.subjectName ?? ""}
           teacherName={""}
           studentName={""}
-          academyName={academyPaper.academyName ?? ""}
+          academyName={academyPaperData.academyName ?? ""}
           academyLogo={""}
           edit={false}
-          addBlankPage={academyPaper.pages?.length % 2 === 1}
+          addBlankPage={academyPaperData.pages?.length % 2 === 1}
         />
       </div>
     );
