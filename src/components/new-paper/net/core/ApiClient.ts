@@ -5,7 +5,7 @@
 
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { ApiRequestOptions, ServerConfig } from '../types';
-import { Interceptors } from '../core/Interceptors';
+import { Interceptors } from './Interceptors';
 import { getCachedSession } from '../utils/globalSession';
 
 /**

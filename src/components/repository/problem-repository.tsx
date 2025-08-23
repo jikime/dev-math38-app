@@ -11,34 +11,33 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { PrescriptionSheet } from "@/components/repository/prescription-sheet"
-import PaperModal from "@/components/new_paper/PaperModal"
+import PaperModal from "@/components/new-paper/PaperModal"
 import { format } from "date-fns"
 import { ko } from "date-fns/locale"
 import {
   Search,
   Filter,
   MoreHorizontal,
-  Download,
-  Eye,
   Edit,
   CalendarIcon,
   ChevronDown,
   Grid3X3,
   List,
-  X,
   Copy,
   FileText,
   Loader2,
   Printer,
   CheckSquare,
   Trash2,
+  BookOpen,
 } from "lucide-react"
+import { getSubjectTitle } from "@/lib/tag-utils"
+import { clinicName, PaperType } from "../new-paper/domains/paper"
+import { ProgressState } from "../new-paper/domains/lecture"
+
 
 export function ProblemRepository() {
-  const [selectedGrade, setSelectedGrade] = useState("전체")
   const [selectedSubject, setSelectedSubject] = useState("전체")
-  const [selectedLevel, setSelectedLevel] = useState("전체")
-  const [selectedProblemTypes, setSelectedProblemTypes] = useState<string[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [viewMode, setViewMode] = useState<"table" | "grid">("table")
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined)
@@ -47,7 +46,6 @@ export function ProblemRepository() {
     from: undefined,
     to: undefined
   })
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [selectAll, setSelectAll] = useState(false)
   const [showPrescriptionSheet, setShowPrescriptionSheet] = useState(false)
@@ -67,57 +65,15 @@ export function ProblemRepository() {
     상태: [] as string[],
   })
 
-  const levelOptions = [
-    { value: "전체", label: "전체" },
-    { value: "초4", label: "초등학교 4학년" },
-    { value: "초5", label: "초등학교 5학년" },
-    { value: "초6", label: "초등학교 6학년" },
-    { value: "중1", label: "중학교 1학년" },
-    { value: "중2", label: "중학교 2학년" },
-    { value: "중3", label: "중학교 3학년" },
-    { value: "수(상)", label: "수학(상)" },
-    { value: "수(하)", label: "수학(하)" },
-  ]
 
-  const problemTypeOptions = [
-    { value: "manual", label: "문제 출제" },
-    { value: "workbook_paper", label: "단원 오답" },
-    { value: "workbook_similar", label: "단원 유사" },
-    { value: "addon_ps", label: "기간 오답" },
-    { value: "addon_ps", label: "기간 유사" },
-    { value: "workbook_paper", label: "출판교재" },
-    { value: "workbook_similar", label: "교재유사" },
-    { value: "workbook_similar", label: "개인오답" },
-    { value: "workbook_similar", label: "학원콘텐츠" },
-  ]
-
-  const gradeOptions = [
-    { value: "전체", label: "전체" },
-    { value: "중1", label: "중학교 1학년" },
-    { value: "중2", label: "중학교 2학년" },
-    { value: "중3", label: "중학교 3학년" },
-    { value: "고1", label: "고등학교 1학년" },
-    { value: "고2", label: "고등학교 2학년" },
-    { value: "고3", label: "고등학교 3학년" },
-  ]
-
-  const subjectOptions = [
-    { value: "전체", label: "전체 강좌" },
-    { value: "공통수학1", label: "공통수학1" },
-    { value: "공통수학2", label: "공통수학2" },
-    { value: "수학1", label: "수학1" },
-    { value: "수학2", label: "수학2" },
-    { value: "미적분", label: "미적분" },
-    { value: "확률과통계", label: "확률과 통계" },
-    { value: "기하", label: "기하" },
-  ]
-
-  const statusOptions = [
-    { value: "finished", label: "완료" },
-    { value: "ready", label: "준비" },
-    { value: "pending", label: "대기" },
-    { value: "published", label: "출판" },
-  ]
+  const getSubject = (subjectId: number) => {
+    const { title, color, tag } = getSubjectTitle(subjectId);
+    return (
+      <p className={`text-center ${color}`}>
+        {tag}
+      </p>
+    );
+  }
 
   // API 데이터를 기존 UI 형식으로 변환
   const transformedProblems = lecturePapers?.map((paper) => ({
@@ -126,53 +82,27 @@ export function ProblemRepository() {
     paperIndex: paper.paperIndex, // 번호로 사용할 paperIndex 추가
     date: format(new Date(paper.created), "M월 d일", { locale: ko }),
     fullDate: new Date(paper.created),
-    subject: paper.grade >= 7 ? "고등" : "중등",
-    category: paper.bookTitle || "공통수학1",
-    level: `${paper.grade === 7 ? "중1" : paper.grade === 8 ? "중2" : paper.grade === 9 ? "중3" : paper.grade === 10 ? "고1" : paper.grade === 11 ? "고2" : "고3"}`,
+    subject: getSubject(paper.subjectId),
+    bookTitle: paper.bookTitle,
     title: paper.name,
-    description: `${paper.rangeFrom}${paper.rangeTo !== paper.rangeFrom ? ` ~ ${paper.rangeTo}` : ""}`,
-    type_label: problemTypeOptions.find(option => option.value === paper.type)?.label || "단원 오답",
+    range: `${paper.rangeFrom}${paper.rangeTo !== paper.rangeFrom ? ` ~ ${paper.rangeTo}` : ""}`,
+    type_label: clinicName(paper.type as PaperType),
     type: paper.type,
-    status_label: paper.state === "published" 
-      ? `${paper.finishedCount}/${paper.paperCount}`
-      : statusOptions.find(option => option.value === paper.state)?.label || "대기중",
-    status: paper.state,
+    state: paper.state,
+    color: paper.state === ProgressState.finished ? "green" : paper.state === ProgressState.ready ? "blue" : "orange",
+    finishedCount: paper.finishedCount,
+    paperCount: paper.paperCount,
     totalQuestions: paper.count,
     easyQuestions: paper.level1 + paper.level2,
     mediumQuestions: paper.level3,
     hardQuestions: paper.level4 + paper.level5,
-    color: paper.state === "finished" ? "green" : paper.state === "ready" ? "blue" : "orange",
-    grade: `${paper.grade === 7 ? "중1" : paper.grade === 8 ? "중2" : paper.grade === 9 ? "중3" : paper.grade === 10 ? "고1" : paper.grade === 11 ? "고2" : "고3"}`,
+    grade: paper.grade,
     difficulty: paper.difficulty,
     average: paper.average,
+    countEasy: paper.countEssay,
+    countChoice: paper.countChoice,
   })) || []
 
-  // 컬럼별 고유 값들 추출
-  const getUniqueValues = (key: string) => {
-    const values = transformedProblems.map((item) => {
-      switch (key) {
-        case "출제":
-          return `${item.subject} - ${item.category}`
-        case "문제종류":
-          return item.type
-        case "상태":
-          return item.status
-        default:
-          return ""
-      }
-    })
-    return [...new Set(values)].filter(Boolean)
-  }
-
-  // 컬럼 필터 토글 함수
-  const toggleColumnFilter = (column: string, value: string) => {
-    setColumnFilters((prev) => ({
-      ...prev,
-      [column]: prev[column as keyof typeof prev].includes(value)
-        ? prev[column as keyof typeof prev].filter((item) => item !== value)
-        : [...prev[column as keyof typeof prev], value],
-    }))
-  }
 
   // 컬럼 필터 초기화 함수
   const clearColumnFilter = (column: string) => {
@@ -197,26 +127,15 @@ export function ProblemRepository() {
     }
   }
 
-  const getSubjectColor = (subject: string) => {
-    switch (subject) {
-      case "고등":
-        return "text-pink-600 dark:text-pink-400"
-      case "중등":
-        return "text-purple-600 dark:text-purple-400"
-      default:
-        return "text-gray-600 dark:text-gray-400"
-    }
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "finished":
+  const getStatusColor = (state: ProgressState) => {
+    switch (state) {
+      case ProgressState.finished:
         return "text-green-600 dark:text-green-400"
-      case "ready":
+      case ProgressState.ready:
         return "text-blue-600 dark:text-blue-400"
-      case "pending":
+      case ProgressState.cliniced:
         return "text-yellow-600 dark:text-yellow-400"
-      case "published":
+      case ProgressState.published:
         return "text-red-600 dark:text-red-400"
       default:
         return "text-gray-600 dark:text-gray-400"
@@ -224,57 +143,63 @@ export function ProblemRepository() {
   }
 
   // type별 뱃지 색상
-  const getTypeBadgeColor = (type: string) => {
+  const getTypeBadgeColor = (type: PaperType) => {
     switch (type) {
-      case "manual":
+      case PaperType.manual:
         return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-      case "workbook_paper":
-        return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-      case "workbook_similar":
-        return "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
-      case "addon_ps":
-        return "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
+      case PaperType.workbook_addon:
+        return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
       default:
-        return "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400"
+        return "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
     }
   }
+
+
+  const PaperStateView = (state: ProgressState, finishedCount: number, paperCount: number) => {
+    switch (state) {
+      case ProgressState.finished:
+        return <span className="text-sm font-medium">완료</span>;
+      case ProgressState.published:
+        if (finishedCount === 0) {
+          return <span className="text-sm font-medium">발행됨</span>;
+        } else {
+          return (
+            <span className="text-sm font-medium">
+              {finishedCount} / {paperCount}
+            </span>
+          );
+        }
+      case ProgressState.ready:
+        if (paperCount > 0) {
+          return (
+            <span className="text-sm font-medium">
+              {finishedCount} / {paperCount}
+            </span>
+          );
+        } else {
+          return <span className="text-sm font-medium">준비</span>;
+        }
+    }
+    return <></>;
+  };
 
   const filteredProblems = transformedProblems.filter((problem) => {
     const matchesSearch =
       problem.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      problem.description.toLowerCase().includes(searchTerm.toLowerCase())
+      problem.range.toLowerCase().includes(searchTerm.toLowerCase())
 
-    const matchesGrade = selectedGrade === "전체" || problem.grade === selectedGrade
-    const matchesSubject = selectedSubject === "전체" || problem.category === selectedSubject
-    const matchesLevel = selectedLevel === "전체" || problem.level === selectedLevel
-    const matchesProblemType = selectedProblemTypes.length === 0 || selectedProblemTypes.includes(problem.type)
+    const matchesSubject = selectedSubject === "전체" || problem.bookTitle === selectedSubject
 
     const matchesDateFrom = !dateFrom || problem.fullDate >= dateFrom
     const matchesDateTo = !dateTo || problem.fullDate <= dateTo
 
-    // 컬럼 필터 적용
-    const matchesColumnFilters = {
-      출제: columnFilters.출제.length === 0 || columnFilters.출제.includes(`${problem.subject} - ${problem.category}`),
-      문제종류: columnFilters.문제종류.length === 0 || columnFilters.문제종류.includes(problem.type),
-      상태: columnFilters.상태.length === 0 || columnFilters.상태.includes(problem.status),
-    }
-
     return (
       matchesSearch &&
-      matchesGrade &&
       matchesSubject &&
-      matchesLevel &&
-      matchesProblemType &&
       matchesDateFrom &&
-      matchesDateTo &&
-      Object.values(matchesColumnFilters).every(Boolean)
+      matchesDateTo 
     )
   })
-
-  const clearDateFilter = () => {
-    setDateFrom(undefined)
-    setDateTo(undefined)
-  }
 
   // 제목 클릭 핸들러 - paperRefId 사용
   const handleTitleClick = (paperRefId: string) => {
@@ -319,39 +244,45 @@ export function ProblemRepository() {
     const hardPercent = Math.round((problem.hardQuestions / problem.totalQuestions) * 100)
     
     return (
-      <div className="relative group">
+      <div className="relative group w-full">
         <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
           <div className="flex h-full">
-            <div
-              className="bg-green-500 transition-all duration-200"
-              style={{ width: `${easyPercent}%` }}
-            ></div>
-            <div
-              className="bg-blue-500 transition-all duration-200"
-              style={{ width: `${mediumPercent}%` }}
-            ></div>
-            <div
-              className="bg-purple-500 transition-all duration-200"
-              style={{ width: `${hardPercent}%` }}
-            ></div>
+            {easyPercent > 0 && (
+              <div
+                className="bg-green-500 transition-all duration-200"
+                style={{ width: `${easyPercent}%` }}
+              />
+            )}
+            {mediumPercent > 0 && (
+              <div
+                className="bg-blue-500 transition-all duration-200"
+                style={{ width: `${mediumPercent}%` }}
+              />
+            )}
+            {hardPercent > 0 && (
+              <div
+                className="bg-purple-500 transition-all duration-200"
+                style={{ width: `${hardPercent}%` }}
+              />
+            )}
           </div>
         </div>
-        <div className="flex items-center justify-center gap-3 text-xs mt-1">
+        <div className="flex items-center justify-center gap-3 text-xs mt-2">
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span className="text-gray-600">
+            <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
+            <span className="text-gray-600 dark:text-gray-400">
               {easyPercent}%
             </span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            <span className="text-gray-600">
+            <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+            <span className="text-gray-600 dark:text-gray-400">
               {mediumPercent}%
             </span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-            <span className="text-gray-600">
+            <div className="w-2 h-2 bg-purple-500 rounded-full flex-shrink-0"></div>
+            <span className="text-gray-600 dark:text-gray-400">
               {hardPercent}%
             </span>
           </div>
@@ -383,71 +314,6 @@ export function ProblemRepository() {
           </div>
         </div>
       </div>
-    )
-  }
-
-  // 컬럼 필터 렌더링 함수
-  const renderColumnFilter = (column: string, title: string) => {
-    const uniqueValues = getUniqueValues(column)
-    const selectedValues = columnFilters[column as keyof typeof columnFilters]
-    const hasActiveFilter = selectedValues.length > 0
-
-    return (
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className={`h-5 px-1.5 rounded-md transition-all ${
-              hasActiveFilter 
-                ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50" 
-                : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 dark:text-gray-500"
-            }`}
-          >
-            <Filter className="w-3 h-3" />
-            {hasActiveFilter && (
-              <span className="ml-0.5 text-[10px] font-bold">{selectedValues.length}</span>
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-64 p-0 border-border" align="start">
-          <div className="p-3">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-medium text-sm">{title} 필터</h4>
-              {hasActiveFilter && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => clearColumnFilter(column)}
-                  className="h-6 px-2 text-xs text-muted-foreground"
-                >
-                  초기화
-                </Button>
-              )}
-            </div>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {uniqueValues.map((value) => (
-                <div key={value} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`${column}-${value}`}
-                    checked={selectedValues.includes(value)}
-                    onCheckedChange={() => toggleColumnFilter(column, value)}
-                  />
-                  <label
-                    htmlFor={`${column}-${value}`}
-                    className="text-sm cursor-pointer flex-1 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    {value}
-                  </label>
-                </div>
-              ))}
-            </div>
-            {uniqueValues.length === 0 && (
-              <div className="text-sm text-muted-foreground text-center py-4">필터할 항목이 없습니다</div>
-            )}
-          </div>
-        </PopoverContent>
-      </Popover>
     )
   }
 
@@ -670,62 +536,56 @@ export function ProblemRepository() {
         <div className="flex flex-col gap-6">
           <div className="px-6 p-0">
             <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-            <Table>
+            <Table className="table-fixed w-full">
               <TableHeader className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 dark:from-blue-950/30 dark:via-purple-950/30 dark:to-pink-950/30">
                 <TableRow className="border-b-0">
-                  <TableHead className="w-12 text-center py-2">
+                  <TableHead style={{ width: "48px" }} className="text-center py-2">
                     <Checkbox
                       checked={selectAll}
                       onCheckedChange={handleSelectAll}
                       className="mx-auto"
                     />
                   </TableHead>
-                  <TableHead className="w-16 text-center py-2">
+                  <TableHead style={{ width: "64px" }} className="text-center py-2">
                     <div className="flex items-center justify-center">
-                      <span className="text-sm font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">번호</span>
+                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">No.</span>
                     </div>
                   </TableHead>
-                  <TableHead className="w-24 text-center py-2">
+                  <TableHead style={{ width: "96px" }} className="text-center py-2">
                     <div className="flex items-center justify-center gap-1">
-                      <CalendarIcon className="w-3 h-3 text-gray-600 dark:text-gray-300" />
-                      <span className="text-sm font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">출제일</span>
+                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">Date</span>
                     </div>
                   </TableHead>
-                  <TableHead className="w-32 text-center py-2">
+                  <TableHead style={{ width: "140px" }} className="text-center py-2">
                     <div className="flex items-center justify-center gap-1.5">
                       <div className="flex items-center gap-1">
-                        <span className="text-sm font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">출제</span>
+                        <span className="text-xs font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">출제</span>
                       </div>
-                      {renderColumnFilter("출제", "출제")}
                     </div>
                   </TableHead>
                   <TableHead className="py-2">
                     <div className="flex items-center gap-1.5">
-                      <FileText className="w-3 h-3 text-gray-600 dark:text-gray-300" />
-                      <span className="text-sm font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">범위/문제명</span>
+                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">범위/문제명</span>
                     </div>
                   </TableHead>
-                  <TableHead className="w-24 text-center py-2">
+                  <TableHead style={{ width: "100px" }} className="text-center py-2">
                     <div className="flex items-center justify-center gap-1.5">
-                      <span className="text-sm font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">문제종류</span>
-                      {renderColumnFilter("문제종류", "문제 종류")}
+                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">유형</span>
                     </div>
                   </TableHead>
-                  <TableHead className="w-20 text-center py-2">
+                  <TableHead style={{ width: "90px" }} className="text-center py-2">
                     <div className="flex items-center justify-center gap-1.5">
                       <div className="flex items-center gap-1">
-                        <span className="text-sm font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">상태</span>
+                        <span className="text-xs font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">상태</span>
                       </div>
-                      {renderColumnFilter("상태", "상태")}
                     </div>
                   </TableHead>
-                  <TableHead className="w-48 text-center py-2">
+                  <TableHead style={{ width: "180px" }} className="text-center py-2">
                     <div className="flex items-center justify-center gap-1.5">
-                      <Grid3X3 className="w-3 h-3 text-gray-600 dark:text-gray-300" />
-                      <span className="text-sm font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">문항수 (주관식/객관식)</span>
+                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200 tracking-wide uppercase">문항수 (주관식/객관식)</span>
                     </div>
                   </TableHead>
-                  <TableHead className="w-16"></TableHead>
+                  <TableHead style={{ width: "64px" }}></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -742,52 +602,50 @@ export function ProblemRepository() {
                     <TableCell className="text-center text-sm text-muted-foreground">{problem.date}</TableCell>
                     <TableCell className="text-center">
                       <div className="space-y-1">
-                        <Badge 
-                          variant="secondary" 
-                          className={
-                            problem.subject === "고등" 
-                              ? "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400 hover:bg-pink-200 dark:hover:bg-pink-900/50"
-                              : "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 hover:bg-purple-200 dark:hover:bg-purple-900/50"
-                          }
-                        >
-                          {problem.subject}
-                        </Badge>
-                        <div className="text-xs text-gray-600 dark:text-gray-400">{problem.category}</div>
+                        {problem.subject}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
+                        {problem.range != 'null' && <div className="text-sm text-gray-600 dark:text-gray-400 break-words whitespace-normal">{problem.range}</div>}
                         <div 
-                          className="font-bold text-md text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 cursor-pointer hover:underline"
+                          className="font-medium text-lg text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 cursor-pointer hover:underline break-words whitespace-normal"
                           onClick={() => handleTitleClick(problem.paperRefId)}
                         >
-                          {problem.title}
+                          <span className="text-lg text-gray-600 dark:text-gray-400 break-words whitespace-normal">{problem.bookTitle}</span> {problem.title}
                         </div>
-                        {problem.description != 'null' && <div className="text-xs text-gray-600 dark:text-gray-400">{problem.description}</div>}
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge className={`text-xs ${getTypeBadgeColor(problem.type)}`}>
-                        {problem.type_label}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className={`inline-flex items-center gap-1 ${getStatusColor(problem.status)}`}>
-                        <div className={`w-2 h-2 rounded-full ${getProgressColor(problem.color)}`}></div>
-                        <span className="text-sm font-medium">{problem.status_label}</span>
+                      <div className="flex items-center justify-center gap-1">
+                        {(problem.type === PaperType.workbook_addon ||
+                          problem.type === PaperType.workbook_paper) && (
+                          <BookOpen className="w-4 h-4" />
+                        )}
+                        {problem.type === PaperType.academy_contents && (
+                          <BookOpen className="w-4 h-4 text-orange-500" />
+                        )}
+                        <Badge className={`text-xs ${getTypeBadgeColor(problem.type)}`}>
+                          {problem.type_label}
+                        </Badge>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="space-y-2">
-                        {problem.type === "addon_ps" ? (
+                    <TableCell className="text-center">
+                      <div className={`inline-flex items-center gap-1 ${getStatusColor(problem.state)}`}>
+                        {PaperStateView(problem.state, problem.finishedCount, problem.paperCount)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-4">
+                      <div className="space-y-2 w-full">
+                        {problem.type === PaperType.addon_ps ? (
                           <div className="text-center text-sm font-medium text-blue-600 dark:text-blue-400">개별시험지</div>
                         ) : (
                           <>
-                          {renderDifficultyGraph(problem)}
-                          <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400">
-                          <span>총 {problem.totalQuestions}문항</span>
-                        </div>
-                        </>
+                            {renderDifficultyGraph(problem)}
+                            <div className="flex justify-center text-xs text-gray-600 dark:text-gray-400 mt-1">
+                              <span>총 {problem.totalQuestions}문항 ({problem.countEasy}/{problem.countChoice})</span>
+                            </div>
+                          </>
                         )}
                       </div>
                     </TableCell>
@@ -839,15 +697,7 @@ export function ProblemRepository() {
                   {/* 헤더: 학교급, 번호, 날짜 */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Badge 
-                        className={
-                          problem.subject === "고등" 
-                            ? "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400 text-xs"
-                            : "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 text-xs"
-                        }
-                      >
                         {problem.subject}
-                      </Badge>
                       <span className="text-xs font-medium text-gray-600 dark:text-gray-400">#{problem.paperIndex}</span>
                     </div>
                     <span className="text-xs text-gray-500">{problem.date}</span>
@@ -856,15 +706,14 @@ export function ProblemRepository() {
                   {/* 제목과 설명 */}
                   <div className="space-y-1">
                     <h3 
-                      className="font-medium text-sm line-clamp-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 cursor-pointer hover:underline"
+                      className="font-medium text-lg line-clamp-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 cursor-pointer hover:underline"
                       onClick={() => handleTitleClick(problem.id)}
                     >
-                      {problem.title}
+                      <span className="text-lg text-gray-600 dark:text-gray-400 break-words whitespace-normal">{problem.bookTitle}</span> {problem.title}
                     </h3>
-                    {problem.description !== 'null' && (
-                      <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">{problem.description}</p>
+                    {problem.range !== 'null' && (
+                      <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">{problem.range}</p>
                     )}
-                    <div className="text-xs text-gray-500">{problem.category}</div>
                   </div>
 
                   {/* 타입과 상태 */}
@@ -872,11 +721,8 @@ export function ProblemRepository() {
                     <Badge className={`text-xs ${getTypeBadgeColor(problem.type)}`}>
                       {problem.type_label}
                     </Badge>
-                    <div className={`flex items-center gap-1 ${getStatusColor(problem.status)}`}>
-                      <div 
-                        className={`w-2 h-2 rounded-full ${getProgressColor(problem.color)}`}
-                      ></div>
-                      <span className="text-xs font-medium">{problem.status_label}</span>
+                    <div className={`flex items-center gap-1 ${getStatusColor(problem.state)}`}>
+                      <span className="text-xs font-medium">{PaperStateView(problem.state, problem.finishedCount, problem.paperCount)}</span>
                     </div>
                   </div>
 
@@ -886,7 +732,7 @@ export function ProblemRepository() {
                       <span className="font-medium text-blue-600 dark:text-blue-400">개별시험지</span>
                     ) : (
                       <>
-                        <span>총 {problem.totalQuestions}문항</span>
+                        <span>총 {problem.totalQuestions}문항 ({problem.countEasy}/{problem.countChoice})</span>
                         <span>난이도 {problem.difficulty}</span>
                       </>
                     )}

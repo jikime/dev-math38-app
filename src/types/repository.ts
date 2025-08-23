@@ -1,5 +1,8 @@
 // 저장소 관련 타입 정의
 
+import { ProgressState } from "@/components/new-paper/domains/lecture";
+import { PaperType } from "@/components/new-paper/domains/paper";
+
 // 실제 API 응답 타입
 export interface LecturePaper {
   lecturePaperId: string;
@@ -7,7 +10,7 @@ export interface LecturePaper {
   lectureId: string;
   paperRefId: string;
   name: string;
-  type: string; // "manual" 등
+  type: PaperType; // "manual" 등
   bookTitle: string | null;
   grade: number;
   subjectId: number;
@@ -22,7 +25,7 @@ export interface LecturePaper {
   level4: number;
   level5: number;
   difficulty: number; // 전체 난이도
-  state: 'ready' | 'finished' | 'pending' | 'published'; // 상태
+  state: ProgressState; // 상태
   paperCount: number; // 시행 횟수
   finishedCount: number; // 완료 횟수
   average: number; // 평균 점수
