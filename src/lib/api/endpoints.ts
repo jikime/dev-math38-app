@@ -132,6 +132,7 @@ export const API_ENDPOINTS = {
     COPY_PAPER: '/api/m38/paper/copyPaperTo',
     PRINT_PAPER: '/api/m38/paper/print',
     STUDENTS: (lectureId: string) => `/api/m38/lecture/students/${lectureId}`,
+    PAPER_SOLVE_COUNTS: '/api/m38/study/lecture/solveCounts/papers',
     USER_STUDY_PAPER_IDS: (lecturePaperId: string) => `/api/m38/lecture/getUserStudyPaperIds/${lecturePaperId}`,
     PUBLISH_PAPER: '/api/m38/study/publish/paper',
     PUBLISH_WORKBOOK_PAPER: '/api/m38/study/publish/workbookpaper',

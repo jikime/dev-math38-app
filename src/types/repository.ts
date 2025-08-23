@@ -270,3 +270,34 @@ export enum PaperState {
   started = "started", 
   finished = "finished"
 }
+
+// 학생 성과 관련 타입 (usePaperSolveCounts 용)
+export interface LectureStudentWrongsVO extends SimpleStudentVO {
+  targets: number;
+  correct2: number;  // 정답
+  correct1: number;  // 부분정답
+  wrong1: number;    // 부분오답
+  wrong2: number;    // 오답
+  total?: number;
+}
+
+export interface StudentSkillSolveCount {
+  studentId: string;
+  skillId: string;
+  correct2: number;  // 정답
+  correct1: number;  // 부분정답
+  wrong1: number;    // 부분오답
+  wrong2: number;    // 오답
+  solveCounts: number[]; // [correct2, correct1, wrong1, wrong2] 순서
+}
+
+export interface LectureStudentSkillSolveCountRO {
+  lectureId: string;
+  studentSkillSolveCountMap: Record<string, Record<string, StudentSkillSolveCount>>;
+}
+
+export interface PaperSolveCountsParams {
+  lectureId: string;
+  studentIds: string[];
+  paperIds: string[];
+}

@@ -1,111 +1,207 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
+import { useLectureStudents, usePaperSolveCounts } from "@/hooks/use-repository"
+import type { LectureStudentWrongsVO, PaperSolveCountsParams } from "@/types/repository"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ChevronDown, ChevronRight, Grid3X3, List } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface Student {
-  id: number
+  userId: string
   name: string
-  school: string
-  totalQuestions: number
-  wrongAnswers: number
-  partialWrong: number
-  partialCorrect: number
-  correct: number
+  email: string
+  schoolName: string
+  grade: number
+  score: number
+  // 처방 데이터 (API에서 별도 로드)
+  totalQuestions?: number
+  wrongAnswers?: number
+  partialWrong?: number
+  partialCorrect?: number
+  correct?: number
+  targets?: number
+  index?: number
+}
+
+// SimpleStudentVO 타입에 맞게 변환
+interface ExtendedStudent extends Student {
+  // 기본 API 응답 필드들은 이미 Student에 있음
 }
 
 interface PrescriptionSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   selectedItemsCount: number
-  students: Student[]
+  lectureId?: string
+  paperIds: string[]
+  multiplies?: number[]
 }
 
 export function PrescriptionSheet({ 
   open, 
   onOpenChange, 
   selectedItemsCount, 
-  students 
+  lectureId,
+  paperIds,
+  multiplies = [1, 1, -1, -1]
 }: PrescriptionSheetProps) {
-  const [selectedStudents, setSelectedStudents] = useState<number[]>([])
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([])
   const [selectAllStudents, setSelectAllStudents] = useState(false)
-  const [isGeneratingStats, setIsGeneratingStats] = useState(true) // 통계 생성 중 상태
-  const [viewMode, setViewMode] = useState<"table" | "grid">("grid")
+  const [isGeneratingStats, setIsGeneratingStats] = useState(true)
+  const [viewMode, setViewMode] = useState<"table" | "grid">("table")
+  const [students, setStudents] = useState<Student[]>([])
   
-  // 필터 상태 - 기본값 설정 (정답만 충족)
-  const [wrongAnswerFilter, setWrongAnswerFilter] = useState("미충족")
-  const [partialWrongFilter, setPartialWrongFilter] = useState("미충족")
-  const [partialCorrectFilter, setPartialCorrectFilter] = useState("미충족") 
-  const [correctFilter, setCorrectFilter] = useState("충족")
+  // 오답 설정 상태 (multiplies 배열: [오답, 부분오답, 부분정답, 정답])
+  const [wrongAnswerMultiplies, setWrongAnswerMultiplies] = useState<number[]>(multiplies)
+  
+  // multiplies가 변경될 때 동기화
+  useEffect(() => {
+    setWrongAnswerMultiplies(multiplies)
+  }, [multiplies])
+  
+  const setMultiply = (index: number, value: number) => {
+    const newMultiplies = [...wrongAnswerMultiplies]
+    newMultiplies[index] = value
+    setWrongAnswerMultiplies(newMultiplies)
+  }
   
   // 상세 필터 상태
   const [examName, setExamName] = useState("")
   const [questionType, setQuestionType] = useState("전체")
-  const [questionCount, setQuestionCount] = useState("")
-  const [problemOrder, setProblemOrder] = useState("")
+  const [questionCount, setQuestionCount] = useState("60")
+  const [problemOrder, setProblemOrder] = useState("chapter")
+  const [categories, setCategories] = useState<string[]>(["교과서", "문제집", "기출", "모의고사"])
 
-  // 필터링된 학생 목록
-  const filteredStudents = students.filter((student) => {
-    // 각 카테고리별 점수 기준 
-    const wrongAnswerPercentage = Math.round((student.wrongAnswers / student.totalQuestions) * 100)
-    const partialWrongPercentage = Math.round((student.partialWrong / student.totalQuestions) * 100)
-    const partialCorrectPercentage = Math.round((student.partialCorrect / student.totalQuestions) * 100)
-    const correctPercentage = Math.round((student.correct / student.totalQuestions) * 100)
+  // 학생 목록 가져오기 (React Query 사용)
+  const { data: studentList, isLoading, error } = useLectureStudents(lectureId || "")
 
-    // 필터 조건 확인 - 더 유연한 기준으로 수정
-    const checkFilter = (percentage: number, filter: string) => {
-      switch (filter) {
-        case "미충족": return percentage < 40  // 40% 미만
-        case "충족": return percentage >= 20 && percentage <= 80  // 20-80%
-        case "발전": return percentage > 60   // 60% 초과
-        default: return true
-      }
+  // 선택된 학생들의 성과 데이터 가져오기
+  const paperSolveCountsParams: PaperSolveCountsParams | null = useMemo(() => {
+    if (!lectureId || selectedStudents.length === 0 || paperIds.length === 0) {
+      return null
     }
+    return {
+      lectureId,
+      studentIds: selectedStudents,
+      paperIds
+    }
+  }, [lectureId, selectedStudents, paperIds])
 
-    return (
-      checkFilter(wrongAnswerPercentage, wrongAnswerFilter) &&
-      checkFilter(partialWrongPercentage, partialWrongFilter) &&
-      checkFilter(partialCorrectPercentage, partialCorrectFilter) &&
-      checkFilter(correctPercentage, correctFilter)
-    )
+  const { data: studentSolveCounts, isLoading: solveCountsLoading } = usePaperSolveCounts(paperSolveCountsParams)
+
+  // 학생 데이터 처리 (실제 API 데이터 기반)
+  const studentsWithIndex = useMemo(() => {
+    if (!studentList) return []
+
+    return studentList.map((student, index) => {
+      let correct2 = 0
+      let correct1 = 0  
+      let wrong1 = 0
+      let wrong2 = 0
+
+      // API에서 가져온 성과 데이터가 있으면 사용
+      if (studentSolveCounts && selectedStudents.includes(student.userId)) {
+        const skillSolveCounts = studentSolveCounts.studentSkillSolveCountMap[student.userId]
+        if (skillSolveCounts) {
+          Object.values(skillSolveCounts).forEach((skillCount) => {
+            if (skillCount.solveCounts) {
+              if (skillCount.solveCounts[0]) correct2 += skillCount.solveCounts[0]
+              if (skillCount.solveCounts[1]) correct1 += skillCount.solveCounts[1] 
+              if (skillCount.solveCounts[2]) wrong1 += skillCount.solveCounts[2]
+              if (skillCount.solveCounts[3]) wrong2 += skillCount.solveCounts[3]
+            }
+          })
+        }
+      }
+
+      const totalQuestions = correct2 + correct1 + wrong1 + wrong2
+      
+      // targets 계산 (multiplies 기반)
+      const targets = 
+        (wrongAnswerMultiplies[0] < 0 ? 0 : wrongAnswerMultiplies[0] * wrong2) +    // 오답
+        (wrongAnswerMultiplies[1] < 0 ? 0 : wrongAnswerMultiplies[1] * wrong1) +    // 부분오답
+        (wrongAnswerMultiplies[2] < 0 ? 0 : wrongAnswerMultiplies[2] * correct1) +  // 부분정답
+        (wrongAnswerMultiplies[3] < 0 ? 0 : wrongAnswerMultiplies[3] * correct2) +  // 정답
+        // multiplies가 0인 경우 (재출제)
+        (wrongAnswerMultiplies[0] === 0 ? wrong2 : 0) +
+        (wrongAnswerMultiplies[1] === 0 ? wrong1 : 0) +
+        (wrongAnswerMultiplies[2] === 0 ? correct1 : 0) +
+        (wrongAnswerMultiplies[3] === 0 ? correct2 : 0)
+      
+      return {
+        ...student,
+        index: index + 1,
+        totalQuestions,
+        wrongAnswers: wrong2,    // 오답
+        partialWrong: wrong1,    // 부분오답
+        partialCorrect: correct1, // 부분정답
+        correct: correct2,       // 정답
+        targets
+      }
+    }) as ExtendedStudent[]
+  }, [studentList, studentSolveCounts, selectedStudents, wrongAnswerMultiplies])
+
+  // 필터링된 학생 목록 (오답 설정 기반)
+  const filteredStudents = studentsWithIndex.filter((student) => {
+    if (!student.totalQuestions) return true // 데이터 없으면 모두 표시
+    
+    // 각 카테고리별 문제 수
+    const wrongAnswerCount = student.wrongAnswers || 0
+    const partialWrongCount = student.partialWrong || 0  
+    const partialCorrectCount = student.partialCorrect || 0
+    const correctCount = student.correct || 0
+    
+    // multiplies에 따른 필터링 (음수면 해당 카테고리 제외)
+    const includeWrongAnswer = wrongAnswerMultiplies[0] >= 0 && wrongAnswerCount > 0
+    const includePartialWrong = wrongAnswerMultiplies[1] >= 0 && partialWrongCount > 0
+    const includePartialCorrect = wrongAnswerMultiplies[2] >= 0 && partialCorrectCount > 0
+    const includeCorrect = wrongAnswerMultiplies[3] >= 0 && correctCount > 0
+    
+    // 하나라도 출제 대상이면 표시
+    return includeWrongAnswer || includePartialWrong || includePartialCorrect || includeCorrect
   })
 
+  const ratio = (value: number, total: number) => {
+    if (total === 0) return "0%"
+    return ((value / total) * 100).toFixed(0) + "%"
+  }
+
   // 학생 체크박스 관련 함수들
-  const handleSelectAllStudents = () => {
-    if (selectAllStudents) {
-      setSelectedStudents([])
-      setSelectAllStudents(false)
-    } else {
-      const allFilteredStudentIds = filteredStudents.map(student => student.id)
+  const handleSelectAllStudents = (checked: boolean) => {
+    if (checked) {
+      const allFilteredStudentIds = filteredStudents.map(student => student.userId)
       setSelectedStudents(allFilteredStudentIds)
       setSelectAllStudents(true)
+    } else {
+      setSelectedStudents([])
+      setSelectAllStudents(false)
     }
   }
 
-  const handleSelectStudent = (id: number) => {
-    setSelectedStudents(prev => {
-      const newSelected = prev.includes(id) 
-        ? prev.filter(item => item !== id)
-        : [...prev, id]
-      
-      // 전체 선택 상태 업데이트
-      setSelectAllStudents(newSelected.length === filteredStudents.length && filteredStudents.length > 0)
-      
-      return newSelected
-    })
+  const handleSelectStudent = (userId: string, checked: boolean) => {
+    let newSelectedIds: string[]
+    if (checked) {
+      newSelectedIds = [...selectedStudents, userId]
+    } else {
+      newSelectedIds = selectedStudents.filter(id => id !== userId)
+    }
+    setSelectedStudents(newSelectedIds)
+    setSelectAllStudents(newSelectedIds.length === filteredStudents.length && filteredStudents.length > 0)
   }
 
-  // 필터가 변경될 때마다 선택 상태 초기화
+  // multiplies가 변경될 때마다 선택 상태 초기화
   useEffect(() => {
     setSelectedStudents([])
     setSelectAllStudents(false)
-  }, [wrongAnswerFilter, partialWrongFilter, partialCorrectFilter, correctFilter])
+  }, [wrongAnswerMultiplies])
 
   // Sheet가 열릴 때 통계 생성 시뮬레이션
   useEffect(() => {
@@ -113,7 +209,7 @@ export function PrescriptionSheet({
       setIsGeneratingStats(true)
       const timer = setTimeout(() => {
         setIsGeneratingStats(false)
-      }, 2500) // 2.5초 로딩
+      }, 1500) // 1.5초 로딩
       
       return () => clearTimeout(timer)
     }
@@ -190,6 +286,12 @@ export function PrescriptionSheet({
               선택된 {selectedItemsCount}개 항목을 기반으로 처방을 생성합니다.
             </SheetDescription>
             
+            {/* 에러 표시 */}
+            {error && (
+              <div className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 p-2 rounded">
+                학생 목록을 불러오는 중 오류가 발생했습니다.
+              </div>
+            )}
           </SheetHeader>
           
           {/* 상세 필터 - 항상 표시 */}
@@ -206,27 +308,22 @@ export function PrescriptionSheet({
                 />
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">출제유형</span>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-8 w-32">
-                      <span className="text-sm">{questionType}</span>
-                      <ChevronDown className="w-3 h-3 ml-1" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-32">
-                    <DropdownMenuItem onClick={() => setQuestionType("전체")}>전체</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setQuestionType("객관식")}>객관식</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setQuestionType("주관식")}>주관식</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setQuestionType("서술형")}>서술형</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <span className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">원본출제유형</span>
+                <Select value={problemOrder} onValueChange={setProblemOrder}>
+                  <SelectTrigger className="w-32 h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="chapter">단원 순서</SelectItem>
+                    <SelectItem value="leveldesc">높은 난이도</SelectItem>
+                    <SelectItem value="levelasc">낮은 난이도</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">문제수</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">최대 문제수</span>
                 <Input 
                   type="number" 
-                  placeholder="60" 
                   className="h-8 w-20 text-sm"
                   value={questionCount}
                   onChange={(e) => setQuestionCount(e.target.value)}
@@ -275,85 +372,90 @@ export function PrescriptionSheet({
             </div>
           </div>
           
-          {/* 성과 필터 - 한 줄 표시 */}
-          <div className="flex-shrink-0 bg-white dark:bg-gray-900 px-6 py-3 border-b border-gray-200 dark:border-gray-700">
+          {/* 오답 설정 - WrongAnswerSettings 스타일 */}
+          <div className="flex-shrink-0 bg-white dark:bg-gray-900 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-              {/* 오답 필터 */}
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-red-500 rounded-sm"></div>
-                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">오답</span>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
-                      <span>{wrongAnswerFilter}</span>
-                      <ChevronDown className="w-3 h-3 ml-1" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-20">
-                    <DropdownMenuItem onClick={() => setWrongAnswerFilter("미충족")}>미충족</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setWrongAnswerFilter("충족")}>충족</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setWrongAnswerFilter("발전")}>발전</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
-              {/* 부분 오답 필터 */}
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-orange-500 rounded-sm"></div>
-                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">부분오답</span>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
-                      <span>{partialWrongFilter}</span>
-                      <ChevronDown className="w-3 h-3 ml-1" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-20">
-                    <DropdownMenuItem onClick={() => setPartialWrongFilter("미충족")}>미충족</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setPartialWrongFilter("충족")}>충족</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setPartialWrongFilter("발전")}>발전</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
-              {/* 부분 정답 필터 */}
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-yellow-500 rounded-sm"></div>
-                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">부분정답</span>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
-                      <span>{partialCorrectFilter}</span>
-                      <ChevronDown className="w-3 h-3 ml-1" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-20">
-                    <DropdownMenuItem onClick={() => setPartialCorrectFilter("미충족")}>미충족</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setPartialCorrectFilter("충족")}>충족</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setPartialCorrectFilter("발전")}>발전</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
-              {/* 정답 필터 */}
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-green-500 rounded-sm"></div>
-                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">정답</span>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
-                      <span>{correctFilter}</span>
-                      <ChevronDown className="w-3 h-3 ml-1" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-20">
-                    <DropdownMenuItem onClick={() => setCorrectFilter("미충족")}>미충족</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setCorrectFilter("충족")}>충족</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setCorrectFilter("발전")}>발전</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              <div className="flex w-full items-center gap-4">
+                {/* 오답 설정 */}
+                <div className="flex items-center gap-2 flex-1">
+                  <div className="w-3 h-3 bg-red-500 rounded-sm"></div>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">오답</span>
+                  <Select
+                    value={wrongAnswerMultiplies[0].toString()}
+                    onValueChange={(value) => setMultiply(0, Number(value))}
+                  >
+                    <SelectTrigger className="w-[90px] h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">유사 x1</SelectItem>
+                      <SelectItem value="2">유사 x2</SelectItem>
+                      <SelectItem value="3">유사 x3</SelectItem>
+                      <SelectItem value="0">재출제</SelectItem>
+                      <SelectItem value="-1">미출제</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* 부분 오답 설정 */}
+                <div className="flex items-center gap-2 flex-1">
+                  <div className="w-3 h-3 bg-orange-500 rounded-sm"></div>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">부분오답</span>
+                  <Select
+                    value={wrongAnswerMultiplies[1].toString()}
+                    onValueChange={(value) => setMultiply(1, Number(value))}
+                  >
+                    <SelectTrigger className="w-[90px] h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">유사 x1</SelectItem>
+                      <SelectItem value="2">유사 x2</SelectItem>
+                      <SelectItem value="3">유사 x3</SelectItem>
+                      <SelectItem value="0">재출제</SelectItem>
+                      <SelectItem value="-1">미출제</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* 부분 정답 설정 */}
+                <div className="flex items-center gap-2 flex-1">
+                  <div className="w-3 h-3 bg-yellow-500 rounded-sm"></div>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">부분정답</span>
+                  <Select
+                    value={wrongAnswerMultiplies[2].toString()}
+                    onValueChange={(value) => setMultiply(2, Number(value))}
+                  >
+                    <SelectTrigger className="w-[90px] h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">유사 x1</SelectItem>
+                      <SelectItem value="2">유사 x2</SelectItem>
+                      <SelectItem value="3">유사 x3</SelectItem>
+                      <SelectItem value="0">재출제</SelectItem>
+                      <SelectItem value="-1">미출제</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* 정답 설정 */}
+                <div className="flex items-center gap-2 flex-1">
+                  <div className="w-3 h-3 bg-green-500 rounded-sm"></div>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">정답</span>
+                  <Select
+                    value={wrongAnswerMultiplies[3].toString()}
+                    onValueChange={(value) => setMultiply(3, Number(value))}
+                  >
+                    <SelectTrigger className="w-[90px] h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">발전</SelectItem>
+                      <SelectItem value="-1">미출제</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
           </div>
@@ -384,7 +486,7 @@ export function PrescriptionSheet({
                   onClick={() => setViewMode("table")}
                   className="h-7 px-2"
                 >
-                  <List className="w-3 h-3 mr-1" />
+                  <List className="w-3 h-3" />
                 </Button>
                 <Button
                   variant={viewMode === "grid" ? "default" : "ghost"}
@@ -392,7 +494,7 @@ export function PrescriptionSheet({
                   onClick={() => setViewMode("grid")}
                   className="h-7 px-2"
                 >
-                  <Grid3X3 className="w-3 h-3 mr-1" />
+                  <Grid3X3 className="w-3 h-3" />
                 </Button>
               </div>
             </div>
@@ -416,66 +518,116 @@ export function PrescriptionSheet({
 
           {/* Student List - Table or Grid View */}
           <div className="flex-1 overflow-y-auto px-4 py-3">
-            {viewMode === "table" ? (
-              // Table View
+            {(isLoading || solveCountsLoading) ? (
+              // Loading skeleton
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-12">
+                    <TableHead className="w-16 text-center">번호</TableHead>
+                    <TableHead className="w-12 text-center">
+                      <Skeleton className="w-4 h-4 mx-auto" />
+                    </TableHead>
+                    <TableHead className="w-40">이름 / 학교</TableHead>
+                    <TableHead className="w-16 text-center">출제</TableHead>
+                    <TableHead className="w-20 text-center">오답</TableHead>
+                    <TableHead className="w-20 text-center">부분오답</TableHead>
+                    <TableHead className="w-20 text-center">부분정답</TableHead>
+                    <TableHead className="w-20 text-center">정답</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <TableRow key={index}>
+                      <TableCell><Skeleton className="w-8 h-4" /></TableCell>
+                      <TableCell><Skeleton className="w-4 h-4" /></TableCell>
+                      <TableCell><Skeleton className="w-32 h-4" /></TableCell>
+                      <TableCell><Skeleton className="w-12 h-4" /></TableCell>
+                      <TableCell><Skeleton className="w-16 h-4" /></TableCell>
+                      <TableCell><Skeleton className="w-16 h-4" /></TableCell>
+                      <TableCell><Skeleton className="w-16 h-4" /></TableCell>
+                      <TableCell><Skeleton className="w-16 h-4" /></TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : viewMode === "table" ? (
+              // Table View
+              <Table>
+                <TableHeader className="sticky top-0 bg-slate-50 z-10">
+                  <TableRow>
+                    <TableHead className="w-16 text-center">번호</TableHead>
+                    <TableHead className="w-12 text-center">
                       <Checkbox
-                        checked={selectAllStudents}
+                        checked={filteredStudents.length > 0 && selectedStudents.length === filteredStudents.length}
                         onCheckedChange={handleSelectAllStudents}
                       />
                     </TableHead>
-                    <TableHead>이름/학교</TableHead>
-                    <TableHead className="text-center">출제</TableHead>
-                    <TableHead className="text-center">오답</TableHead>
-                    <TableHead className="text-center">부분오답</TableHead>
-                    <TableHead className="text-center">부분정답</TableHead>
-                    <TableHead className="text-center">정답</TableHead>
+                    <TableHead className="w-40">이름 / 학교</TableHead>
+                    <TableHead className="w-16 text-center">출제</TableHead>
+                    <TableHead className="w-20 text-center">오답</TableHead>
+                    <TableHead className="w-20 text-center">부분오답</TableHead>
+                    <TableHead className="w-20 text-center">부분정답</TableHead>
+                    <TableHead className="w-20 text-center">정답</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredStudents.map((student) => (
-                    <TableRow key={student.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                      <TableCell>
+                    <TableRow 
+                      key={student.userId} 
+                      className={cn(
+                        selectedStudents.includes(student.userId) && "bg-slate-50",
+                        "hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                      )}
+                    >
+                      <TableCell className="text-center text-sm">
+                        {student.index}
+                      </TableCell>
+                      <TableCell className="text-center">
                         <Checkbox
-                          checked={selectedStudents.includes(student.id)}
-                          onCheckedChange={() => handleSelectStudent(student.id)}
+                          checked={selectedStudents.includes(student.userId)}
+                          onCheckedChange={(checked) => handleSelectStudent(student.userId, checked as boolean)}
                         />
                       </TableCell>
                       <TableCell>
-                        <div>
-                          <div className="font-semibold text-sm">{student.name}</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400">{student.school}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="text-sm font-medium">{student.name}</div>
+                          <div className="text-xs text-gray-500">{student.schoolName}</div>
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
-                        <div className="font-bold">{student.totalQuestions}</div>
+                        {selectedStudents.includes(student.userId) && (
+                          <div className="text-red-500 font-bold animate-pulse">
+                            {student.targets || 0}
+                          </div>
+                        )}
                       </TableCell>
-                      <TableCell className="text-center">
-                        <div className="text-red-600 dark:text-red-400 font-bold">{student.wrongAnswers}</div>
-                        <div className="text-xs text-red-500 dark:text-red-400">
-                          {Math.round((student.wrongAnswers / student.totalQuestions) * 100)}%
-                        </div>
+                      <TableCell className="text-center text-sm">
+                        {selectedStudents.includes(student.userId) && student.totalQuestions ? (
+                          <div className="whitespace-nowrap">
+                            {ratio(student.wrongAnswers || 0, student.totalQuestions)}({student.wrongAnswers || 0})
+                          </div>
+                        ) : null}
                       </TableCell>
-                      <TableCell className="text-center">
-                        <div className="text-orange-600 dark:text-orange-400 font-bold">{student.partialWrong}</div>
-                        <div className="text-xs text-orange-500 dark:text-orange-400">
-                          {Math.round((student.partialWrong / student.totalQuestions) * 100)}%
-                        </div>
+                      <TableCell className="text-center text-sm">
+                        {selectedStudents.includes(student.userId) && student.totalQuestions ? (
+                          <div className="whitespace-nowrap">
+                            {ratio(student.partialWrong || 0, student.totalQuestions)}({student.partialWrong || 0})
+                          </div>
+                        ) : null}
                       </TableCell>
-                      <TableCell className="text-center">
-                        <div className="text-yellow-600 dark:text-yellow-500 font-bold">{student.partialCorrect}</div>
-                        <div className="text-xs text-yellow-600 dark:text-yellow-500">
-                          {Math.round((student.partialCorrect / student.totalQuestions) * 100)}%
-                        </div>
+                      <TableCell className="text-center text-sm">
+                        {selectedStudents.includes(student.userId) && student.totalQuestions ? (
+                          <div className="whitespace-nowrap">
+                            {ratio(student.partialCorrect || 0, student.totalQuestions)}({student.partialCorrect || 0})
+                          </div>
+                        ) : null}
                       </TableCell>
-                      <TableCell className="text-center">
-                        <div className="text-green-600 dark:text-green-400 font-bold">{student.correct}</div>
-                        <div className="text-xs text-green-500 dark:text-green-400">
-                          {Math.round((student.correct / student.totalQuestions) * 100)}%
-                        </div>
+                      <TableCell className="text-center text-sm">
+                        {selectedStudents.includes(student.userId) && student.totalQuestions ? (
+                          <div className="whitespace-nowrap">
+                            {ratio(student.correct || 0, student.totalQuestions)}({student.correct || 0})
+                          </div>
+                        ) : null}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -485,61 +637,70 @@ export function PrescriptionSheet({
               // Grid View
               <div className="grid grid-cols-2 gap-3">
                 {filteredStudents.map((student) => (
-                  <div key={student.id} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                  <div key={student.userId} className={cn(
+                    "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors",
+                    selectedStudents.includes(student.userId) && "bg-slate-50"
+                  )}>
                     {/* Student Header - Compact */}
                     <div className="flex items-center justify-between p-3 border-b border-gray-100 dark:border-gray-800">
                       <div className="flex items-center gap-3 min-w-0 flex-1">
                         <Checkbox
-                          checked={selectedStudents.includes(student.id)}
-                          onCheckedChange={() => handleSelectStudent(student.id)}
+                          checked={selectedStudents.includes(student.userId)}
+                          onCheckedChange={(checked) => handleSelectStudent(student.userId, checked as boolean)}
                         />
                         <div className="min-w-0 flex-1">
                           <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{student.name}</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{student.school}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{student.schoolName}</div>
                         </div>
                       </div>
                       <div className="text-right flex-shrink-0 ml-2">
-                        <div className="text-lg font-bold text-gray-900 dark:text-gray-100">{student.totalQuestions}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">총 문항</div>
+                        <div className="text-sm font-bold text-gray-900 dark:text-gray-100">{student.index}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">번호</div>
                       </div>
                     </div>
 
-                    {/* Performance Grid - Compact */}
-                    <div className="p-3">
-                      <div className="grid grid-cols-4 gap-2">
-                        {/* 오답 */}
-                        <div className="bg-red-50 dark:bg-red-950/30 rounded p-2 text-center min-w-0">
-                          <div className="text-lg font-bold text-red-600 dark:text-red-400">{student.wrongAnswers}</div>
-                          <div className="text-xs text-red-500 dark:text-red-400">
-                            {Math.round((student.wrongAnswers / student.totalQuestions) * 100)}%
+                    {/* Performance Grid - Only show when selected */}
+                    {selectedStudents.includes(student.userId) && student.totalQuestions ? (
+                      <div className="p-3">
+                        <div className="grid grid-cols-4 gap-2">
+                          {/* 오답 */}
+                          <div className="bg-red-50 dark:bg-red-950/30 rounded p-2 text-center min-w-0">
+                            <div className="text-lg font-bold text-red-600 dark:text-red-400">{student.wrongAnswers || 0}</div>
+                            <div className="text-xs text-red-500 dark:text-red-400">
+                              {ratio(student.wrongAnswers || 0, student.totalQuestions)}
+                            </div>
                           </div>
-                        </div>
 
-                        {/* 부분오답 */}
-                        <div className="bg-orange-50 dark:bg-orange-950/30 rounded p-2 text-center min-w-0">
-                          <div className="text-lg font-bold text-orange-600 dark:text-orange-400">{student.partialWrong}</div>
-                          <div className="text-xs text-orange-500 dark:text-orange-400">
-                            {Math.round((student.partialWrong / student.totalQuestions) * 100)}%
+                          {/* 부분오답 */}
+                          <div className="bg-orange-50 dark:bg-orange-950/30 rounded p-2 text-center min-w-0">
+                            <div className="text-lg font-bold text-orange-600 dark:text-orange-400">{student.partialWrong || 0}</div>
+                            <div className="text-xs text-orange-500 dark:text-orange-400">
+                              {ratio(student.partialWrong || 0, student.totalQuestions)}
+                            </div>
                           </div>
-                        </div>
 
-                        {/* 부분정답 */}
-                        <div className="bg-yellow-50 dark:bg-yellow-950/30 rounded p-2 text-center min-w-0">
-                          <div className="text-lg font-bold text-yellow-600 dark:text-yellow-500">{student.partialCorrect}</div>
-                          <div className="text-xs text-yellow-600 dark:text-yellow-500">
-                            {Math.round((student.partialCorrect / student.totalQuestions) * 100)}%
+                          {/* 부분정답 */}
+                          <div className="bg-yellow-50 dark:bg-yellow-950/30 rounded p-2 text-center min-w-0">
+                            <div className="text-lg font-bold text-yellow-600 dark:text-yellow-500">{student.partialCorrect || 0}</div>
+                            <div className="text-xs text-yellow-600 dark:text-yellow-500">
+                              {ratio(student.partialCorrect || 0, student.totalQuestions)}
+                            </div>
                           </div>
-                        </div>
 
-                        {/* 정답 */}
-                        <div className="bg-green-50 dark:bg-green-950/30 rounded p-2 text-center min-w-0">
-                          <div className="text-lg font-bold text-green-600 dark:text-green-400">{student.correct}</div>
-                          <div className="text-xs text-green-500 dark:text-green-400">
-                            {Math.round((student.correct / student.totalQuestions) * 100)}%
+                          {/* 정답 */}
+                          <div className="bg-green-50 dark:bg-green-950/30 rounded p-2 text-center min-w-0">
+                            <div className="text-lg font-bold text-green-600 dark:text-green-400">{student.correct || 0}</div>
+                            <div className="text-xs text-green-500 dark:text-green-400">
+                              {ratio(student.correct || 0, student.totalQuestions)}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="p-3 text-center text-sm text-gray-500">
+                        선택하면 성과 데이터가 표시됩니다
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

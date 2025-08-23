@@ -26,7 +26,9 @@ import type {
   StudentStudyPaperId,
   M38UserStudyPaper,
   M38UserStudyPaperVO,
-  PaperAnswerSheet
+  PaperAnswerSheet,
+  LectureStudentSkillSolveCountRO,
+  PaperSolveCountsParams
 } from '@/types/repository';
 import { M38GeneratedPaper } from '@/components/math-paper/domains/paper';
 
@@ -548,6 +550,19 @@ export function useResetPaper() {
         queryClient.invalidateQueries({ queryKey: [...repositoryKeys.all, 'study-paper-list'] });
         queryClient.invalidateQueries({ queryKey: [...repositoryKeys.all, 'answer-sheet'] });
       },
+    }
+  );
+}
+
+// 시험지별 정답률 조회 (PaperSolveCounts)
+export function usePaperSolveCounts(params: PaperSolveCountsParams | null) {
+  return useApiQuery<LectureStudentSkillSolveCountRO>(
+    [...repositoryKeys.all, 'paper-solve-counts', params],
+    API_ENDPOINTS.REPOSITORY.PAPER_SOLVE_COUNTS,
+    {
+      method: 'POST',
+      params,
+      enabled: !!params && !!params.lectureId && params.studentIds.length > 0 && params.paperIds.length > 0,
     }
   );
 }

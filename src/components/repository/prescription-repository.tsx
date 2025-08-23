@@ -686,58 +686,9 @@ function PrescriptionRepositoryComponent() {
         open={showPrescriptionSheet} 
         onOpenChange={setShowPrescriptionSheet}
         selectedItemsCount={selectedItems.length}
-        students={[
-          {
-            id: 1,
-            name: "김지민",
-            school: "서울고등학교",
-            totalQuestions: 15,
-            wrongAnswers: 3,
-            partialWrong: 2,
-            partialCorrect: 4,
-            correct: 6,
-          },
-          {
-            id: 2,
-            name: "이수진",
-            school: "부산여고",
-            totalQuestions: 12,
-            wrongAnswers: 1,
-            partialWrong: 3,
-            partialCorrect: 2,
-            correct: 6,
-          },
-          {
-            id: 3,
-            name: "박민수",
-            school: "대구중학교",
-            totalQuestions: 18,
-            wrongAnswers: 4,
-            partialWrong: 1,
-            partialCorrect: 5,
-            correct: 8,
-          },
-          {
-            id: 4,
-            name: "정하영",
-            school: "인천고등학교",
-            totalQuestions: 20,
-            wrongAnswers: 2,
-            partialWrong: 4,
-            partialCorrect: 6,
-            correct: 8,
-          },
-          {
-            id: 5,
-            name: "최도현",
-            school: "광주과학고",
-            totalQuestions: 25,
-            wrongAnswers: 5,
-            partialWrong: 3,
-            partialCorrect: 7,
-            correct: 10,
-          },
-        ]}
+        lectureId={selectedLectureId}
+        paperIds={selectedItems}
+        multiplies={[1, 1, -1, -1]}
       />
 
             {/* 시험지 보기 모달 */}
