@@ -48,6 +48,14 @@ export function PrescriptionSheet({
   paperIds,
   multiplies = [1, 1, -1, -1]
 }: PrescriptionSheetProps) {
+  // Props 확인
+  console.log('📌 PrescriptionSheet Props:', {
+    selectedItemsCount,
+    lectureId,
+    paperIds,
+    paperIdsLength: paperIds?.length,
+    multiplies
+  })
   const [selectedStudents, setSelectedStudents] = useState<string[]>([])
   const [selectAllStudents, setSelectAllStudents] = useState(false)
   const [viewMode, setViewMode] = useState<"table" | "grid">("table")
@@ -80,25 +88,29 @@ export function PrescriptionSheet({
   // 선택된 학생들의 성과 데이터 가져오기 - 선택된 학생이 있을 때만 API 호출
   const paperSolveCountsParams: PaperSolveCountsParams | null = useMemo(() => {
     // 선택된 학생이 없으면 API 호출하지 않음
-    if (!lectureId || selectedStudents.length === 0 || paperIds.length === 0) {
+    if (!lectureId || selectedStudents.length === 0) {
       console.log('❌ API 호출 조건 미충족:', {
         lectureId: !!lectureId,
         selectedStudentsCount: selectedStudents.length,
-        paperIdsCount: paperIds.length
+        paperIdsCount: paperIds?.length || 0,
+        reason: !lectureId ? 'No lectureId' : 'No selected students'
       })
       return null
     }
     
+    // paperIds가 없으면 빈 배열로 처리
+    const finalPaperIds = paperIds && paperIds.length > 0 ? paperIds : []
+    
     const params = {
       lectureId,
       studentIds: selectedStudents,
-      paperIds
+      paperIds: finalPaperIds
     }
     
     console.log('✅ API 호출 파라미터 생성:', {
       lectureId,
       selectedStudentIds: selectedStudents,
-      paperCount: paperIds.length,
+      paperCount: finalPaperIds.length,
       params
     })
     

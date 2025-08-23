@@ -13,12 +13,25 @@ export function useApiQuery<TData = unknown, TError = AxiosError>(
 ) {
   const { params, method = 'GET', ...queryOptions } = options || {};
   
+  // 디버깅: API 호출 로깅
+  if (url.includes('solveCounts')) {
+    console.log('🔍 useApiQuery 호출:', {
+      url,
+      method,
+      params,
+      enabled: queryOptions.enabled,
+      queryKey
+    });
+  }
+  
   return useQuery<TData, TError>({
     queryKey,
     queryFn: async () => {
+      console.log(`📡 API 호출 시작: ${method} ${url}`, params);
       const response = method === 'POST' 
         ? await apiRequest.post<TData>(url, params)
         : await apiRequest.get<TData>(url, { params });
+      console.log(`✅ API 응답:`, response.data);
       return response.data;
     },
     ...queryOptions,

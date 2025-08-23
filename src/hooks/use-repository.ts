@@ -562,7 +562,7 @@ export function usePaperSolveCounts(params: PaperSolveCountsParams | null) {
     {
       method: 'POST',
       params: params || undefined,  // useApiQuery에서는 params로 body 전달
-      enabled: !!params && !!params.lectureId && params.studentIds.length > 0 && params.paperIds.length > 0,
+      enabled: !!params && !!params.lectureId && params.studentIds.length > 0, // paperIds 조건 제거
     }
   );
 }
