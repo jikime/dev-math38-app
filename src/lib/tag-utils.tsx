@@ -1,4 +1,4 @@
-import { LeveledPaper, PaperType } from "@/components/new-paper/typings";
+import { LeveledPaper, PaperType } from "@/components/math-paper/typings";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 

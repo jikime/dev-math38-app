@@ -1,6 +1,6 @@
 "use client";
 
-import { PaperIdPrint, M38GeneratedPaper, AcademyStaticPaper } from "@/components/math-paper";
+import { PaperIdPrint, M38GeneratedPaper, AcademyStaticPaper } from "@/components/math-paper_";
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";

@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { PrescriptionSheet } from "@/components/repository/prescription-sheet"
-import PaperModal from "@/components/new-paper/PaperModal"
+import PaperModal from "@/components/math-paper/PaperModal"
 import { format } from "date-fns"
 import { ko } from "date-fns/locale"
 import {
@@ -32,8 +32,8 @@ import {
   BookOpen,
 } from "lucide-react"
 import { getSubjectTitle } from "@/lib/tag-utils"
-import { clinicName, PaperType } from "../new-paper/domains/paper"
-import { ProgressState } from "../new-paper/domains/lecture"
+import { clinicName, PaperType } from "../math-paper/domains/paper"
+import { ProgressState } from "../math-paper/domains/lecture"
 
 
 export function ProblemRepository() {

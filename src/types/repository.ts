@@ -1,7 +1,7 @@
 // 저장소 관련 타입 정의
 
-import { ProgressState } from "@/components/new-paper/domains/lecture";
-import { PaperType } from "@/components/new-paper/domains/paper";
+import { ProgressState } from "@/components/math-paper/domains/lecture";
+import { PaperType } from "@/components/math-paper/domains/paper";
 
 // 실제 API 응답 타입
 export interface LecturePaper {

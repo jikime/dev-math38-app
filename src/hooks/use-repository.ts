@@ -23,7 +23,7 @@ import type {
   LecturePaper,
   LecturePaperSearchParams
 } from '@/types/repository';
-import { M38GeneratedPaper } from '@jongwon/math-paper';
+import { M38GeneratedPaper } from '@/components/math-paper/domains/paper';
 
 // 저장소 쿼리 키
 const repositoryKeys = {
