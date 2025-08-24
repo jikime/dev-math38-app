@@ -5,3 +5,12 @@ export interface Subject {
   leaf: boolean
   children: Subject[]
 }
+
+// 과목 상세 구조 타입 정의
+export interface SubjectTop {
+  subjectId: number
+  title: string
+  key: number
+  domain: string | null
+  children: SubjectTop[] | null
+}

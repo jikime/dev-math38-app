@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
@@ -11,8 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { PrintSettingsDialog } from "@/components/common/print-settings-dialog"
 import { FunctionProblemDialog } from "@/components/create-problems/function-problem-dialog"
 import { useMyLectures } from "@/hooks/use-lecture"
-import { useSubjects } from "@/hooks/use-subjects"
+import { useSubjects, useSubjectTops } from "@/hooks/use-subjects"
 import { MultiSelect } from "@/components/ui/multi-select"
+import { SubjectTree } from "@/components/ui/subject-tree"
 import type { Option } from "@/components/ui/multi-select"
 import {
   Plus,
@@ -35,6 +37,7 @@ export function ProblemCreator() {
   
   // 과목 관련 상태
   const [selectedSubjectKeys, setSelectedSubjectKeys] = useState<string[]>([])
+  const [selectedTreeItems, setSelectedTreeItems] = useState<string[]>([])
   
   const [selectedRange, setSelectedRange] = useState("1 유리수와 순환소수 ~ 3.1.3 일차부등식의 활용")
   const [expandedCategories, setExpandedCategories] = useState<string[]>(["1 자연수의 성질"])
@@ -68,6 +71,7 @@ export function ProblemCreator() {
   // API 훅들
   const { data: lectures, isLoading: lecturesLoading } = useMyLectures()
   const { data: subjects, isLoading: subjectsLoading } = useSubjects()
+  const { data: subjectTops, isLoading: subjectTopsLoading } = useSubjectTops(selectedSubjectKeys)
 
   // 첫 번째 강좌를 기본값으로 설정
   useEffect(() => {
@@ -241,6 +245,11 @@ export function ProblemCreator() {
     setSelectedProblems([])
     setTotalProblems(0)
   }, [selectedLectureId])
+
+  // 과목 변경 시 트리 항목 선택 초기화
+  useEffect(() => {
+    setSelectedTreeItems([])
+  }, [selectedSubjectKeys])
 
   // 선택된 강좌의 과목명 추출
   const selectedSubjectName = selectedLectureId && lectures?.find(l => l.lectureId === selectedLectureId)?.subjectName
@@ -1298,38 +1307,52 @@ export function ProblemCreator() {
                     항목을 선택해 주세요
                     <span className="text-sm text-gray-500 ml-auto">* 자동출제용</span>
                   </h3>
-                <div className="mb-4">
-                  <div className="font-medium text-sm mb-2">1.1.1 유리수와 순환소수</div>
-                  <div className="text-right text-sm text-gray-500 mb-2">전체 선택</div>
-                </div>
 
-                <ScrollArea className="h-48">
-                  <div className="space-y-2">
-                    {getCurrentCurriculumData()["1 자연수의 성질"]?.["1.1 소인수분해"]?.map((problem) => {
-                      const isAlreadyAdded = selectedProblemsPreview.some((p) => p.id === problem.id)
-                      return (
-                        <div
-                          key={problem.id}
-                          className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
-                            selectedProblems.includes(problem.id)
-                              ? "border-blue-500 bg-blue-50"
-                              : "border-gray-200 hover:border-gray-300"
-                          }`}
-                          onClick={() => toggleProblem(problem.id)}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-sm">{problem.id}.</span>
-                            <span className="text-sm">{problem.title}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge className="bg-blue-100 text-blue-800 text-xs">{problem.selected}</Badge>
-                            <span className="text-xs text-gray-500">{problem.total}</span>
-                          </div>
+                  {/* 선택된 트리 항목 표시 */}
+                  {selectedTreeItems.length > 0 && (
+                    <div className="mb-4">
+                      <div className="text-sm text-gray-600 mb-2">선택된 항목: {selectedTreeItems.length}개</div>
+                      <div className="flex flex-wrap gap-1">
+                        {selectedTreeItems.slice(0, 3).map((item) => (
+                          <Badge key={item} variant="outline" className="bg-green-100 text-green-800 text-xs">
+                            {item}
+                          </Badge>
+                        ))}
+                        {selectedTreeItems.length > 3 && (
+                          <Badge variant="outline" className="bg-green-100 text-green-800 text-xs">
+                            +{selectedTreeItems.length - 3}개 더
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 트리 구조 표시 */}
+                  <ScrollArea className="h-80">
+                    {subjectTopsLoading ? (
+                      <div className="flex items-center justify-center h-32">
+                        <div className="text-sm text-gray-500">과목 상세 정보 로딩중...</div>
+                      </div>
+                    ) : selectedSubjectKeys.length === 0 ? (
+                      <div className="flex items-center justify-center h-32 text-gray-500">
+                        <div className="text-center">
+                          <p>먼저 과목을 선택해주세요</p>
                         </div>
-                      )
-                    })}
-                  </div>
-                </ScrollArea>
+                      </div>
+                    ) : subjectTops && subjectTops.length > 0 ? (
+                      <SubjectTree
+                        data={subjectTops}
+                        selectedKeys={selectedTreeItems}
+                        onSelectionChange={setSelectedTreeItems}
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-32 text-gray-500">
+                        <div className="text-center">
+                          <p>선택된 과목의 상세 항목이 없습니다</p>
+                        </div>
+                      </div>
+                    )}
+                  </ScrollArea>
                 </div>
 
                 {/* 문항수를 선택해 주세요 */}

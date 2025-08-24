@@ -163,5 +163,6 @@ export const API_ENDPOINTS = {
   // 과목 관련
   SUBJECTS: {
     LIST: 'https://math2.suzag.com/app/subject/subject/list',
+    TOPS: (subjectIds: string, depth = 2) => `https://math2.suzag.com/app/subject/tops?subjectIds=${subjectIds}&depth=${depth}`,
   },
 } as const;
