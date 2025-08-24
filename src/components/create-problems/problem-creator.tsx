@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { PrintSettingsDialog } from "@/components/common/print-settings-dialog"
 import { FunctionProblemDialog } from "@/components/create-problems/function-problem-dialog"
+import { useMyLectures } from "@/hooks/use-lecture"
 import {
   ChevronDown,
   ChevronRight,
@@ -31,8 +32,9 @@ import {
 } from "lucide-react"
 
 export function ProblemCreator() {
-  const [selectedCourse, setSelectedCourse] = useState("교과서 쌍둥이 유사(이정연)")
-  const [selectedSubject, setSelectedSubject] = useState("중학교 1학년 수학")
+  // 강좌 관련 상태
+  const [selectedLectureId, setSelectedLectureId] = useState<string>("")
+  
   const [selectedRange, setSelectedRange] = useState("1 유리수와 순환소수 ~ 3.1.3 일차부등식의 활용")
   const [expandedCategories, setExpandedCategories] = useState<string[]>(["1 자연수의 성질"])
   const [selectedProblems, setSelectedProblems] = useState<string[]>([])
@@ -62,11 +64,16 @@ export function ProblemCreator() {
   }
   const [selectedFunctionProblems, setSelectedFunctionProblems] = useState<FunctionDialogProblem[]>([])
 
-  // 강좌 데이터
-  const courseOptions = ["교과서 쌍둥이 유사(이정연)", "개념원리 RPM 수학", "쎈 수학 시리즈", "일품 수학"]
+  // API 훅들
+  const { data: lectures, isLoading: lecturesLoading } = useMyLectures()
 
-  // 과목 데이터
-  const subjectOptions = ["중학교 1학년 수학", "중학교 2학년 수학", "중학교 3학년 수학", "고등학교 1학년 수학"]
+  // 첫 번째 강좌를 기본값으로 설정
+  useEffect(() => {
+    if (lectures && lectures.length > 0 && !selectedLectureId) {
+      setSelectedLectureId(lectures[0].lectureId)
+    }
+  }, [lectures, selectedLectureId])
+
 
   // 문제 타입 정의
   type Problem = {
@@ -214,16 +221,19 @@ export function ProblemCreator() {
     },
   ]
 
-  // 과목 변경 시 교육과정 데이터 초기화
+  // 강좌 변경 시 교육과정 데이터 초기화
   useEffect(() => {
     setExpandedCategories([])
     setSelectedProblems([])
     setTotalProblems(0)
-  }, [selectedSubject])
+  }, [selectedLectureId])
+
+  // 선택된 강좌의 과목명 추출
+  const selectedSubjectName = selectedLectureId && lectures?.find(l => l.lectureId === selectedLectureId)?.subjectName
 
   // 선택된 문제 수 계산
   useEffect(() => {
-    const currentData = curriculumData[selectedSubject as keyof typeof curriculumData]
+    const currentData = curriculumData[selectedSubjectName as keyof typeof curriculumData]
     if (!currentData) return
 
     let total = 0
@@ -237,7 +247,7 @@ export function ProblemCreator() {
       })
     })
     setTotalProblems(total)
-  }, [selectedProblems, selectedSubject])
+  }, [selectedProblems, selectedSubjectName])
 
   const toggleCategory = (category: string) => {
     setExpandedCategories((prev) =>
@@ -252,7 +262,7 @@ export function ProblemCreator() {
   }
 
   const getCurrentCurriculumData = () => {
-    return curriculumData[selectedSubject as keyof typeof curriculumData] || {}
+    return curriculumData[selectedSubjectName as keyof typeof curriculumData] || {}
   }
 
   // 초간단 탭 렌더링 함수를 다음과 같이 변경 (더 넓은 입력 필드):
@@ -1213,18 +1223,22 @@ export function ProblemCreator() {
                 {/* 강좌명 선택 */}
                 <div className="bg-white rounded-lg border p-4">
                   <h3 className="font-semibold text-lg mb-4">강좌명</h3>
-                  <Select value={selectedCourse} onValueChange={setSelectedCourse}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {courseOptions.map((course) => (
-                        <SelectItem key={course} value={course}>
-                          {course}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {lecturesLoading ? (
+                    <div className="h-10 bg-gray-200 rounded animate-pulse" />
+                  ) : (
+                    <Select value={selectedLectureId} onValueChange={setSelectedLectureId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="강좌를 선택하세요" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {lectures?.map((lecture) => (
+                          <SelectItem key={lecture.lectureId} value={lecture.lectureId}>
+                            {lecture.name} - {lecture.teacherName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
 
                 {/* 과목을 선택해 주세요 */}
@@ -1236,17 +1250,19 @@ export function ProblemCreator() {
                     과목을 선택해 주세요
                   </h3>
                 <div className="flex flex-wrap gap-2 mb-4">
-                  <Badge variant="outline" className="bg-blue-100 text-blue-800">
-                    중학교 1학년 수학
-                  </Badge>
-                  <Badge variant="outline" className="bg-gray-100 text-gray-600">
-                    중학교 2학년 수학
-                  </Badge>
+                  {selectedLectureId && lectures?.find(l => l.lectureId === selectedLectureId) ? (
+                    <Badge variant="outline" className="bg-blue-100 text-blue-800">
+                      {lectures.find(l => l.lectureId === selectedLectureId)?.subjectName}
+                    </Badge>
+                  ) : (
+                    <div className="text-sm text-gray-500">강좌를 선택하면 과목이 표시됩니다</div>
+                  )}
                 </div>
 
                 <ScrollArea className="h-64">
                   <div className="space-y-2">
-                    {Object.entries(getCurrentCurriculumData()).map(([categoryName, subcategories]) => (
+                    {selectedLectureId ? (
+                      Object.entries(getCurrentCurriculumData()).map(([categoryName, subcategories]) => (
                       <div key={categoryName}>
                         <div className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-gray-50">
                           <div className="flex items-center gap-2">
@@ -1280,7 +1296,14 @@ export function ProblemCreator() {
                           </div>
                         )}
                       </div>
-                    ))}
+                    ))
+                    ) : (
+                      <div className="flex items-center justify-center h-32 text-gray-500">
+                        <div className="text-center">
+                          <p>먼저 강좌를 선택해주세요</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </ScrollArea>
                 </div>
