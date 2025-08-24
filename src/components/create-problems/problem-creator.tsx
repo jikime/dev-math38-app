@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -8,13 +8,18 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Checkbox } from "@/components/ui/checkbox"
 import { PrintSettingsDialog } from "@/components/common/print-settings-dialog"
 import { FunctionProblemDialog } from "@/components/create-problems/function-problem-dialog"
 import { useMyLectures } from "@/hooks/use-lecture"
 import { useSubjects, useSubjectTops } from "@/hooks/use-subjects"
+import { useSkillChapters, useSkillCounts } from "@/hooks/use-skills"
 import { MultiSelect } from "@/components/ui/multi-select"
 import { SubjectTree } from "@/components/ui/subject-tree"
 import type { Option } from "@/components/ui/multi-select"
+import type { SkillChapter } from "@/types/skill"
+import { ProblemDistributionProvider, useProblemDistribution } from "@/contexts/problem-distribution-context"
+import { useSimple1Aggregator, useNormal1Aggregator, useDetailedAggregator } from "@/hooks/use-aggregators"
 import {
   Plus,
   Settings,
@@ -30,7 +35,7 @@ import {
   Printer
 } from "lucide-react"
 
-export function ProblemCreator() {
+function ProblemCreatorContent() {
   // 강좌 관련 상태
   const [selectedLectureId, setSelectedLectureId] = useState<string>("")
   
@@ -38,10 +43,13 @@ export function ProblemCreator() {
   const [selectedSubjectKeys, setSelectedSubjectKeys] = useState<string[]>([])
   const [selectedTreeItems, setSelectedTreeItems] = useState<string[]>([])
   
+  // Skill 관련 상태
+  const [skillChapters, setSkillChapters] = useState<SkillChapter[]>([])
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([])
+  
   const [selectedRange, setSelectedRange] = useState("1 유리수와 순환소수 ~ 3.1.3 일차부등식의 활용")
   const [expandedCategories, setExpandedCategories] = useState<string[]>(["1 자연수의 성질"])
   const [selectedProblems, setSelectedProblems] = useState<string[]>([])
-  const [totalProblems, setTotalProblems] = useState(0)
   const [activeTab, setActiveTab] = useState("exam")
   const [questionsPerPage, setQuestionsPerPage] = useState(4)
   const [selectedHeaderStyle, setSelectedHeaderStyle] = useState(1)
@@ -71,6 +79,10 @@ export function ProblemCreator() {
   const { data: lectures, isLoading: lecturesLoading } = useMyLectures()
   const { data: subjects, isLoading: subjectsLoading } = useSubjects()
   const { data: subjectTops, isLoading: subjectTopsLoading } = useSubjectTops(selectedSubjectKeys)
+  const skillChaptersMutation = useSkillChapters()
+  
+  // 스킬별 문제 개수 조회
+  const { data: skillCounts } = useSkillCounts(selectedLectureId)
 
   // 첫 번째 강좌를 기본값으로 설정
   useEffect(() => {
@@ -208,12 +220,12 @@ export function ProblemCreator() {
   })
 
   // 초간단 탭용 상태 추가
-  const [simpleDifficultyStats, setSimpleDifficultyStats] = useState({
-    최상: { selected: 0, total: 0 },
-    상: { selected: 0, total: 4 },
-    중: { selected: 0, total: 32 },
-    하: { selected: 0, total: 13 },
-    최하: { selected: 0, total: 26 },
+  const [simpleDifficultyInputs, setSimpleDifficultyInputs] = useState({
+    highest: 0,
+    high: 0,
+    medium: 0,
+    low: 0,
+    lowest: 0,
   })
 
   const tabs = [
@@ -242,13 +254,40 @@ export function ProblemCreator() {
   useEffect(() => {
     setExpandedCategories([])
     setSelectedProblems([])
-    setTotalProblems(0)
   }, [selectedLectureId])
 
   // 과목 변경 시 트리 항목 선택 초기화
   useEffect(() => {
     setSelectedTreeItems([])
+    setSkillChapters([])
+    setSelectedSkills([])
   }, [selectedSubjectKeys])
+
+  // 선택된 트리 항목이 변경될 때 skill API 호출
+  useEffect(() => {
+    if (selectedTreeItems.length > 0) {
+      // string 배열을 number 배열로 변환
+      const numericIds = selectedTreeItems.map(id => parseInt(id, 10))
+      skillChaptersMutation.mutate(
+        numericIds,
+        {
+          onSuccess: (data) => {
+            // skillList가 있는 챕터들만 필터링
+            const chaptersWithSkills = data.filter(chapter => chapter.skillList && chapter.skillList.length > 0)
+            setSkillChapters(chaptersWithSkills)
+            setSelectedSkills([])
+          },
+          onError: (error) => {
+            console.error('Skill chapters fetch failed:', error)
+            setSkillChapters([])
+          }
+        }
+      )
+    } else {
+      setSkillChapters([])
+      setSelectedSkills([])
+    }
+  }, [selectedTreeItems])
 
   // 선택된 강좌의 과목명 추출
   const selectedSubjectName = selectedLectureId && lectures?.find(l => l.lectureId === selectedLectureId)?.subjectName
@@ -268,7 +307,6 @@ export function ProblemCreator() {
         })
       })
     })
-    setTotalProblems(total)
   }, [selectedProblems, selectedSubjectName])
 
   const toggleCategory = (category: string) => {
@@ -289,46 +327,170 @@ export function ProblemCreator() {
     value: subject.key.toString()
   })) || []
 
+  // 스킬 선택 토글 함수
+  const toggleSkill = (skillId: string) => {
+    setSelectedSkills(prev =>
+      prev.includes(skillId)
+        ? prev.filter(id => id !== skillId)
+        : [...prev, skillId]
+    )
+  }
+
+  // 챕터별 전체 선택/해제 함수
+  const toggleAllSkillsInChapter = (chapter: SkillChapter) => {
+    const chapterSkillIds = chapter.skillList.map(skill => skill.skillId)
+    const allSelected = chapterSkillIds.every(skillId => selectedSkills.includes(skillId))
+    
+    setSelectedSkills(prev => {
+      if (allSelected) {
+        // 모두 선택된 상태라면 해제
+        return prev.filter(skillId => !chapterSkillIds.includes(skillId))
+      } else {
+        // 일부만 선택되었거나 아무것도 선택되지 않았다면 전체 선택
+        const newSkills = [...prev]
+        chapterSkillIds.forEach(skillId => {
+          if (!newSkills.includes(skillId)) {
+            newSkills.push(skillId)
+          }
+        })
+        return newSkills
+      }
+    })
+  }
+
+  // 난이도별 총합 계산 (마지막 배열만 사용)
+  const difficultyStats = React.useMemo(() => {
+    const stats = {
+      highest: 0, // index 0 - 최상
+      high: 0,    // index 1 - 상
+      medium: 0,  // index 2 - 중
+      low: 0,     // index 3 - 하
+      lowest: 0   // index 4 - 최하
+    }
+
+    if (skillChapters.length === 0) return stats
+
+    console.log('Selected skills:', selectedSkills)
+    console.log('Skill chapters:', skillChapters)
+
+    // 선택된 스킬들의 typeCounts 마지막 배열(8x5)에서 컬럼별로 합산
+    skillChapters.forEach(chapter => {
+      chapter.skillList.forEach(skill => {
+        if (selectedSkills.includes(skill.skillId) && skill.typeCounts) {
+          console.log(`Processing skill ${skill.skillId}:`, skill.typeCounts)
+          
+          // typeCounts의 마지막 배열을 가져와서 8x5 구조로 처리
+          if (Array.isArray(skill.typeCounts) && skill.typeCounts.length > 0) {
+            const lastMatrix = skill.typeCounts[skill.typeCounts.length - 1]
+            if (Array.isArray(lastMatrix) && lastMatrix.length === 8) {
+              // 8개 행의 각 컬럼을 난이도별로 합산
+              lastMatrix.forEach(row => {
+                if (Array.isArray(row) && row.length >= 5) {
+                  stats.highest += row[0] || 0  // 컬럼 0 (최상)
+                  stats.high += row[1] || 0     // 컬럼 1 (상)
+                  stats.medium += row[2] || 0   // 컬럼 2 (중)
+                  stats.low += row[3] || 0      // 컬럼 3 (하)
+                  stats.lowest += row[4] || 0   // 컬럼 4 (최하)
+                }
+              })
+            }
+          }
+        }
+      })
+    })
+
+    console.log('difficultyStats calculated:', stats)
+    return stats
+  }, [skillChapters, selectedSkills])
+
+  // Aggregator 훅들
+  const { simpleValues, setSimpleValues } = useSimple1Aggregator()
+  const { objectiveSums, subjectiveSums, setNormal1Values } = useNormal1Aggregator()
+  const { currentDistribution, setDistribution } = useDetailedAggregator()
+
+  // 전체 문항수 계산
+  const totalProblems = React.useMemo(() => {
+    let total = 0
+    for (let row = 0; row < 8; row++) {
+      for (let col = 0; col < 5; col++) {
+        total += currentDistribution[row][col] || 0
+      }
+    }
+    return total
+  }, [currentDistribution])
+
+  // 실제 typeCounts 구조를 기반으로 8x5 maxFeasible 배열 생성
+  const maxFeasible = React.useMemo(() => {
+    // 8x5 배열 초기화
+    const feasible = Array(8).fill(null).map(() => Array(5).fill(0))
+
+    if (skillChapters.length === 0) return feasible
+
+    // 선택된 스킬들의 typeCounts 마지막 배열(8x5)을 maxFeasible로 사용
+    skillChapters.forEach(chapter => {
+      chapter.skillList.forEach(skill => {
+        if (selectedSkills.includes(skill.skillId) && skill.typeCounts) {
+          // typeCounts의 마지막 배열을 가져와서 8x5 구조로 처리
+          if (Array.isArray(skill.typeCounts) && skill.typeCounts.length > 0) {
+            const lastMatrix = skill.typeCounts[skill.typeCounts.length - 1]
+            if (Array.isArray(lastMatrix) && lastMatrix.length === 8) {
+              // 8개 행의 각 셀을 maxFeasible에 누적
+              lastMatrix.forEach((row, rowIndex) => {
+                if (Array.isArray(row) && row.length >= 5) {
+                  for (let col = 0; col < 5; col++) {
+                    feasible[rowIndex][col] += row[col] || 0
+                  }
+                }
+              })
+            }
+          }
+        }
+      })
+    })
+
+    return feasible
+  }, [skillChapters, selectedSkills])
+
   const getCurrentCurriculumData = () => {
     return curriculumData[selectedSubjectName as keyof typeof curriculumData] || {}
   }
 
-  // 초간단 탭 렌더링 함수를 다음과 같이 변경 (더 넓은 입력 필드):
+  // 초간단 탭 렌더링 함수 - aggregator 사용
   const renderSimpleTab = () => {
+    console.log('renderSimpleTab - difficultyStats:', difficultyStats)
+    console.log('renderSimpleTab - simpleValues:', simpleValues)
+    
+    const levelConfig = [
+      { key: 0, label: '최상', color: 'bg-red-100' },
+      { key: 1, label: '상', color: 'bg-orange-100' },
+      { key: 2, label: '중', color: 'bg-blue-100' },
+      { key: 3, label: '하', color: 'bg-green-100' },
+      { key: 4, label: '최하', color: 'bg-teal-100' }
+    ]
+
     return (
       <div className="grid grid-cols-5 gap-2">
-        {Object.entries(simpleDifficultyStats).map(([level, stats]) => (
-          <div key={level} className="text-center">
-            <div
-              className={`p-2 rounded-lg mb-1 ${
-                level === "최상"
-                  ? "bg-red-100"
-                  : level === "상"
-                    ? "bg-orange-100"
-                    : level === "중"
-                      ? "bg-blue-100"
-                      : level === "하"
-                        ? "bg-green-100"
-                        : "bg-teal-100"
-              }`}
-            >
+        {levelConfig.map(({ key, label, color }) => (
+          <div key={key} className="text-center">
+            <div className={`p-2 rounded-lg mb-1 ${color}`}>
               <Input
                 type="number"
-                value={stats.selected}
+                value={simpleValues[key]}
                 onChange={(e) => {
-                  const newValue = Math.max(0, Math.min(stats.total, Number.parseInt(e.target.value) || 0))
-                  setSimpleDifficultyStats((prev) => ({
-                    ...prev,
-                    [level]: { ...prev[level as keyof typeof prev], selected: newValue },
-                  }))
+                  const newValue = Math.max(0, Number.parseInt(e.target.value) || 0)
+                  const newValues = [...simpleValues]
+                  newValues[key] = newValue
+                  setSimpleValues(newValues, maxFeasible)
+                  
                 }}
                 className="h-10 w-16 text-center font-bold text-lg border-0 bg-transparent px-2 focus-visible:ring-0"
                 min="0"
-                max={stats.total}
               />
             </div>
-            <div className="text-xs text-gray-500 mb-1">{stats.total}</div>
-            <div className="text-xs font-medium">{level}</div>
+            <div className="text-xs text-gray-500 mb-1">
+              {difficultyStats[['highest', 'high', 'medium', 'low', 'lowest'][key] as keyof typeof difficultyStats]}
+            </div>
+            <div className="text-xs font-medium">{label}</div>
           </div>
         ))}
       </div>
@@ -336,50 +498,48 @@ export function ProblemCreator() {
   }
 
   // 간단 탭 렌더링 함수를 다음과 같이 변경 (박스에 맞는 크기로 조정):
+  // 간단 탭 렌더링 함수 - aggregator 사용
   const renderIntermediateTab = () => {
+    console.log('renderIntermediateTab - objectiveSums:', objectiveSums)
+    console.log('renderIntermediateTab - subjectiveSums:', subjectiveSums)
+    console.log('renderIntermediateTab - maxFeasible:', maxFeasible)
+    
+    const levelConfig = [
+      { key: 0, label: '최상', color: 'bg-red-50 border-red-200' },
+      { key: 1, label: '상', color: 'bg-orange-50 border-orange-200' },
+      { key: 2, label: '중', color: 'bg-blue-50 border-blue-200' },
+      { key: 3, label: '하', color: 'bg-green-50 border-green-200' },
+      { key: 4, label: '최하', color: 'bg-teal-50 border-teal-200' }
+    ]
+
     return (
       <div className="space-y-6">
         {/* 객관식 섹션 */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h4 className="font-medium text-lg">객관식 : 1</h4>
+            <h4 className="font-medium text-lg">객관식</h4>
           </div>
           <div className="grid grid-cols-5 gap-3">
-            {Object.entries(detailedDifficultyStats.객관식).map(([difficulty, stats]) => (
-              <div
-                key={difficulty}
-                className={`p-3 rounded-lg border-2 ${
-                  difficulty === "최상"
-                    ? "bg-red-50 border-red-200"
-                    : difficulty === "상"
-                      ? "bg-orange-50 border-orange-200"
-                      : difficulty === "중"
-                        ? "bg-blue-50 border-blue-200"
-                        : difficulty === "하"
-                          ? "bg-green-50 border-green-200"
-                          : "bg-teal-50 border-teal-200"
-                }`}
-              >
+            {levelConfig.map(({ key, label, color }) => (
+              <div key={key} className={`p-3 rounded-lg border-2 ${color}`}>
                 <div className="text-center mb-2">
-                  <div className="text-xs font-medium mb-2">{difficulty}</div>
+                  <div className="text-xs font-medium mb-2">{label}</div>
                   <Input
                     type="number"
-                    value={stats.selected}
+                    value={objectiveSums[key]}
                     onChange={(e) => {
-                      const newValue = Math.max(0, Math.min(stats.total, Number.parseInt(e.target.value) || 0))
-                      setDetailedDifficultyStats((prev) => ({
-                        ...prev,
-                        객관식: {
-                          ...prev.객관식,
-                          [difficulty]: { ...prev.객관식[difficulty as keyof typeof prev.객관식], selected: newValue },
-                        },
-                      }))
+                      const newValue = Math.max(0, Number.parseInt(e.target.value) || 0)
+                      const newObjective = [...objectiveSums]
+                      newObjective[key] = newValue
+                      setNormal1Values(newObjective, subjectiveSums, maxFeasible)
                     }}
                     className="h-12 w-full text-center font-bold text-xl border-0 bg-transparent px-1 focus-visible:ring-0 mb-2"
                     min="0"
-                    max={stats.total}
                   />
-                  <div className="text-xs text-gray-500">{stats.total}</div>
+                  <div className="text-xs text-gray-500">
+                    {/* 객관식 영역의 최대 가능 개수 (row 0-3 합계) */}
+                    {maxFeasible.slice(0, 4).reduce((sum, row) => sum + row[key], 0)}
+                  </div>
                 </div>
               </div>
             ))}
@@ -389,44 +549,29 @@ export function ProblemCreator() {
         {/* 주관식 섹션 */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h4 className="font-medium text-lg">주관식 : 0</h4>
+            <h4 className="font-medium text-lg">주관식</h4>
           </div>
           <div className="grid grid-cols-5 gap-3">
-            {Object.entries(detailedDifficultyStats.주관식).map(([difficulty, stats]) => (
-              <div
-                key={difficulty}
-                className={`p-3 rounded-lg border-2 ${
-                  difficulty === "최상"
-                    ? "bg-red-50 border-red-200"
-                    : difficulty === "상"
-                      ? "bg-orange-50 border-orange-200"
-                      : difficulty === "중"
-                        ? "bg-blue-50 border-blue-200"
-                        : difficulty === "하"
-                          ? "bg-green-50 border-green-200"
-                          : "bg-teal-50 border-teal-200"
-                }`}
-              >
+            {levelConfig.map(({ key, label, color }) => (
+              <div key={key} className={`p-3 rounded-lg border-2 ${color}`}>
                 <div className="text-center mb-2">
-                  <div className="text-xs font-medium mb-2">{difficulty}</div>
+                  <div className="text-xs font-medium mb-2">{label}</div>
                   <Input
                     type="number"
-                    value={stats.selected}
+                    value={subjectiveSums[key]}
                     onChange={(e) => {
-                      const newValue = Math.max(0, Math.min(stats.total, Number.parseInt(e.target.value) || 0))
-                      setDetailedDifficultyStats((prev) => ({
-                        ...prev,
-                        주관식: {
-                          ...prev.주관식,
-                          [difficulty]: { ...prev.주관식[difficulty as keyof typeof prev.주관식], selected: newValue },
-                        },
-                      }))
+                      const newValue = Math.max(0, Number.parseInt(e.target.value) || 0)
+                      const newSubjective = [...subjectiveSums]
+                      newSubjective[key] = newValue
+                      setNormal1Values(objectiveSums, newSubjective, maxFeasible)
                     }}
                     className="h-12 w-full text-center font-bold text-xl border-0 bg-transparent px-1 focus-visible:ring-0 mb-2"
                     min="0"
-                    max={stats.total}
                   />
-                  <div className="text-xs text-gray-500">{stats.total}</div>
+                  <div className="text-xs text-gray-500">
+                    {/* 주관식 영역의 최대 가능 개수 (row 4-7 합계) */}
+                    {maxFeasible.slice(4, 8).reduce((sum, row) => sum + row[key], 0)}
+                  </div>
                 </div>
               </div>
             ))}
@@ -436,8 +581,15 @@ export function ProblemCreator() {
     )
   }
 
-  // 자세히 탭 렌더링 함수를 다음과 같이 변경 (더 넓은 입력 필드):
+  // 자세히 탭 렌더링 함수 - aggregator 사용
   const renderDetailedTab = () => {
+    console.log('renderDetailedTab - currentDistribution:', currentDistribution)
+    console.log('renderDetailedTab - maxFeasible:', maxFeasible)
+    
+    const typeLabels = ['계산', '이해', '해결', '추론']
+    const difficultyLabels = ['최상', '상', '중', '하', '최하']
+    const difficultyColors = ['bg-red-50', 'bg-orange-50', 'bg-blue-50', 'bg-green-50', 'bg-teal-50']
+
     return (
       <div className="space-y-4">
         {/* 객관식 테이블 */}
@@ -448,38 +600,37 @@ export function ProblemCreator() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-3 py-2 text-left border-r">구분</th>
-                  <th className="px-3 py-2 text-center border-r bg-red-50">최상</th>
-                  <th className="px-3 py-2 text-center border-r bg-orange-50">상</th>
-                  <th className="px-3 py-2 text-center border-r bg-blue-50">중</th>
-                  <th className="px-3 py-2 text-center border-r bg-green-50">하</th>
-                  <th className="px-3 py-2 text-center bg-teal-50">최하</th>
+                  {difficultyLabels.map((label, index) => (
+                    <th key={label} className={`px-3 py-2 text-center border-r ${difficultyColors[index]}`}>
+                      {label}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {Object.entries(detailedTableData.객관식).map(([type, difficulties]) => (
+                {typeLabels.map((type, rowIndex) => (
                   <tr key={type} className="border-t">
-                    <td className="px-3 py-2 font-medium border-r">{type}</td>
-                    {Object.entries(difficulties).map(([difficulty, count]) => (
-                      <td key={difficulty} className="px-3 py-2 text-center border-r">
-                        <Input
-                          type="number"
-                          value={count}
-                          onChange={(e) => {
-                            const newValue = Math.max(0, Number.parseInt(e.target.value) || 0)
-                            setDetailedTableData((prev) => ({
-                              ...prev,
-                              객관식: {
-                                ...prev.객관식,
-                                [type]: {
-                                  ...prev.객관식[type as keyof typeof prev.객관식],
-                                  [difficulty]: newValue,
-                                },
-                              },
-                            }))
-                          }}
-                          className={`h-8 w-16 text-center border-0 bg-transparent px-1 focus-visible:ring-0 ${count > 0 ? "text-blue-600 font-medium" : "text-gray-400"}`}
-                          min="0"
-                        />
+                    <td className="px-2 py-1 font-medium border-r">{type}</td>
+                    {difficultyLabels.map((difficulty, colIndex) => (
+                      <td key={difficulty} className="px-2 py-1 text-center border-r">
+                        <div className="flex flex-col items-center">
+                          <Input
+                            type="number"
+                            value={currentDistribution[rowIndex][colIndex]}
+                            onChange={(e) => {
+                              const newValue = Math.max(0, Number.parseInt(e.target.value) || 0)
+                              setDistribution(rowIndex, colIndex, newValue)
+                            }}
+                            className={`h-6 w-12 text-center border-0 bg-transparent px-1 focus-visible:ring-0 text-sm ${
+                              currentDistribution[rowIndex][colIndex] > 0 ? "text-blue-600 font-medium" : "text-gray-400"
+                            }`}
+                            min="0"
+                            max={maxFeasible[rowIndex][colIndex]}
+                          />
+                          <div className="text-xs text-gray-500 mt-1">
+                            {maxFeasible[rowIndex][colIndex]}
+                          </div>
+                        </div>
                       </td>
                     ))}
                   </tr>
@@ -497,38 +648,37 @@ export function ProblemCreator() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-3 py-2 text-left border-r">구분</th>
-                  <th className="px-3 py-2 text-center border-r bg-red-50">최상</th>
-                  <th className="px-3 py-2 text-center border-r bg-orange-50">상</th>
-                  <th className="px-3 py-2 text-center border-r bg-blue-50">중</th>
-                  <th className="px-3 py-2 text-center border-r bg-green-50">하</th>
-                  <th className="px-3 py-2 text-center bg-teal-50">최하</th>
+                  {difficultyLabels.map((label, index) => (
+                    <th key={label} className={`px-3 py-2 text-center border-r ${difficultyColors[index]}`}>
+                      {label}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {Object.entries(detailedTableData.주관식).map(([type, difficulties]) => (
+                {typeLabels.map((type, rowIndex) => (
                   <tr key={type} className="border-t">
-                    <td className="px-3 py-2 font-medium border-r">{type}</td>
-                    {Object.entries(difficulties).map(([difficulty, count]) => (
-                      <td key={difficulty} className="px-3 py-2 text-center border-r">
-                        <Input
-                          type="number"
-                          value={count}
-                          onChange={(e) => {
-                            const newValue = Math.max(0, Number.parseInt(e.target.value) || 0)
-                            setDetailedTableData((prev) => ({
-                              ...prev,
-                              주관식: {
-                                ...prev.주관식,
-                                [type]: {
-                                  ...prev.주관식[type as keyof typeof prev.주관식],
-                                  [difficulty]: newValue,
-                                },
-                              },
-                            }))
-                          }}
-                          className={`h-8 w-16 text-center border-0 bg-transparent px-1 focus-visible:ring-0 ${count > 0 ? "text-blue-600 font-medium" : "text-gray-400"}`}
-                          min="0"
-                        />
+                    <td className="px-2 py-1 font-medium border-r">{type}</td>
+                    {difficultyLabels.map((difficulty, colIndex) => (
+                      <td key={difficulty} className="px-2 py-1 text-center border-r">
+                        <div className="flex flex-col items-center">
+                          <Input
+                            type="number"
+                            value={currentDistribution[rowIndex + 4][colIndex]}
+                            onChange={(e) => {
+                              const newValue = Math.max(0, Number.parseInt(e.target.value) || 0)
+                              setDistribution(rowIndex + 4, colIndex, newValue)
+                            }}
+                            className={`h-6 w-12 text-center border-0 bg-transparent px-1 focus-visible:ring-0 text-sm ${
+                              currentDistribution[rowIndex + 4][colIndex] > 0 ? "text-blue-600 font-medium" : "text-gray-400"
+                            }`}
+                            min="0"
+                            max={maxFeasible[rowIndex + 4][colIndex]}
+                          />
+                          <div className="text-xs text-gray-500 mt-1">
+                            {maxFeasible[rowIndex + 4][colIndex]}
+                          </div>
+                        </div>
                       </td>
                     ))}
                   </tr>
@@ -1246,7 +1396,7 @@ export function ProblemCreator() {
 
       <div className="grid grid-cols-12 gap-6 min-h-screen">
         {/* Left Sidebar - Settings */}
-        <div className="col-span-4 h-full">
+        <div className="col-span-5 h-full">
           <div className="space-y-6">
                 {/* 강좌명 선택 */}
                 <div className="bg-white rounded-lg border p-4">
@@ -1267,6 +1417,44 @@ export function ProblemCreator() {
                       </SelectContent>
                     </Select>
                   )}
+                </div>
+
+                {/* 범위 섹션 */}
+                <div className="bg-white rounded-lg border p-4">
+                  <h3 className="font-semibold text-lg mb-4">범위</h3>
+                  <div className="space-y-3">
+                    <div className="text-sm font-medium text-gray-700">
+                      1.1 다항식의 연산 ~ 1.1.1 다항식의 연산
+                    </div>
+                    <div className="bg-gray-100 rounded-lg p-3">
+                      <div className="text-xs text-gray-600 mb-1">시험지명</div>
+                      <div className="font-medium">207 회차</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 범위 탭 버튼 */}
+                <div className="bg-white rounded-lg border p-4">
+                  <div className="flex gap-1">
+                    <button className="px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md">
+                      출제 범위
+                    </button>
+                    <button className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
+                      전체
+                    </button>
+                    <button className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
+                      교과서 유형
+                    </button>
+                    <button className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
+                      문제집 유형
+                    </button>
+                    <button className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
+                      기출 유형
+                    </button>
+                    <button className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
+                      모의고사 유형
+                    </button>
+                  </div>
                 </div>
 
                 {/* 과목을 선택해 주세요 */}
@@ -1353,34 +1541,123 @@ export function ProblemCreator() {
                   )}
                 </div>
 
-                {/* 문제 유형별 선택 */}
+                {/* 항목을 선택해 주세요 */}
                 <div className="bg-white rounded-lg border p-4">
                   <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
                     <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
                       2
                     </span>
-                    문제 유형을 선택해 주세요
+                    항목을 선택해 주세요
+                    {selectedSkills.length > 0 && (
+                      <span className="bg-purple-100 text-purple-800 rounded-full px-2 py-1 text-xs font-medium">
+                        {selectedSkills.length}개 선택됨
+                      </span>
+                    )}
                     <span className="text-sm text-gray-500 ml-auto">* 자동출제용</span>
                   </h3>
 
-                  {selectedTreeItems.length > 0 ? (
-                    <div className="space-y-3">
-                      <div className="text-sm text-gray-600">
-                        선택된 항목 기반으로 문제를 자동 생성합니다.
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <Badge className="bg-blue-100 text-blue-800">객관식</Badge>
-                        <Badge className="bg-green-100 text-green-800">주관식</Badge>
-                        <Badge className="bg-purple-100 text-purple-800">서술형</Badge>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center h-32 text-gray-500">
-                      <div className="text-center">
-                        <p>먼저 과목과 상세 항목을 선택해주세요</p>
+                  {/* 선택된 스킬 표시 */}
+                  {selectedSkills.length > 0 && (
+                    <div className="mb-4">
+                      <div className="text-sm text-gray-600 mb-2">선택된 항목: {selectedSkills.length}개</div>
+                      <div className="flex flex-wrap gap-1">
+                        {selectedSkills.slice(0, 3).map((skillId) => {
+                          // skillId로 실제 skill 정보 찾기
+                          const skill = skillChapters.flatMap(chapter => chapter.skillList)
+                            .find(skill => skill.skillId === skillId)
+                          return skill ? (
+                            <Badge key={skillId} variant="outline" className="bg-purple-100 text-purple-800 text-xs">
+                              {skill.skillName.substring(0, 20)}...
+                            </Badge>
+                          ) : null
+                        })}
+                        {selectedSkills.length > 3 && (
+                          <Badge variant="outline" className="bg-purple-100 text-purple-800 text-xs">
+                            +{selectedSkills.length - 3}개 더
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   )}
+
+                  <ScrollArea className="h-80">
+                    {skillChaptersMutation.isPending ? (
+                      <div className="flex items-center justify-center h-32">
+                        <div className="text-sm text-gray-500">문항 목록 로딩중...</div>
+                      </div>
+                    ) : selectedTreeItems.length === 0 ? (
+                      <div className="flex items-center justify-center h-32 text-gray-500">
+                        <div className="text-center">
+                          <p>먼저 상세 항목을 선택해주세요</p>
+                        </div>
+                      </div>
+                    ) : skillChapters.length > 0 ? (
+                      <div className="space-y-6">
+                        {skillChapters.map((chapter) => (
+                          <div key={chapter.chapterId} className="space-y-3">
+                            {/* 챕터 헤더 */}
+                            <div className="flex items-center justify-between pb-2 border-b">
+                              <h4 className="font-medium text-gray-800">{chapter.chapterIndex} {chapter.chapterName}</h4>
+                              <button
+                                onClick={() => toggleAllSkillsInChapter(chapter)}
+                                className={`text-xs px-2 py-1 rounded transition-colors ${
+                                  chapter.skillList.every(skill => selectedSkills.includes(skill.skillId))
+                                    ? "text-blue-600 bg-blue-50 hover:bg-blue-100"
+                                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                                }`}
+                              >
+                                {chapter.skillList.every(skill => selectedSkills.includes(skill.skillId))
+                                  ? "전체 해제"
+                                  : "전체 선택"
+                                }
+                              </button>
+                            </div>
+
+                            {/* 스킬 목록 */}
+                            <div className="space-y-2">
+                              {chapter.skillList.map((skill) => (
+                                <div
+                                  key={skill.skillId}
+                                  className={`p-4 rounded-lg border cursor-pointer transition-colors ${
+                                    selectedSkills.includes(skill.skillId)
+                                      ? "border-blue-500 bg-blue-50"
+                                      : "border-gray-200 hover:border-gray-300"
+                                  }`}
+                                  onClick={() => toggleSkill(skill.skillId)}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <Checkbox
+                                        checked={selectedSkills.includes(skill.skillId)}
+                                        readOnly
+                                      />
+                                      <span className="text-sm font-medium">{skill.skillName}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      {/* API에서 가져온 문제 개수 */}
+                                      <Badge className="bg-green-100 text-green-800 text-xs px-2 py-1">
+                                        문제 {skillCounts?.[skill.skillId]?.length || 0}개
+                                      </Badge>
+                                      {/* 기존 스킬의 count */}
+                                      <Badge className="bg-blue-100 text-blue-800 text-xs px-2 py-1">
+                                        총 {skill.counts}개
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center h-32 text-gray-500">
+                        <div className="text-center">
+                          <p>선택된 항목에 대한 문제가 없습니다</p>
+                        </div>
+                      </div>
+                    )}
+                  </ScrollArea>
                 </div>
 
                 {/* 문항수를 선택해 주세요 */}
@@ -1440,7 +1717,7 @@ export function ProblemCreator() {
         </div>
 
         {/* Right Side - Exam Paper */}
-        <div className="col-span-8 h-full">
+        <div className="col-span-7 h-full">
           <div className="bg-card text-card-foreground flex flex-col rounded-xl border h-full">
             <div className="grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 p-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
               {/* Tab Navigation */}
@@ -1539,5 +1816,13 @@ export function ProblemCreator() {
         onProblemsChange={setSelectedFunctionProblems}
       />
     </div>
+  )
+}
+
+export function ProblemCreator() {
+  return (
+    <ProblemDistributionProvider>
+      <ProblemCreatorContent />
+    </ProblemDistributionProvider>
   )
 }

@@ -165,4 +165,10 @@ export const API_ENDPOINTS = {
     LIST: 'https://math2.suzag.com/app/subject/subject/list',
     TOPS: (subjectIds: string, depth = 2) => `https://math2.suzag.com/app/subject/tops?subjectIds=${subjectIds}&depth=${depth}`,
   },
+
+  // Skill 관련
+  SKILLS: {
+    LIST_CHAPTERS: 'https://math2.suzag.com/app/skill/listchapters',
+    SKILL_COUNTS: (lectureId: string) => `/api/m38/paper/skillcounts/${lectureId}`,
+  },
 } as const;
