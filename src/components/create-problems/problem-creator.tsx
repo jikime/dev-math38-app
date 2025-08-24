@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
@@ -1296,63 +1295,92 @@ export function ProblemCreator() {
                   {!subjectsLoading && (!subjects || subjects.length === 0) && (
                     <div className="text-sm text-red-500 mt-2">과목 목록을 불러올 수 없습니다</div>
                   )}
+
+                  {/* 선택된 과목의 트리 항목 표시 */}
+                  {selectedSubjectKeys.length > 0 && (
+                    <div className="mt-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-medium text-sm text-gray-700">상세 항목 선택</h4>
+                        {selectedTreeItems.length > 0 && (
+                          <span className="text-xs text-gray-500">
+                            {selectedTreeItems.length}개 선택됨
+                          </span>
+                        )}
+                      </div>
+
+                      {/* 선택된 트리 항목 Badge 표시 */}
+                      {selectedTreeItems.length > 0 && (
+                        <div className="mb-3">
+                          <div className="flex flex-wrap gap-1">
+                            {selectedTreeItems.slice(0, 3).map((item) => (
+                              <Badge key={item} variant="outline" className="bg-green-100 text-green-800 text-xs">
+                                {item}
+                              </Badge>
+                            ))}
+                            {selectedTreeItems.length > 3 && (
+                              <Badge variant="outline" className="bg-green-100 text-green-800 text-xs">
+                                +{selectedTreeItems.length - 3}개 더
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 트리 구조 표시 */}
+                      <div className="border rounded-lg">
+                        <ScrollArea className="h-60">
+                          {subjectTopsLoading ? (
+                            <div className="flex items-center justify-center h-32">
+                              <div className="text-sm text-gray-500">항목 로딩중...</div>
+                            </div>
+                          ) : subjectTops && subjectTops.length > 0 ? (
+                            <SubjectTree
+                              data={subjectTops}
+                              selectedKeys={selectedTreeItems}
+                              onSelectionChange={setSelectedTreeItems}
+                              className="p-2"
+                            />
+                          ) : (
+                            <div className="flex items-center justify-center h-32 text-gray-500">
+                              <div className="text-center">
+                                <p className="text-sm">상세 항목이 없습니다</p>
+                              </div>
+                            </div>
+                          )}
+                        </ScrollArea>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* 항목을 선택해 주세요 */}
+                {/* 문제 유형별 선택 */}
                 <div className="bg-white rounded-lg border p-4">
                   <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
                     <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
                       2
                     </span>
-                    항목을 선택해 주세요
+                    문제 유형을 선택해 주세요
                     <span className="text-sm text-gray-500 ml-auto">* 자동출제용</span>
                   </h3>
 
-                  {/* 선택된 트리 항목 표시 */}
-                  {selectedTreeItems.length > 0 && (
-                    <div className="mb-4">
-                      <div className="text-sm text-gray-600 mb-2">선택된 항목: {selectedTreeItems.length}개</div>
-                      <div className="flex flex-wrap gap-1">
-                        {selectedTreeItems.slice(0, 3).map((item) => (
-                          <Badge key={item} variant="outline" className="bg-green-100 text-green-800 text-xs">
-                            {item}
-                          </Badge>
-                        ))}
-                        {selectedTreeItems.length > 3 && (
-                          <Badge variant="outline" className="bg-green-100 text-green-800 text-xs">
-                            +{selectedTreeItems.length - 3}개 더
-                          </Badge>
-                        )}
+                  {selectedTreeItems.length > 0 ? (
+                    <div className="space-y-3">
+                      <div className="text-sm text-gray-600">
+                        선택된 항목 기반으로 문제를 자동 생성합니다.
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Badge className="bg-blue-100 text-blue-800">객관식</Badge>
+                        <Badge className="bg-green-100 text-green-800">주관식</Badge>
+                        <Badge className="bg-purple-100 text-purple-800">서술형</Badge>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-32 text-gray-500">
+                      <div className="text-center">
+                        <p>먼저 과목과 상세 항목을 선택해주세요</p>
                       </div>
                     </div>
                   )}
-
-                  {/* 트리 구조 표시 */}
-                  <ScrollArea className="h-80">
-                    {subjectTopsLoading ? (
-                      <div className="flex items-center justify-center h-32">
-                        <div className="text-sm text-gray-500">과목 상세 정보 로딩중...</div>
-                      </div>
-                    ) : selectedSubjectKeys.length === 0 ? (
-                      <div className="flex items-center justify-center h-32 text-gray-500">
-                        <div className="text-center">
-                          <p>먼저 과목을 선택해주세요</p>
-                        </div>
-                      </div>
-                    ) : subjectTops && subjectTops.length > 0 ? (
-                      <SubjectTree
-                        data={subjectTops}
-                        selectedKeys={selectedTreeItems}
-                        onSelectionChange={setSelectedTreeItems}
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center h-32 text-gray-500">
-                        <div className="text-center">
-                          <p>선택된 과목의 상세 항목이 없습니다</p>
-                        </div>
-                      </div>
-                    )}
-                  </ScrollArea>
                 </div>
 
                 {/* 문항수를 선택해 주세요 */}
