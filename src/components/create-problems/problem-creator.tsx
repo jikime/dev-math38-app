@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
@@ -13,6 +12,8 @@ import { PrintSettingsDialog } from "@/components/common/print-settings-dialog"
 import { FunctionProblemDialog } from "@/components/create-problems/function-problem-dialog"
 import { useMyLectures } from "@/hooks/use-lecture"
 import { useSubjects } from "@/hooks/use-subjects"
+import { MultiSelect } from "@/components/ui/multi-select"
+import type { Option } from "@/components/ui/multi-select"
 import {
   Plus,
   Settings,
@@ -33,7 +34,7 @@ export function ProblemCreator() {
   const [selectedLectureId, setSelectedLectureId] = useState<string>("")
   
   // 과목 관련 상태
-  const [selectedSubjectKeys, setSelectedSubjectKeys] = useState<number[]>([])
+  const [selectedSubjectKeys, setSelectedSubjectKeys] = useState<string[]>([])
   
   const [selectedRange, setSelectedRange] = useState("1 유리수와 순환소수 ~ 3.1.3 일차부등식의 활용")
   const [expandedCategories, setExpandedCategories] = useState<string[]>(["1 자연수의 성질"])
@@ -262,13 +263,11 @@ export function ProblemCreator() {
     )
   }
 
-  const toggleSubject = (subjectKey: number) => {
-    setSelectedSubjectKeys((prev) =>
-      prev.includes(subjectKey) 
-        ? prev.filter((key) => key !== subjectKey) 
-        : [...prev, subjectKey]
-    )
-  }
+  // 과목 데이터를 MultiSelect 옵션으로 변환
+  const subjectOptions: Option[] = subjects?.map(subject => ({
+    label: subject.title,
+    value: subject.key.toString()
+  })) || []
 
   const getCurrentCurriculumData = () => {
     return curriculumData[selectedSubjectName as keyof typeof curriculumData] || {}
@@ -1259,58 +1258,23 @@ export function ProblemCreator() {
                     과목을 선택해 주세요
                   </h3>
 
-                  {/* 선택된 과목 표시 */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {selectedSubjectKeys.length > 0 ? (
-                      selectedSubjectKeys.map((key) => {
-                        const subject = subjects?.find(s => s.key === key)
-                        return subject ? (
-                          <Badge key={key} variant="outline" className="bg-blue-100 text-blue-800">
-                            {subject.title}
-                            <button
-                              onClick={() => toggleSubject(key)}
-                              className="ml-1 hover:bg-blue-200 rounded-full"
-                            >
-                              ×
-                            </button>
-                          </Badge>
-                        ) : null
-                      })
-                    ) : (
-                      <div className="text-sm text-gray-500">과목을 선택해주세요</div>
-                    )}
-                  </div>
-
                   {/* 과목 선택 UI */}
-                  <ScrollArea className="h-64">
-                    <div className="space-y-1">
-                      {subjectsLoading ? (
-                        <div className="flex items-center justify-center h-32">
-                          <div className="text-sm text-gray-500">과목 목록 로딩중...</div>
-                        </div>
-                      ) : subjects && subjects.length > 0 ? (
-                        subjects.map((subject) => (
-                          <div
-                            key={subject.key}
-                            className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
-                            onClick={() => toggleSubject(subject.key)}
-                          >
-                            <Checkbox
-                              checked={selectedSubjectKeys.includes(subject.key)}
-                              onChange={() => toggleSubject(subject.key)}
-                            />
-                            <span className="font-medium text-sm">{subject.title}</span>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="flex items-center justify-center h-32 text-gray-500">
-                          <div className="text-center">
-                            <p>과목 목록을 불러올 수 없습니다</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </ScrollArea>
+                  <MultiSelect
+                    options={subjectOptions}
+                    selected={selectedSubjectKeys}
+                    onChange={setSelectedSubjectKeys}
+                    placeholder="과목을 선택하세요"
+                    disabled={subjectsLoading}
+                    className="w-full"
+                  />
+                  
+                  {subjectsLoading && (
+                    <div className="text-sm text-gray-500 mt-2">과목 목록 로딩중...</div>
+                  )}
+                  
+                  {!subjectsLoading && (!subjects || subjects.length === 0) && (
+                    <div className="text-sm text-red-500 mt-2">과목 목록을 불러올 수 없습니다</div>
+                  )}
                 </div>
 
                 {/* 항목을 선택해 주세요 */}
