@@ -76,6 +76,18 @@ export function ProblemCreator() {
     }
   }, [lectures, selectedLectureId])
 
+  // 첫 번째 강의의 subjectId와 일치하는 과목을 기본값으로 설정
+  useEffect(() => {
+    if (lectures && lectures.length > 0 && subjects && subjects.length > 0 && selectedSubjectKeys.length === 0) {
+      const firstLecture = lectures[0]
+      const matchingSubject = subjects.find(subject => subject.key === firstLecture.subjectId)
+      
+      if (matchingSubject) {
+        setSelectedSubjectKeys([matchingSubject.key.toString()])
+      }
+    }
+  }, [lectures, subjects, selectedSubjectKeys])
+
 
   // 문제 타입 정의
   type Problem = {
