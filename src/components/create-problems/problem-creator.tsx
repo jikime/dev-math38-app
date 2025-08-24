@@ -1398,6 +1398,15 @@ function ProblemCreatorContent() {
                 </SelectContent>
               </Select>
             )}
+            
+            <div className="flex items-center gap-3 ml-8">
+              <label className="font-semibold text-lg whitespace-nowrap">시험지</label>
+              <input 
+                type="text" 
+                placeholder="제목을 입력하세요"
+                className="w-64 px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
           </div>
           
           <div className="flex items-center gap-3">
@@ -1417,7 +1426,7 @@ function ProblemCreatorContent() {
       <div className="mb-6">
         <div className="flex">
           <div className="w-[30%] pr-3">
-            <div className="bg-white rounded-lg border p-4">
+            <div className="bg-white rounded-lg border p-4 h-20 flex flex-col justify-center">
               <h3 className="font-semibold text-sm mb-2">범위</h3>
               <div className="text-sm text-gray-700">
                 1.1 다항식의 연산 ~ 1.1.1 다항식의 연산
@@ -1426,7 +1435,7 @@ function ProblemCreatorContent() {
           </div>
           
           <div className="w-[70%] pl-3">
-            <div className="bg-white rounded-lg border p-4">
+            <div className="bg-white rounded-lg border p-4 h-20 flex flex-col justify-center">
               <h3 className="font-semibold text-sm mb-2">출제유형</h3>
               <div className="flex gap-1">
                 <button className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
