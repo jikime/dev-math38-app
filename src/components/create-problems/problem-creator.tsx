@@ -477,6 +477,7 @@ function ProblemCreatorContent() {
       <div className="grid grid-cols-5 gap-1">
         {levelConfig.map(({ key, label, color }) => (
           <div key={key} className="text-center">
+            <div className="text-xs font-medium mb-1">{label}</div>
             <div className={`p-0 rounded-lg mb-1 ${color}`}>
               <Input
                 type="number"
@@ -495,7 +496,6 @@ function ProblemCreatorContent() {
             <div className="text-xs text-gray-500 mb-1">
               {difficultyStats[['highest', 'high', 'medium', 'low', 'lowest'][key] as keyof typeof difficultyStats]}
             </div>
-            <div className="text-xs font-medium">{label}</div>
           </div>
         ))}
       </div>
@@ -510,11 +510,11 @@ function ProblemCreatorContent() {
     console.log('renderIntermediateTab - maxFeasible:', maxFeasible)
     
     const levelConfig = [
-      { key: 0, label: '최상', color: 'bg-red-50 border-red-200' },
-      { key: 1, label: '상', color: 'bg-orange-50 border-orange-200' },
-      { key: 2, label: '중', color: 'bg-blue-50 border-blue-200' },
-      { key: 3, label: '하', color: 'bg-green-50 border-green-200' },
-      { key: 4, label: '최하', color: 'bg-teal-50 border-teal-200' }
+      { key: 0, label: '최상', color: 'bg-red-100' },
+      { key: 1, label: '상', color: 'bg-orange-100' },
+      { key: 2, label: '중', color: 'bg-blue-100' },
+      { key: 3, label: '하', color: 'bg-green-100' },
+      { key: 4, label: '최하', color: 'bg-teal-100' }
     ]
 
     return (
@@ -524,11 +524,11 @@ function ProblemCreatorContent() {
           <div className="flex items-center justify-between mb-4">
             <h4 className="font-medium text-lg">객관식</h4>
           </div>
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-5 gap-1">
             {levelConfig.map(({ key, label, color }) => (
-              <div key={key} className={`p-1 rounded-lg border-2 ${color}`}>
-                <div className="text-center mb-2">
-                  <div className="text-xs font-medium mb-2">{label}</div>
+              <div key={key} className="text-center">
+                <div className="text-xs font-medium mb-1">{label}</div>
+                <div className={`p-0 rounded-lg mb-1 ${color}`}>
                   <Input
                     type="number"
                     value={objectiveSums[key]}
@@ -538,13 +538,12 @@ function ProblemCreatorContent() {
                       newObjective[key] = newValue
                       setNormal1Values(newObjective, subjectiveSums, maxFeasible)
                     }}
-                    className="h-12 w-full text-center font-bold text-lg border-0 bg-transparent px-1 focus-visible:ring-0 mb-2"
+                    className="h-10 w-16 text-center font-bold text-base border-0 bg-transparent px-2 focus-visible:ring-0"
                     min="0"
                   />
-                  <div className="text-xs text-gray-500">
-                    {/* 객관식 영역의 최대 가능 개수 (row 0-3 합계) */}
-                    {maxFeasible.slice(0, 4).reduce((sum, row) => sum + row[key], 0)}
-                  </div>
+                </div>
+                <div className="text-xs text-gray-500 mb-1">
+                  {maxFeasible.slice(0, 4).reduce((sum, row) => sum + row[key], 0)}
                 </div>
               </div>
             ))}
@@ -556,11 +555,11 @@ function ProblemCreatorContent() {
           <div className="flex items-center justify-between mb-4">
             <h4 className="font-medium text-lg">주관식</h4>
           </div>
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-5 gap-1">
             {levelConfig.map(({ key, label, color }) => (
-              <div key={key} className={`p-1 rounded-lg border-2 ${color}`}>
-                <div className="text-center mb-2">
-                  <div className="text-xs font-medium mb-2">{label}</div>
+              <div key={key} className="text-center">
+                <div className="text-xs font-medium mb-1">{label}</div>
+                <div className={`p-0 rounded-lg mb-1 ${color}`}>
                   <Input
                     type="number"
                     value={subjectiveSums[key]}
@@ -570,13 +569,12 @@ function ProblemCreatorContent() {
                       newSubjective[key] = newValue
                       setNormal1Values(objectiveSums, newSubjective, maxFeasible)
                     }}
-                    className="h-12 w-full text-center font-bold text-lg border-0 bg-transparent px-1 focus-visible:ring-0 mb-2"
+                    className="h-10 w-16 text-center font-bold text-base border-0 bg-transparent px-2 focus-visible:ring-0"
                     min="0"
                   />
-                  <div className="text-xs text-gray-500">
-                    {/* 주관식 영역의 최대 가능 개수 (row 4-7 합계) */}
-                    {maxFeasible.slice(4, 8).reduce((sum, row) => sum + row[key], 0)}
-                  </div>
+                </div>
+                <div className="text-xs text-gray-500 mb-1">
+                  {maxFeasible.slice(4, 8).reduce((sum, row) => sum + row[key], 0)}
                 </div>
               </div>
             ))}
@@ -604,9 +602,9 @@ function ProblemCreatorContent() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-3 py-2 text-left border-r">구분</th>
+                  <th className="px-1 py-1 text-left border-r">구분</th>
                   {difficultyLabels.map((label, index) => (
-                    <th key={label} className={`px-3 py-2 text-center border-r ${difficultyColors[index]}`}>
+                    <th key={label} className={`px-1 py-1 text-center border-r ${difficultyColors[index]}`}>
                       {label}
                     </th>
                   ))}
@@ -615,9 +613,9 @@ function ProblemCreatorContent() {
               <tbody>
                 {typeLabels.map((type, rowIndex) => (
                   <tr key={type} className="border-t">
-                    <td className="px-2 py-1 font-medium border-r">{type}</td>
+                    <td className="px-1 py-1 font-medium border-r">{type}</td>
                     {difficultyLabels.map((difficulty, colIndex) => (
-                      <td key={difficulty} className="px-2 py-1 text-center border-r">
+                      <td key={difficulty} className="px-1 py-1 text-center border-r">
                         <div className="flex flex-col items-center">
                           <Input
                             type="number"
@@ -652,9 +650,9 @@ function ProblemCreatorContent() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-3 py-2 text-left border-r">구분</th>
+                  <th className="px-1 py-1 text-left border-r">구분</th>
                   {difficultyLabels.map((label, index) => (
-                    <th key={label} className={`px-3 py-2 text-center border-r ${difficultyColors[index]}`}>
+                    <th key={label} className={`px-1 py-1 text-center border-r ${difficultyColors[index]}`}>
                       {label}
                     </th>
                   ))}
@@ -663,9 +661,9 @@ function ProblemCreatorContent() {
               <tbody>
                 {typeLabels.map((type, rowIndex) => (
                   <tr key={type} className="border-t">
-                    <td className="px-2 py-1 font-medium border-r">{type}</td>
+                    <td className="px-1 py-1 font-medium border-r">{type}</td>
                     {difficultyLabels.map((difficulty, colIndex) => (
-                      <td key={difficulty} className="px-2 py-1 text-center border-r">
+                      <td key={difficulty} className="px-1 py-1 text-center border-r">
                         <div className="flex flex-col items-center">
                           <Input
                             type="number"
@@ -1451,7 +1449,7 @@ function ProblemCreatorContent() {
         className="min-h-screen"
       >
         {/* Left Sidebar - Settings */}
-        <ResizablePanel defaultSize={40} minSize={30} maxSize={60}>
+        <ResizablePanel defaultSize={30} minSize={30} maxSize={60}>
           <div className="h-full pr-3">
             <div className="space-y-6">
                 {/* 과목을 선택해 주세요 */}
@@ -1717,7 +1715,7 @@ function ProblemCreatorContent() {
         <ResizableHandle withHandle />
 
         {/* Right Side - Exam Paper */}
-        <ResizablePanel defaultSize={60} minSize={40}>
+        <ResizablePanel defaultSize={70} minSize={40}>
           <div className="h-full pl-3">
             <div className="bg-card text-card-foreground flex flex-col rounded-xl border h-full">
             <div className="grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 p-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
