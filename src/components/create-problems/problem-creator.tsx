@@ -9,6 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox"
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable"
 import { PrintSettingsDialog } from "@/components/common/print-settings-dialog"
 import { FunctionProblemDialog } from "@/components/create-problems/function-problem-dialog"
 import { useMyLectures } from "@/hooks/use-lecture"
@@ -1394,10 +1399,14 @@ function ProblemCreatorContent() {
         </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-6 min-h-screen">
+      <ResizablePanelGroup 
+        direction="horizontal" 
+        className="min-h-screen"
+      >
         {/* Left Sidebar - Settings */}
-        <div className="col-span-5 h-full">
-          <div className="space-y-6">
+        <ResizablePanel defaultSize={40} minSize={30} maxSize={60}>
+          <div className="h-full pr-3">
+            <div className="space-y-6">
                 {/* 강좌명 선택 */}
                 <div className="bg-white rounded-lg border p-4">
                   <h3 className="font-semibold text-lg mb-4">강좌명</h3>
@@ -1411,7 +1420,7 @@ function ProblemCreatorContent() {
                       <SelectContent>
                         {lectures?.map((lecture) => (
                           <SelectItem key={lecture.lectureId} value={lecture.lectureId}>
-                            {lecture.name} - {lecture.teacherName}
+                            {lecture.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -1714,11 +1723,15 @@ function ProblemCreatorContent() {
                 </div>
                 </div>
               </div>
-        </div>
+          </div>
+        </ResizablePanel>
+
+        <ResizableHandle withHandle />
 
         {/* Right Side - Exam Paper */}
-        <div className="col-span-7 h-full">
-          <div className="bg-card text-card-foreground flex flex-col rounded-xl border h-full">
+        <ResizablePanel defaultSize={60} minSize={40}>
+          <div className="h-full pl-3">
+            <div className="bg-card text-card-foreground flex flex-col rounded-xl border h-full">
             <div className="grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 p-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
               {/* Tab Navigation */}
               <div className="relative w-full">
@@ -1802,8 +1815,9 @@ function ProblemCreatorContent() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
+          </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
 
       {/* Print Settings Dialog */}
       <PrintSettingsDialog open={showPrintDialog} onOpenChange={setShowPrintDialog} />
