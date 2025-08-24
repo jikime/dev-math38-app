@@ -1411,34 +1411,40 @@ function ProblemCreatorContent() {
             </Button>
           </div>
         </div>
-        
-        {/* 범위 및 출제범위 */}
-        <div className="grid grid-cols-2 gap-6">
-          <div>
-            <h3 className="font-semibold text-sm mb-2">범위</h3>
-            <div className="text-sm text-gray-700">
-              1.1 다항식의 연산 ~ 1.1.1 다항식의 연산
+      </div>
+
+      {/* 범위 및 출제유형 */}
+      <div className="mb-6">
+        <div className="flex">
+          <div className="w-[30%] pr-3">
+            <div className="bg-white rounded-lg border p-4">
+              <h3 className="font-semibold text-sm mb-2">범위</h3>
+              <div className="text-sm text-gray-700">
+                1.1 다항식의 연산 ~ 1.1.1 다항식의 연산
+              </div>
             </div>
           </div>
           
-          <div>
-            <h3 className="font-semibold text-sm mb-2">출제범위</h3>
-            <div className="flex gap-1">
-              <button className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
-                전체
-              </button>
-              <button className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
-                교과서 유형
-              </button>
-              <button className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
-                문제집 유형
-              </button>
-              <button className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
-                기출 유형
-              </button>
-              <button className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
-                모의고사 유형
-              </button>
+          <div className="w-[70%] pl-3">
+            <div className="bg-white rounded-lg border p-4">
+              <h3 className="font-semibold text-sm mb-2">출제유형</h3>
+              <div className="flex gap-1">
+                <button className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
+                  전체
+                </button>
+                <button className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
+                  교과서 유형
+                </button>
+                <button className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
+                  문제집 유형
+                </button>
+                <button className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
+                  기출 유형
+                </button>
+                <button className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
+                  모의고사 유형
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1446,7 +1452,7 @@ function ProblemCreatorContent() {
 
       <ResizablePanelGroup 
         direction="horizontal" 
-        className="min-h-screen"
+        className="h-[calc(100vh-200px)]"
       >
         {/* Left Sidebar - Settings */}
         <ResizablePanel defaultSize={30} minSize={30} maxSize={60}>
@@ -1717,7 +1723,7 @@ function ProblemCreatorContent() {
         {/* Right Side - Exam Paper */}
         <ResizablePanel defaultSize={70} minSize={40}>
           <div className="h-full pl-3">
-            <div className="bg-card text-card-foreground flex flex-col rounded-xl border h-full">
+            <div className="bg-card text-card-foreground flex flex-col rounded-xl border h-full max-h-full overflow-hidden">
             <div className="grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 p-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
               {/* Tab Navigation */}
               <div className="relative w-full">
@@ -1754,51 +1760,6 @@ function ProblemCreatorContent() {
                 {activeTab === "style" && renderStyleTab()}
               </ScrollArea>
 
-              <Separator className="my-6" />
-
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-600">
-                  총 <span className="font-medium">{selectedProblems.length}</span>개 문제 선택됨
-                </div>
-                <div className="flex items-center gap-2">
-                  {activeTab === "exam" && (
-                    <>
-                      <Button size="sm" variant="outline" onClick={() => setShowPrintDialog(true)}>
-                        <Printer className="w-4 h-4 mr-1" />
-                        프린트
-                      </Button>
-                      <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                        <Download className="w-4 h-4 mr-1" />
-                        시험지 다운로드
-                      </Button>
-                    </>
-                  )}
-                  {activeTab === "quick" && (
-                    <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                      <Download className="w-4 h-4 mr-1" />
-                      빠른답안 다운로드
-                    </Button>
-                  )}
-                  {activeTab === "detailed" && (
-                    <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
-                      <Download className="w-4 h-4 mr-1" />
-                      정답지 다운로드
-                    </Button>
-                  )}
-                  {activeTab === "analysis" && (
-                    <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700">
-                      <Download className="w-4 h-4 mr-1" />
-                      분석 리포트 다운로드
-                    </Button>
-                  )}
-                  {activeTab === "style" && (
-                    <Button size="sm" className="bg-orange-600 hover:bg-orange-700">
-                      <Download className="w-4 h-4 mr-1" />
-                      스타일 다운로드
-                    </Button>
-                  )}
-                </div>
-              </div>
             </div>
           </div>
           </div>
