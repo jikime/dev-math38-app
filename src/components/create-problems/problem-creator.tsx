@@ -1379,13 +1379,29 @@ function ProblemCreatorContent() {
 
   return (
     <div className="container mx-auto px-6 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">문제출제</h1>
-            <p className="text-gray-600">맞춤형 시험지와 문제집을 쉽게 만들어보세요</p>
+      {/* Header - 강좌명 */}
+      <div className="mb-8 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <h3 className="font-semibold text-lg">강좌명</h3>
+            {lecturesLoading ? (
+              <div className="h-10 bg-gray-200 rounded animate-pulse w-64" />
+            ) : (
+              <Select value={selectedLectureId} onValueChange={setSelectedLectureId}>
+                <SelectTrigger className="w-64">
+                  <SelectValue placeholder="강좌를 선택하세요" />
+                </SelectTrigger>
+                <SelectContent>
+                  {lectures?.map((lecture) => (
+                    <SelectItem key={lecture.lectureId} value={lecture.lectureId}>
+                      {lecture.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
+          
           <div className="flex items-center gap-3">
             <Button variant="outline">
               <Save className="w-4 h-4 mr-2" />
@@ -1395,6 +1411,37 @@ function ProblemCreatorContent() {
               <FileText className="w-4 h-4 mr-2" />
               시험지 작성
             </Button>
+          </div>
+        </div>
+        
+        {/* 범위 및 출제범위 */}
+        <div className="grid grid-cols-2 gap-6">
+          <div>
+            <h3 className="font-semibold text-sm mb-2">범위</h3>
+            <div className="text-sm text-gray-700">
+              1.1 다항식의 연산 ~ 1.1.1 다항식의 연산
+            </div>
+          </div>
+          
+          <div>
+            <h3 className="font-semibold text-sm mb-2">출제범위</h3>
+            <div className="flex gap-1">
+              <button className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
+                전체
+              </button>
+              <button className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
+                교과서 유형
+              </button>
+              <button className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
+                문제집 유형
+              </button>
+              <button className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
+                기출 유형
+              </button>
+              <button className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
+                모의고사 유형
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1407,65 +1454,6 @@ function ProblemCreatorContent() {
         <ResizablePanel defaultSize={40} minSize={30} maxSize={60}>
           <div className="h-full pr-3">
             <div className="space-y-6">
-                {/* 강좌명 선택 */}
-                <div className="bg-white rounded-lg border p-4">
-                  <h3 className="font-semibold text-lg mb-4">강좌명</h3>
-                  {lecturesLoading ? (
-                    <div className="h-10 bg-gray-200 rounded animate-pulse" />
-                  ) : (
-                    <Select value={selectedLectureId} onValueChange={setSelectedLectureId}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="강좌를 선택하세요" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {lectures?.map((lecture) => (
-                          <SelectItem key={lecture.lectureId} value={lecture.lectureId}>
-                            {lecture.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                </div>
-
-                {/* 범위 섹션 */}
-                <div className="bg-white rounded-lg border p-4">
-                  <h3 className="font-semibold text-lg mb-4">범위</h3>
-                  <div className="space-y-3">
-                    <div className="text-sm font-medium text-gray-700">
-                      1.1 다항식의 연산 ~ 1.1.1 다항식의 연산
-                    </div>
-                    <div className="bg-gray-100 rounded-lg p-3">
-                      <div className="text-xs text-gray-600 mb-1">시험지명</div>
-                      <div className="font-medium">207 회차</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 범위 탭 버튼 */}
-                <div className="bg-white rounded-lg border p-4">
-                  <div className="flex gap-1">
-                    <button className="px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md">
-                      출제 범위
-                    </button>
-                    <button className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
-                      전체
-                    </button>
-                    <button className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
-                      교과서 유형
-                    </button>
-                    <button className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
-                      문제집 유형
-                    </button>
-                    <button className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
-                      기출 유형
-                    </button>
-                    <button className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
-                      모의고사 유형
-                    </button>
-                  </div>
-                </div>
-
                 {/* 과목을 선택해 주세요 */}
                 <div className="bg-white rounded-lg border p-4">
                   <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
