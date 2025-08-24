@@ -474,10 +474,10 @@ function ProblemCreatorContent() {
     ]
 
     return (
-      <div className="grid grid-cols-5 gap-2">
+      <div className="grid grid-cols-5 gap-1">
         {levelConfig.map(({ key, label, color }) => (
           <div key={key} className="text-center">
-            <div className={`p-2 rounded-lg mb-1 ${color}`}>
+            <div className={`p-0 rounded-lg mb-1 ${color}`}>
               <Input
                 type="number"
                 value={simpleValues[key]}
@@ -488,7 +488,7 @@ function ProblemCreatorContent() {
                   setSimpleValues(newValues, maxFeasible)
                   
                 }}
-                className="h-10 w-16 text-center font-bold text-lg border-0 bg-transparent px-2 focus-visible:ring-0"
+                className="h-10 w-16 text-center font-bold text-base border-0 bg-transparent px-2 focus-visible:ring-0"
                 min="0"
               />
             </div>
@@ -524,9 +524,9 @@ function ProblemCreatorContent() {
           <div className="flex items-center justify-between mb-4">
             <h4 className="font-medium text-lg">객관식</h4>
           </div>
-          <div className="grid grid-cols-5 gap-3">
+          <div className="grid grid-cols-5 gap-2">
             {levelConfig.map(({ key, label, color }) => (
-              <div key={key} className={`p-3 rounded-lg border-2 ${color}`}>
+              <div key={key} className={`p-1 rounded-lg border-2 ${color}`}>
                 <div className="text-center mb-2">
                   <div className="text-xs font-medium mb-2">{label}</div>
                   <Input
@@ -538,7 +538,7 @@ function ProblemCreatorContent() {
                       newObjective[key] = newValue
                       setNormal1Values(newObjective, subjectiveSums, maxFeasible)
                     }}
-                    className="h-12 w-full text-center font-bold text-xl border-0 bg-transparent px-1 focus-visible:ring-0 mb-2"
+                    className="h-12 w-full text-center font-bold text-lg border-0 bg-transparent px-1 focus-visible:ring-0 mb-2"
                     min="0"
                   />
                   <div className="text-xs text-gray-500">
@@ -556,9 +556,9 @@ function ProblemCreatorContent() {
           <div className="flex items-center justify-between mb-4">
             <h4 className="font-medium text-lg">주관식</h4>
           </div>
-          <div className="grid grid-cols-5 gap-3">
+          <div className="grid grid-cols-5 gap-2">
             {levelConfig.map(({ key, label, color }) => (
-              <div key={key} className={`p-3 rounded-lg border-2 ${color}`}>
+              <div key={key} className={`p-1 rounded-lg border-2 ${color}`}>
                 <div className="text-center mb-2">
                   <div className="text-xs font-medium mb-2">{label}</div>
                   <Input
@@ -570,7 +570,7 @@ function ProblemCreatorContent() {
                       newSubjective[key] = newValue
                       setNormal1Values(objectiveSums, newSubjective, maxFeasible)
                     }}
-                    className="h-12 w-full text-center font-bold text-xl border-0 bg-transparent px-1 focus-visible:ring-0 mb-2"
+                    className="h-12 w-full text-center font-bold text-lg border-0 bg-transparent px-1 focus-visible:ring-0 mb-2"
                     min="0"
                   />
                   <div className="text-xs text-gray-500">
@@ -626,7 +626,7 @@ function ProblemCreatorContent() {
                               const newValue = Math.max(0, Number.parseInt(e.target.value) || 0)
                               setDistribution(rowIndex, colIndex, newValue)
                             }}
-                            className={`h-6 w-12 text-center border-0 bg-transparent px-1 focus-visible:ring-0 text-sm ${
+                            className={`h-6 w-12 text-center border-0 bg-transparent px-1 focus-visible:ring-0 text-xs ${
                               currentDistribution[rowIndex][colIndex] > 0 ? "text-blue-600 font-medium" : "text-gray-400"
                             }`}
                             min="0"
@@ -674,7 +674,7 @@ function ProblemCreatorContent() {
                               const newValue = Math.max(0, Number.parseInt(e.target.value) || 0)
                               setDistribution(rowIndex + 4, colIndex, newValue)
                             }}
-                            className={`h-6 w-12 text-center border-0 bg-transparent px-1 focus-visible:ring-0 text-sm ${
+                            className={`h-6 w-12 text-center border-0 bg-transparent px-1 focus-visible:ring-0 text-xs ${
                               currentDistribution[rowIndex + 4][colIndex] > 0 ? "text-blue-600 font-medium" : "text-gray-400"
                             }`}
                             min="0"
