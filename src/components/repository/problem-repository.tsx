@@ -764,15 +764,6 @@ function ProblemRepositoryComponent() {
 
             {/* Right side - Search and View toggle */}
             <div className="flex items-center gap-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 z-10" />
-                <Input
-                  placeholder="검색어를 입력하세요..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="h-9 pl-9 pr-4 w-64 text-sm bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 focus:border-blue-400 dark:focus:border-blue-500 rounded-md transition-all duration-200"
-                />
-              </div>
               <div className="flex items-center bg-gray-100 dark:bg-gray-800/50 rounded-lg p-1">
                 <Button
                   variant="ghost"
