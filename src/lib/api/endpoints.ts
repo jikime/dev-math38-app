@@ -159,4 +159,9 @@ export const API_ENDPOINTS = {
     STUDENTS: (id: string) => `/api/m38/lecture/${id}/students`,
     CLONE: '/api/m38/lecture/clone',
   },
+
+  // 과목 관련
+  SUBJECTS: {
+    LIST: 'https://math2.suzag.com/app/subject/subject/list',
+  },
 } as const;

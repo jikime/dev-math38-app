@@ -104,4 +104,7 @@ export const queryKeys = {
   // 학원 통계
   academyStats: () => [...queryKeys.all, 'academy-stats'] as const,
   dashboardMetrics: () => [...queryKeys.all, 'dashboard-metrics'] as const,
+  
+  // 과목 관련
+  subjects: () => [...queryKeys.all, 'subjects'] as const,
 } as const;

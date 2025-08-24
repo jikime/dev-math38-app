@@ -12,9 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { PrintSettingsDialog } from "@/components/common/print-settings-dialog"
 import { FunctionProblemDialog } from "@/components/create-problems/function-problem-dialog"
 import { useMyLectures } from "@/hooks/use-lecture"
+import { useSubjects } from "@/hooks/use-subjects"
 import {
-  ChevronDown,
-  ChevronRight,
   Plus,
   Settings,
   Download,
@@ -22,18 +21,19 @@ import {
   Target,
   BookOpen,
   Edit3,
-  Calculator,
   FileText,
   CheckCircle,
   BookOpenCheck,
   BarChart3,
-  Printer,
-  RotateCcw
+  Printer
 } from "lucide-react"
 
 export function ProblemCreator() {
   // 강좌 관련 상태
   const [selectedLectureId, setSelectedLectureId] = useState<string>("")
+  
+  // 과목 관련 상태
+  const [selectedSubjectKeys, setSelectedSubjectKeys] = useState<number[]>([])
   
   const [selectedRange, setSelectedRange] = useState("1 유리수와 순환소수 ~ 3.1.3 일차부등식의 활용")
   const [expandedCategories, setExpandedCategories] = useState<string[]>(["1 자연수의 성질"])
@@ -66,6 +66,7 @@ export function ProblemCreator() {
 
   // API 훅들
   const { data: lectures, isLoading: lecturesLoading } = useMyLectures()
+  const { data: subjects, isLoading: subjectsLoading } = useSubjects()
 
   // 첫 번째 강좌를 기본값으로 설정
   useEffect(() => {
@@ -258,6 +259,14 @@ export function ProblemCreator() {
   const toggleProblem = (problemId: string) => {
     setSelectedProblems((prev) =>
       prev.includes(problemId) ? prev.filter((id) => id !== problemId) : [...prev, problemId],
+    )
+  }
+
+  const toggleSubject = (subjectKey: number) => {
+    setSelectedSubjectKeys((prev) =>
+      prev.includes(subjectKey) 
+        ? prev.filter((key) => key !== subjectKey) 
+        : [...prev, subjectKey]
     )
   }
 
@@ -1249,63 +1258,59 @@ export function ProblemCreator() {
                     </span>
                     과목을 선택해 주세요
                   </h3>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {selectedLectureId && lectures?.find(l => l.lectureId === selectedLectureId) ? (
-                    <Badge variant="outline" className="bg-blue-100 text-blue-800">
-                      {lectures.find(l => l.lectureId === selectedLectureId)?.subjectName}
-                    </Badge>
-                  ) : (
-                    <div className="text-sm text-gray-500">강좌를 선택하면 과목이 표시됩니다</div>
-                  )}
-                </div>
 
-                <ScrollArea className="h-64">
-                  <div className="space-y-2">
-                    {selectedLectureId ? (
-                      Object.entries(getCurrentCurriculumData()).map(([categoryName, subcategories]) => (
-                      <div key={categoryName}>
-                        <div className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-gray-50">
-                          <div className="flex items-center gap-2">
-                            <Checkbox />
-                            <span className="font-medium text-sm">{categoryName}</span>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => toggleCategory(categoryName)}
-                            className="p-1 h-auto"
-                          >
-                            {expandedCategories.includes(categoryName) ? (
-                              <ChevronDown className="w-4 h-4" />
-                            ) : (
-                              <ChevronRight className="w-4 h-4" />
-                            )}
-                          </Button>
-                        </div>
-
-                        {expandedCategories.includes(categoryName) && (
-                          <div className="ml-6 mt-2 space-y-1">
-                            {Object.entries(subcategories).map(([subName, problems]) => (
-                              <div key={subName}>
-                                <div className="flex items-center gap-2 p-2 text-sm text-gray-600 hover:bg-gray-50 rounded">
-                                  <ChevronRight className="w-3 h-3" />
-                                  <span className="font-medium">{subName}</span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))
+                  {/* 선택된 과목 표시 */}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {selectedSubjectKeys.length > 0 ? (
+                      selectedSubjectKeys.map((key) => {
+                        const subject = subjects?.find(s => s.key === key)
+                        return subject ? (
+                          <Badge key={key} variant="outline" className="bg-blue-100 text-blue-800">
+                            {subject.title}
+                            <button
+                              onClick={() => toggleSubject(key)}
+                              className="ml-1 hover:bg-blue-200 rounded-full"
+                            >
+                              ×
+                            </button>
+                          </Badge>
+                        ) : null
+                      })
                     ) : (
-                      <div className="flex items-center justify-center h-32 text-gray-500">
-                        <div className="text-center">
-                          <p>먼저 강좌를 선택해주세요</p>
-                        </div>
-                      </div>
+                      <div className="text-sm text-gray-500">과목을 선택해주세요</div>
                     )}
                   </div>
-                </ScrollArea>
+
+                  {/* 과목 선택 UI */}
+                  <ScrollArea className="h-64">
+                    <div className="space-y-1">
+                      {subjectsLoading ? (
+                        <div className="flex items-center justify-center h-32">
+                          <div className="text-sm text-gray-500">과목 목록 로딩중...</div>
+                        </div>
+                      ) : subjects && subjects.length > 0 ? (
+                        subjects.map((subject) => (
+                          <div
+                            key={subject.key}
+                            className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
+                            onClick={() => toggleSubject(subject.key)}
+                          >
+                            <Checkbox
+                              checked={selectedSubjectKeys.includes(subject.key)}
+                              onChange={() => toggleSubject(subject.key)}
+                            />
+                            <span className="font-medium text-sm">{subject.title}</span>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="flex items-center justify-center h-32 text-gray-500">
+                          <div className="text-center">
+                            <p>과목 목록을 불러올 수 없습니다</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </ScrollArea>
                 </div>
 
                 {/* 항목을 선택해 주세요 */}
