@@ -502,7 +502,7 @@ export function FunctionProblemDialog({
                           {chapter.skillList.map((skill) => (
                             <div
                               key={skill.skillId}
-                              className={`p-4 rounded-lg border cursor-pointer transition-colors ${
+                              className={`px-4 py-2 bg-white rounded-lg border cursor-pointer transition-colors ${
                                 selectedSkill === skill.skillId
                                   ? "border-blue-500 bg-blue-50"
                                   : "border-gray-200 hover:border-gray-300"
@@ -622,18 +622,77 @@ export function FunctionProblemDialog({
                             <div className="grid grid-cols-2 gap-4">
                               {paginatedProblems.map((problem, index) => (
                                 <div key={problem.problemId} className={`${index % 2 === 0 ? 'pr-2' : 'pl-2'}`}>
-                                  <ProblemView
-                                    problem={problem as any}
-                                    width={390}
-                                    margin={20}
-                                    level={Number(problem.difficulty)}
-                                    skillId={problem.tags?.find(tag => tag.type === "skill")?.skillId || ""}
-                                    ltype={problem.ltype}
-                                    answerType={problem.content?.answerType || "choice"}
-                                    skillName={problem.skillName}
-                                    solution={false}
-                                    showTags={true}
-                                  />
+                                  <div className="border rounded-lg p-2 bg-white">
+                                    <ProblemView
+                                      problem={problem as any}
+                                      width={390}
+                                      margin={20}
+                                      level={Number(problem.difficulty)}
+                                      skillId={problem.tags?.find(tag => tag.type === "skill")?.skillId || ""}
+                                      ltype={problem.ltype}
+                                      answerType={problem.content?.answerType || "choice"}
+                                      skillName={problem.skillName}
+                                      solution={false}
+                                      showTags={true}
+                                    />
+                                    <div className="mt-2 flex justify-center">
+                                      {(() => {
+                                        const isAdded = pages[selectedPageIndex]?.problemIds.includes(problem.problemId)
+                                        return (
+                                          <Button
+                                            size="sm"
+                                            variant={isAdded ? "destructive" : "outline"}
+                                            onClick={() => {
+                                              if (isAdded) {
+                                                // 문제 제거
+                                                setPages((prev) => {
+                                                  const next = prev.map(page => ({
+                                                    ...page,
+                                                    problemIds: [...page.problemIds],
+                                                    laneOf: { ...(page.laneOf || {}) }
+                                                  }))
+                                                  const page = next[selectedPageIndex]
+                                                  page.problemIds = page.problemIds.filter(id => id !== problem.problemId)
+                                                  if (page.laneOf) {
+                                                    delete page.laneOf[problem.problemId]
+                                                  }
+                                                  return next
+                                                })
+                                              } else {
+                                                // 문제 추가
+                                                setPages((prev) => {
+                                                  const next = prev.map(page => ({
+                                                    ...page,
+                                                    problemIds: [...page.problemIds],
+                                                    laneOf: { ...(page.laneOf || {}) }
+                                                  }))
+                                                  const page = next[selectedPageIndex]
+                                                  if (!page.problemIds.includes(problem.problemId)) {
+                                                    page.problemIds.push(problem.problemId)
+                                                    page.laneOf[problem.problemId] = 0 // 첫 번째 컬럼에 추가
+                                                  }
+                                                  return next
+                                                })
+                                              }
+                                            }}
+                                            className="w-full"
+                                          >
+                                            {isAdded ? (
+                                              <>
+                                                <Minus className="w-4 h-4 mr-1" />
+                                                문제 제거
+                                              </>
+                                            ) : (
+                                              <>
+                                                <Plus className="w-4 h-4 mr-1" />
+                                                문제 추가
+                                              </>
+                                            )}
+                                          </Button>
+                                        )
+                                      })()}
+                                    </div>
+                                  </div>
                                 </div>
                               ))}
                             </div>
