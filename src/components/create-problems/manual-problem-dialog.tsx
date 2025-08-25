@@ -18,19 +18,15 @@ interface UIProblem extends ApiProblem {
   skillName?: string;
 }
 
-interface FunctionProblemDialogProps {
+interface ManualProblemDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  selectedProblems: UIProblem[]
-  onProblemsChange: (problems: UIProblem[]) => void
 }
 
-export function FunctionProblemDialog({
+export function ManualProblemDialog({
   open,
   onOpenChange,
-  selectedProblems,
-  onProblemsChange,
-}: FunctionProblemDialogProps) {
+}: ManualProblemDialogProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [problemListPage, setProblemListPage] = useState(1) // 문제 목록 페이징
   const PROBLEMS_PER_PAGE = 20 // 페이지당 문제 수
@@ -78,15 +74,6 @@ export function FunctionProblemDialog({
     }))
   }, [problemsData, skill])
   
-  // 디버깅 로그
-  useEffect(() => {
-    console.log('선택된 스킬:', selectedSkill)
-    console.log('로딩 중:', isLoading)
-    console.log('로드된 문제 수:', problems.length)
-    if (error) {
-      console.error('API 에러:', error)
-    }
-  }, [selectedSkill, isLoading, problems.length, error])
   
   // 스킬이 변경될 때 문제 목록 페이지만 초기화 (페이지는 유지)
   useEffect(() => {
@@ -145,7 +132,6 @@ export function FunctionProblemDialog({
     problemListPage * PROBLEMS_PER_PAGE
   )
 
-
   const selectedPageIndex = Math.max(0, Math.min(currentPage - 1, pages.length - 1))
 
   // 전체 문제 목록을 저장하기 위한 상태 (모든 스킬의 문제를 포함)
@@ -163,31 +149,12 @@ export function FunctionProblemDialog({
 
   const getProblemById = useCallback((id: string) => allProblems.find((p) => p.problemId === id), [allProblems])
 
-  // 초기 로딩 시 부모로부터 받은 선택 문제를 페이지 1에 채워 넣기
-  useEffect(() => {
-    if (selectedProblems.length > 0 && pages.every((p) => p.problemIds.length === 0)) {
-      setPages((prev) => {
-        const next = [...prev]
-        const laneOf: Record<string, number> = {}
-        selectedProblems.forEach((p) => { laneOf[p.problemId] = 0 })
-        next[0] = { ...next[0], problemIds: selectedProblems.map((p) => p.problemId), laneOf }
-        return next
-      })
-    }
-  }, [selectedProblems, pages])
-
-
   const arrangedCount = useMemo(
     () => pages.reduce((acc, p) => acc + p.problemIds.length, 0),
     [pages],
   )
 
   const handleSubmit = () => {
-    const arrangedProblemsFlat: UIProblem[] = pages
-      .flatMap((pg) => pg.problemIds)
-      .map((id) => getProblemById(id))
-      .filter(Boolean) as UIProblem[]
-    onProblemsChange(arrangedProblemsFlat)
     onOpenChange(false)
   }
 
@@ -202,11 +169,6 @@ export function FunctionProblemDialog({
     }
     return lanes
   }, [])
-
-
-  // 드래그 앤 드롭 핸들러는 더 이상 사용하지 않음 (간단한 드래그 앤 드롭으로 대체)
-  // const handleA4DragEnd = (result: DropResult) => { ... }
-  // const handlePmapDragEnd = (result: DropResult) => { ... }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -830,48 +792,46 @@ export function FunctionProblemDialog({
                         </Button>
                       </div>
                     </div>
-                      <div className="space-y-2">
-                        {pages.map((pg, i) => (
-                          <div
-                            key={`pagemap-${pg.id}`}
-                            className={`rounded-md border p-2 ${i === selectedPageIndex ? 'border-blue-400 bg-blue-50' : 'border-gray-200 bg-white'}`}
-                            onClick={() => setCurrentPage(i + 1)}
-                          >
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="text-xs font-medium">페이지 {i + 1}</div>
-                              <div className="text-[10px] text-gray-500">{pg.problemIds.length}개</div>
-                            </div>
-                            <div className="relative">
-                              {pg.columns === 2 && (
-                                <div className="pointer-events-none absolute top-0 bottom-0 left-1/2 -translate-x-1/2 border-l border-dashed border-gray-300" />
-                              )}
-                              <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${pg.columns}, minmax(0, 1fr))` }}>
-                                {getLaneItems(pg).map((lane, laneIdx) => (
-                                      <div key={`pmap-${i}-col-${laneIdx}`} className="min-h-6 border border-dashed border-transparent p-0.5">
-                                        {lane.length === 0 && (
-                                          <div className="h-6 rounded-sm border border-dashed border-gray-300 bg-gray-50 text-[11px] text-gray-400 flex items-center justify-center">
-                                            비어있음
-                                          </div>
-                                        )}
-                                        {lane.map((pid, idx2) => {
-                                          const problem = getProblemById(pid)
-                                          const problemNumber = problem?.problemNumber || problem?.problemId || pid
-                                          return (
-                                            <div key={`mini-${pid}-${idx2}`} className="h-8 rounded-sm border bg-white text-[10px] text-gray-700 flex items-center justify-center truncate cursor-move mb-1">
-                                              문제 {problemNumber}
-                                            </div>
-                                          )
-                                        })}
+                    <div className="space-y-2">
+                      {pages.map((pg, i) => (
+                        <div
+                          key={`pagemap-${pg.id}`}
+                          className={`rounded-md border p-2 ${i === selectedPageIndex ? 'border-blue-400 bg-blue-50' : 'border-gray-200 bg-white'}`}
+                          onClick={() => setCurrentPage(i + 1)}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="text-xs font-medium">페이지 {i + 1}</div>
+                            <div className="text-[10px] text-gray-500">{pg.problemIds.length}개</div>
+                          </div>
+                          <div className="relative">
+                            {pg.columns === 2 && (
+                              <div className="pointer-events-none absolute top-0 bottom-0 left-1/2 -translate-x-1/2 border-l border-dashed border-gray-300" />
+                            )}
+                            <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${pg.columns}, minmax(0, 1fr))` }}>
+                              {getLaneItems(pg).map((lane, laneIdx) => (
+                                <div key={`pmap-${i}-col-${laneIdx}`} className="min-h-6 border border-dashed border-transparent p-0.5">
+                                  {lane.length === 0 && (
+                                    <div className="h-6 rounded-sm border border-dashed border-gray-300 bg-gray-50 text-[11px] text-gray-400 flex items-center justify-center">
+                                      비어있음
+                                    </div>
+                                  )}
+                                  {lane.map((pid, idx2) => {
+                                    const problem = getProblemById(pid)
+                                    const problemNumber = problem?.problemNumber || problem?.problemId || pid
+                                    return (
+                                      <div key={`mini-${pid}-${idx2}`} className="h-8 rounded-sm border bg-white text-[10px] text-gray-700 flex items-center justify-center truncate cursor-move mb-1">
+                                        문제 {problemNumber}
                                       </div>
-                                ))}
-                              </div>
+                                    )
+                                  })}
+                                </div>
+                              ))}
                             </div>
                           </div>
-                        ))}
-                      </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-
-                  
                 </div>
               </div>
             </div>

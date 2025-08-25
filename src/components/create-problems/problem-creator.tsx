@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -15,7 +14,7 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable"
 import { PrintSettingsDialog } from "@/components/common/print-settings-dialog"
-import { FunctionProblemDialog } from "@/components/create-problems/manual-problem-dialog"
+import { ManualProblemDialog } from "@/components/create-problems/manual-problem-dialog"
 import { useMyLectures, useLectureDetail, useLectureLastIndex } from "@/hooks/use-lecture"
 import { useSubjects, useSubjectTops } from "@/hooks/use-subjects"
 import { useSkillChapters, useSkillCounts } from "@/hooks/use-skills"
@@ -23,7 +22,7 @@ import { MultiSelect } from "@/components/ui/multi-select"
 import { SubjectTree } from "@/components/ui/subject-tree"
 import type { Option } from "@/components/ui/multi-select"
 import type { SkillChapter } from "@/types/skill"
-import { ProblemDistributionProvider, useProblemDistribution } from "@/contexts/problem-distribution-context"
+import { ProblemDistributionProvider } from "@/contexts/problem-distribution-context"
 import { useSimple1Aggregator, useNormal1Aggregator, useDetailedAggregator } from "@/hooks/use-aggregators"
 import { useGeneratePaper } from "@/hooks/use-problems"
 import { GeneratedPaper } from "@/types/problem"
@@ -32,16 +31,11 @@ import PaperPrintView4 from "@/components/math-paper/template/paper-print-view4"
 import {
   Plus,
   Settings,
-  Download,
   Save,
-  Target,
-  BookOpen,
   Edit3,
   FileText,
   CheckCircle,
   BookOpenCheck,
-  BarChart3,
-  Printer
 } from "lucide-react"
 import AnswerSummaryPrint from "./answer-summary-print"
 import SolutionPagesPrint from "../math-paper/template/solution-pages-print"
@@ -61,7 +55,6 @@ function ProblemCreatorContent() {
   const [skillChapters, setSkillChapters] = useState<SkillChapter[]>([])
   const [selectedSkills, setSelectedSkills] = useState<string[]>([])
   
-  const [selectedRange, setSelectedRange] = useState("1 유리수와 순환소수 ~ 3.1.3 일차부등식의 활용")
   const [expandedCategories, setExpandedCategories] = useState<string[]>(["1 자연수의 성질"])
   const [selectedProblems, setSelectedProblems] = useState<string[]>([])
   const [activeTab, setActiveTab] = useState("exam")
@@ -69,12 +62,12 @@ function ProblemCreatorContent() {
   const [selectedHeaderStyle, setSelectedHeaderStyle] = useState(1)
   const [difficultyTab, setDifficultyTab] = useState("simple")
   const [showManualDialog, setShowManualDialog] = useState(false)
-  const [selectedManualProblems, setSelectedManualProblems] = useState<string[]>([])
   const [selectedProblemsPreview, setSelectedProblemsPreview] = useState<Array<{ id: string; title: string }>>([])
   const [showPrintDialog, setShowPrintDialog] = useState(false)
   const [showPageMapPreview, setShowPageMapPreview] = useState(false)
   const [showFunctionDialog, setShowFunctionDialog] = useState(false)
-  type FunctionDialogProblem = {
+  
+  type ManualDialogProblem = {
     id: string
     title: string
     description: string
@@ -87,7 +80,8 @@ function ProblemCreatorContent() {
     source: "교과서" | "문제집" | "기출" | "모의고사"
     domain: "계산" | "이해" | "추론" | "해결"
   }
-  const [selectedFunctionProblems, setSelectedFunctionProblems] = useState<FunctionDialogProblem[]>([])
+  
+  const [selectedManualProblems, setSelectedManualProblems] = useState<ManualDialogProblem[]>([])
 
   // 생성된 시험지 상태
   const [generatedPaper, setGeneratedPaper] = useState<GeneratedPaper | null>(null)
@@ -287,7 +281,7 @@ function ProblemCreatorContent() {
     setExpandedCategories([])
     setSelectedProblems([])
     setSelectedProblemsPreview([])
-    setSelectedFunctionProblems([])
+    setSelectedManualProblems([])
     
     // 문항수 관련 초기화는 aggregator 훅 선언 이후에 처리
   }, [selectedLectureId])
@@ -325,10 +319,7 @@ function ProblemCreatorContent() {
     }
   }, [selectedTreeItems])
 
-  // 선택된 강좌의 과목명 추출
-  const selectedSubjectName = selectedLectureId && lectures?.find(l => l.lectureId === selectedLectureId)?.subjectName
-
-
+ 
   // 과목 데이터를 MultiSelect 옵션으로 변환
   const subjectOptions: Option[] = subjects?.map(subject => ({
     label: subject.title,
@@ -1402,11 +1393,9 @@ function ProblemCreatorContent() {
       <PrintSettingsDialog open={showPrintDialog} onOpenChange={setShowPrintDialog} />
 
       {/* Function Problem Dialog */}
-      <FunctionProblemDialog
+      <ManualProblemDialog
         open={showFunctionDialog}
         onOpenChange={setShowFunctionDialog}
-        selectedProblems={selectedFunctionProblems}
-        onProblemsChange={setSelectedFunctionProblems}
       />
     </div>
   )
