@@ -88,12 +88,10 @@ export function FunctionProblemDialog({
     }
   }, [selectedSkill, isLoading, problems.length, error])
   
-  // 스킬이 변경될 때마다 페이지 상태 초기화
+  // 스킬이 변경될 때 문제 목록 페이지만 초기화 (페이지는 유지)
   useEffect(() => {
     if (selectedSkill) {
-      setPages([{ id: 1, columns: 2, problemIds: [], laneOf: {} }])
-      setCurrentPage(1)
-      setProblemListPage(1) // 문제 목록 페이지도 초기화
+      setProblemListPage(1) // 문제 목록 페이지만 초기화
     }
   }, [selectedSkill])
 
@@ -150,7 +148,20 @@ export function FunctionProblemDialog({
 
   const selectedPageIndex = Math.max(0, Math.min(currentPage - 1, pages.length - 1))
 
-  const getProblemById = useCallback((id: string) => problems.find((p) => p.problemId === id), [problems])
+  // 전체 문제 목록을 저장하기 위한 상태 (모든 스킬의 문제를 포함)
+  const [allProblems, setAllProblems] = useState<UIProblem[]>([])
+  
+  // 현재 스킬의 문제가 로드될 때마다 전체 문제 목록에 추가
+  useEffect(() => {
+    if (problems.length > 0) {
+      setAllProblems(prev => {
+        const existing = prev.filter(p => !problems.some(newP => newP.problemId === p.problemId))
+        return [...existing, ...problems]
+      })
+    }
+  }, [problems])
+
+  const getProblemById = useCallback((id: string) => allProblems.find((p) => p.problemId === id), [allProblems])
 
   // 초기 로딩 시 부모로부터 받은 선택 문제를 페이지 1에 채워 넣기
   useEffect(() => {
@@ -623,6 +634,10 @@ export function FunctionProblemDialog({
                               {paginatedProblems.map((problem, index) => (
                                 <div key={problem.problemId} className={`${index % 2 === 0 ? 'pr-2' : 'pl-2'}`}>
                                   <div className="border rounded-lg p-2 bg-white">
+                                    {/* 문제 번호 표시 */}
+                                    <div className="mb-2 px-2 py-1 bg-gray-100 rounded text-xs font-medium text-gray-600">
+                                      문제 번호: {problem.problemNumber || problem.problemId}
+                                    </div>
                                     <ProblemView
                                       problem={problem as any}
                                       width={390}
@@ -637,47 +652,77 @@ export function FunctionProblemDialog({
                                     />
                                     <div className="mt-2 flex justify-center">
                                       {(() => {
-                                        const isAdded = pages[selectedPageIndex]?.problemIds.includes(problem.problemId)
+                                        // 모든 페이지에서 해당 문제가 이미 추가되었는지 확인
+                                        const isAddedInAnyPage = pages.some(page => page.problemIds.includes(problem.problemId))
+                                        
                                         return (
                                           <Button
                                             size="sm"
-                                            variant={isAdded ? "destructive" : "outline"}
+                                            variant={isAddedInAnyPage ? "destructive" : "outline"}
                                             onClick={() => {
-                                              if (isAdded) {
-                                                // 문제 제거
+                                              if (isAddedInAnyPage) {
+                                                // 문제 제거 - 모든 페이지에서 해당 문제 제거
                                                 setPages((prev) => {
-                                                  const next = prev.map(page => ({
+                                                  return prev.map(page => ({
                                                     ...page,
-                                                    problemIds: [...page.problemIds],
-                                                    laneOf: { ...(page.laneOf || {}) }
+                                                    problemIds: page.problemIds.filter(id => id !== problem.problemId),
+                                                    laneOf: (() => {
+                                                      const newLaneOf = { ...(page.laneOf || {}) }
+                                                      delete newLaneOf[problem.problemId]
+                                                      return newLaneOf
+                                                    })()
                                                   }))
-                                                  const page = next[selectedPageIndex]
-                                                  page.problemIds = page.problemIds.filter(id => id !== problem.problemId)
-                                                  if (page.laneOf) {
-                                                    delete page.laneOf[problem.problemId]
-                                                  }
-                                                  return next
                                                 })
                                               } else {
-                                                // 문제 추가
+                                                // 문제 추가 - 빈 자리가 있는 페이지를 찾거나 새 페이지 생성
                                                 setPages((prev) => {
                                                   const next = prev.map(page => ({
                                                     ...page,
                                                     problemIds: [...page.problemIds],
                                                     laneOf: { ...(page.laneOf || {}) }
                                                   }))
-                                                  const page = next[selectedPageIndex]
-                                                  if (!page.problemIds.includes(problem.problemId)) {
-                                                    page.problemIds.push(problem.problemId)
-                                                    page.laneOf[problem.problemId] = 0 // 첫 번째 컬럼에 추가
+                                                  
+                                                  // 빈 자리가 있는 페이지 찾기
+                                                  let targetPageIndex = -1
+                                                  for (let i = 0; i < next.length; i++) {
+                                                    if (next[i].problemIds.length < 4) {
+                                                      targetPageIndex = i
+                                                      break
+                                                    }
                                                   }
+                                                  
+                                                  // 빈 자리가 없으면 새 페이지 생성
+                                                  if (targetPageIndex === -1) {
+                                                    const newPageId = Math.max(...next.map(p => p.id)) + 1
+                                                    const newPage = { 
+                                                      id: newPageId, 
+                                                      columns: 2, 
+                                                      problemIds: [problem.problemId], 
+                                                      laneOf: { [problem.problemId]: 0 } 
+                                                    }
+                                                    next.push(newPage)
+                                                    // 새 페이지로 이동
+                                                    setCurrentPage(next.length)
+                                                  } else {
+                                                    // 기존 페이지에 추가
+                                                    const targetPage = next[targetPageIndex]
+                                                    targetPage.problemIds.push(problem.problemId)
+                                                    // 좌(0) 1,2 → 우(1) 3,4 순서로 배치
+                                                    const currentCount = targetPage.problemIds.length
+                                                    if (currentCount <= 2) {
+                                                      targetPage.laneOf[problem.problemId] = 0 // 좌측 컬럼
+                                                    } else {
+                                                      targetPage.laneOf[problem.problemId] = 1 // 우측 컬럼
+                                                    }
+                                                  }
+                                                  
                                                   return next
                                                 })
                                               }
                                             }}
                                             className="w-full"
                                           >
-                                            {isAdded ? (
+                                            {isAddedInAnyPage ? (
                                               <>
                                                 <Minus className="w-4 h-4 mr-1" />
                                                 문제 제거
@@ -714,10 +759,9 @@ export function FunctionProblemDialog({
               <div className="flex-1 p-4">
                 <div className="space-y-4">
                   <div className="bg-white rounded-lg border p-3">
-                    <div className="text-sm font-medium mb-2">현재 페이지</div>
-                    <div className="flex items-center justify-between">
-                      <div className="text-2xl font-bold text-blue-600">{currentPage}</div>
-                      <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-sm font-medium">컬럼</div>
+                      <div className="flex items-center gap-1">
                         <Button
                           size="sm"
                           variant="outline"
@@ -727,8 +771,9 @@ export function FunctionProblemDialog({
                             next[idx].columns = Math.max(1, Math.min(2, next[idx].columns - 1))
                             return next
                           })}
+                          className="h-6 w-6 p-0"
                         >
-                          - 컬럼
+                          <Minus className="w-3 h-3" />
                         </Button>
                         <Button
                           size="sm"
@@ -738,11 +783,13 @@ export function FunctionProblemDialog({
                             next[idx].columns = Math.max(1, Math.min(2, next[idx].columns + 1))
                             return next
                           })}
+                          className="h-6 w-6 p-0"
                         >
-                          + 컬럼
+                          <Plus className="w-3 h-3" />
                         </Button>
                       </div>
                     </div>
+                    <div className="text-2xl font-bold text-blue-600">{pages[selectedPageIndex]?.columns || 2}</div>
                   </div>
 
                   <div className="bg-white rounded-lg border p-3">
@@ -757,7 +804,7 @@ export function FunctionProblemDialog({
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-7 w-7 p-0"
+                          className="h-6 w-6 p-0"
                           title="페이지 삭제"
                           onClick={() => setPages((prev) => {
                             if (prev.length <= 1) return prev
@@ -772,7 +819,7 @@ export function FunctionProblemDialog({
                         </Button>
                         <Button
                           size="sm"
-                          className="h-7 w-7 p-0"
+                          className="h-6 w-6 p-0"
                           title="페이지 추가"
                           onClick={() => setPages((prev) => {
                             const newId = (prev[prev.length - 1]?.id ?? 0) + 1
@@ -806,11 +853,15 @@ export function FunctionProblemDialog({
                                             비어있음
                                           </div>
                                         )}
-                                        {lane.map((pid, idx2) => (
-                                              <div key={`mini-${pid}-${idx2}`} className="h-8 rounded-sm border bg-white text-[10px] text-gray-700 flex items-center justify-center truncate cursor-move mb-1">
-                                                문제 {idx2 + 1}
-                                              </div>
-                                        ))}
+                                        {lane.map((pid, idx2) => {
+                                          const problem = getProblemById(pid)
+                                          const problemNumber = problem?.problemNumber || problem?.problemId || pid
+                                          return (
+                                            <div key={`mini-${pid}-${idx2}`} className="h-8 rounded-sm border bg-white text-[10px] text-gray-700 flex items-center justify-center truncate cursor-move mb-1">
+                                              문제 {problemNumber}
+                                            </div>
+                                          )
+                                        })}
                                       </div>
                                 ))}
                               </div>
