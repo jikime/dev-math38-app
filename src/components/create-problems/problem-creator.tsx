@@ -27,6 +27,7 @@ import { ProblemDistributionProvider, useProblemDistribution } from "@/contexts/
 import { useSimple1Aggregator, useNormal1Aggregator, useDetailedAggregator } from "@/hooks/use-aggregators"
 import { useGeneratePaper } from "@/hooks/use-problems"
 import { GeneratedPaper } from "@/types/problem"
+import { useManualProblemStore } from "@/stores/manual-problem-store"
 import PaperPrintView4 from "@/components/math-paper/template/paper-print-view4"
 import {
   Plus,
@@ -97,6 +98,9 @@ function ProblemCreatorContent() {
   const { data: subjects, isLoading: subjectsLoading } = useSubjects()
   const { data: subjectTops, isLoading: subjectTopsLoading } = useSubjectTops(selectedSubjectKeys)
   const skillChaptersMutation = useSkillChapters()
+  
+  // zustand 스토어
+  const { setSkillChapters: setManualSkillChapters, setSelectedSkills: setManualSelectedSkills } = useManualProblemStore()
   
   // 스킬별 문제 개수 조회
   const { data: skillCounts } = useSkillCounts(selectedLectureId)
@@ -1318,7 +1322,12 @@ function ProblemCreatorContent() {
                     variant="outline"
                     disabled={selectedTreeItems.length === 0 || selectedSkills.length > 0}
                     className={(selectedTreeItems.length === 0 || selectedSkills.length > 0) ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-transparent"}
-                    onClick={() => setShowFunctionDialog(true)}
+                    onClick={() => {
+                      // zustand 스토어에 현재 skillChapters와 selectedSkills 설정
+                      setManualSkillChapters(skillChapters)
+                      setManualSelectedSkills(selectedSkills)
+                      setShowFunctionDialog(true)
+                    }}
                   >
                     <Edit3 className="w-4 h-4 mr-1" />
                     수동출제

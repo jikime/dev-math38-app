@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useCallback, useMemo, useState } from "react"
+import { useManualProblemStore } from "@/stores/manual-problem-store"
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -8,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Checkbox } from "@/components/ui/checkbox"
 import { ChevronLeft, ChevronRight, X, Search, Filter, BookOpen, Target, Award, Brain, Plus, Minus } from "lucide-react"
 
 interface Problem {
@@ -40,6 +42,14 @@ export function FunctionProblemDialog({
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedCategory, setSelectedCategory] = useState("D004")
   const [searchTerm, setSearchTerm] = useState("")
+  
+  // zustand 스토어에서 항목 관련 상태 가져오기
+  const { 
+    skillChapters, 
+    selectedSkills, 
+    toggleSkill, 
+    toggleAllSkillsInChapter 
+  } = useManualProblemStore()
   
   // 필터 상태
   const [sourceFilter, setSourceFilter] = useState("전체")
@@ -1236,131 +1246,109 @@ export function FunctionProblemDialog({
             )}
           </div>
 
-          {/* 메인 컨텐츠 영역 - 4단 그리드 (항목 선택 | 문제 선택 | A4 | 페이지맵) */}
-          <div className="flex-1 grid grid-cols-[0.6fr_0.7fr_3.2fr_0.6fr] h-full">
+          {/* 메인 컨텐츠 영역 - 3단 그리드 (항목 선택 | A4 | 페이지맵) */}
+          <div className="flex-1 grid grid-cols-[0.8fr_3.2fr_0.6fr] h-full">
             {/* 1단: 항목 선택 (왼쪽) */}
             <div className="bg-gray-50 border-r border-gray-200 flex flex-col h-full min-h-0">
               <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
-                <h3 className="font-semibold text-lg mb-2">항목을 선택하세요</h3>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <Input
-                    placeholder="문제 검색..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
+                <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                  <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
+                    2
+                  </span>
+                  항목을 선택해 주세요
+                </h3>
 
-              <ScrollArea className="flex-1 min-h-0 overflow-auto">
-                <div className="p-4 space-y-1">
-                  {categories.map((category) => (
-                    <div
-                      key={category.id}
-                      className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
-                        selectedCategory === category.id
-                          ? "bg-blue-100 text-blue-800 border border-blue-200"
-                          : "hover:bg-gray-100"
-                      }`}
-                      onClick={() => setSelectedCategory(category.id)}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm">{category.id}.</span>
-                        <span className="text-sm">{category.title}</span>
-                      </div>
-                      <Badge variant="outline" className="text-xs">
-                        {category.count}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </div>
-
-            {/* 2단: 문제 선택 (중좌) */}
-            <div className="bg-white border-r border-gray-200 flex flex-col h-full min-h-0">
-              <div className="p-4 border-b border-gray-200 flex flex-col gap-2 flex-shrink-0">
-                <h3 className="font-semibold text-lg">문제 선택</h3>
-                <div className="flex items-center gap-2 justify-between w-full">
-                  <Input
-                    placeholder="문제 검색..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-48"
-                  />
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setSelectedCategory((c) => (c === 'D004' ? 'D007' : 'D004'))}
-                  >
-                    카테고리: {selectedCategory}
-                  </Button>
-                </div>
-              </div>
-              <ScrollArea className="flex-1 min-h-0 overflow-auto">
-                <div className="p-4 grid grid-cols-1 gap-3">
-                  {categoryFilteredPool.map((p) => (
-                    <div
-                      key={`panel-${p.id}`}
-                      draggable
-                      onDragStart={onDragStartFromPool(p.id)}
-                      className="bg-white border rounded-lg p-3 cursor-move hover:shadow-md"
-                    >
-                      <h4 className="font-medium text-sm mb-1 line-clamp-2">{p.title}</h4>
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-xs">{p.id}</span>
-                          <Badge className={getDifficultyColor(p.difficulty)} variant="outline">
-                            {p.difficulty}
+                {/* 선택된 스킬 표시 */}
+                {selectedSkills.length > 0 && (
+                  <div className="mb-4">
+                    <div className="text-sm text-gray-600 mb-2">선택된 항목: {selectedSkills.length}개</div>
+                    <div className="flex flex-wrap gap-1">
+                      {selectedSkills.slice(0, 3).map((skillId) => {
+                        // skillId로 실제 skill 정보 찾기
+                        const skill = skillChapters.flatMap(chapter => chapter.skillList)
+                          .find(skill => skill.skillId === skillId)
+                        return skill ? (
+                          <Badge key={skillId} variant="outline" className="bg-purple-100 text-purple-800 text-xs">
+                            {skill.skillName.substring(0, 20)}...
                           </Badge>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-xs"
-                          onClick={() => setPages((prev) => {
-                            const next = prev.map((pg) => ({ ...pg, problemIds: [...pg.problemIds], laneOf: { ...(pg.laneOf ?? {}) } }))
-                            const target = next[selectedPageIndex]
-                            if (!target.problemIds.includes(p.id)) {
-                              // 더 짧은 레인에 삽입
-                              const laneIndex = pickShortestLaneIndex(target)
-                              target.problemIds.push(p.id)
-                              target.laneOf = target.laneOf ?? {}
-                              target.laneOf[p.id] = laneIndex
-                            }
-                            return next
-                          })}
-                        >
-                          추가
-                        </Button>
-                      </div>
-                      <p className="text-[11px] text-gray-600 mb-2 line-clamp-2">{p.description}</p>
-
-                      <div className="bg-gray-50 rounded p-2 mb-2">
-                        <div className="text-[11px] font-mono text-center break-words">{p.formula}</div>
-                      </div>
-
-                      <div className="space-y-1 mb-2">
-                        {p.choices.slice(0, 2).map((choice, index) => (
-                          <div key={index} className="text-[11px] text-gray-700 line-clamp-1">{choice}</div>
-                        ))}
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <Badge variant="outline" className="text-[10px]">{p.type}</Badge>
-                        <span className="text-[10px] text-gray-500">A5 미리보기</span>
-                      </div>
+                        ) : null
+                      })}
+                      {selectedSkills.length > 3 && (
+                        <Badge variant="outline" className="bg-purple-100 text-purple-800 text-xs">
+                          +{selectedSkills.length - 3}개 더
+                        </Badge>
+                      )}
                     </div>
-                  ))}
-                  {categoryFilteredPool.length === 0 && (
-                    <div className="text-xs text-gray-500">조건에 맞는 문제가 없습니다.</div>
-                  )}
-                </div>
+                  </div>
+                )}
+              </div>
+
+              <ScrollArea className="flex-1 min-h-0 overflow-auto">
+                {skillChapters.length > 0 ? (
+                  <div className="p-4 space-y-6">
+                    {skillChapters.map((chapter) => (
+                      <div key={chapter.chapterId} className="space-y-3">
+                        {/* 챕터 헤더 */}
+                        <div className="flex items-center justify-between pb-2 border-b">
+                          <h4 className="font-medium text-gray-800">{chapter.chapterIndex} {chapter.chapterName}</h4>
+                          <button
+                            onClick={() => toggleAllSkillsInChapter(chapter)}
+                            className={`text-xs px-2 py-1 rounded transition-colors ${
+                              chapter.skillList.every(skill => selectedSkills.includes(skill.skillId))
+                                ? "text-blue-600 bg-blue-50 hover:bg-blue-100"
+                                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                            }`}
+                          >
+                            {chapter.skillList.every(skill => selectedSkills.includes(skill.skillId))
+                              ? "전체 해제"
+                              : "전체 선택"
+                            }
+                          </button>
+                        </div>
+
+                        {/* 스킬 목록 */}
+                        <div className="space-y-2">
+                          {chapter.skillList.map((skill) => (
+                            <div
+                              key={skill.skillId}
+                              className={`p-4 rounded-lg border cursor-pointer transition-colors ${
+                                selectedSkills.includes(skill.skillId)
+                                  ? "border-blue-500 bg-blue-50"
+                                  : "border-gray-200 hover:border-gray-300"
+                              }`}
+                              onClick={() => toggleSkill(skill.skillId)}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <Checkbox
+                                    checked={selectedSkills.includes(skill.skillId)}
+                                    onCheckedChange={() => {}}
+                                  />
+                                  <span className="text-sm font-medium">{skill.skillName}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Badge className="bg-blue-100 text-blue-800 text-xs px-2 py-1">
+                                    총 {skill.counts}개
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-32 text-gray-500">
+                    <div className="text-center">
+                      <p>선택된 상세 항목에 대한 문제가 없습니다</p>
+                    </div>
+                  </div>
+                )}
               </ScrollArea>
             </div>
 
-            {/* 3단: A4 페이지 편집기 (중앙) */}
+            {/* 2단: A4 페이지 편집기 (중앙) */}
             <div className="relative flex flex-col h-full">
               {/* 상단 내비게이션 (페이지 이동) */}
               <div className="p-4 border-b border-gray-200 grid grid-cols-[1fr_auto_1fr] items-center">
@@ -1476,7 +1464,7 @@ export function FunctionProblemDialog({
               </div>
             </div>
 
-            {/* 4단: 페이지 맵 (오른쪽) */}
+            {/* 3단: 페이지 맵 (오른쪽) */}
             <div className="bg-gray-50 border-l border-gray-200 flex flex-col h-full">
               <div className="p-4 h-16 border-b border-gray-200">
                 <h3 className="font-semibold text-lg">페이지 맵</h3>
