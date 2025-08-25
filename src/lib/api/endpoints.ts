@@ -30,6 +30,7 @@ export const API_ENDPOINTS = {
     BY_TEXTBOOK: (textbookId: string) => `/problems/textbook/${textbookId}`,
     SIMILAR: (id: string) => `/problems/${id}/similar`,
     SOLUTION: (id: string) => `/problems/${id}/solution`,
+    GENERATE_PAPER: 'https://math2.suzag.com/app/paper/paper/generate',
   },
 
   // 교재 관련

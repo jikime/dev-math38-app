@@ -2,7 +2,14 @@ import { useApiQuery, useApiMutation, useApiPutMutation, useApiDeleteMutation } 
 import { queryKeys } from '@/lib/api/query-client';
 import { API_ENDPOINTS } from '@/lib/api/endpoints';
 import { useQueryClient } from '@tanstack/react-query';
-import type { Problem, ProblemCreateInput, ProblemUpdateInput, ProblemSolution } from '@/types/problem';
+import type { 
+  Problem, 
+  ProblemCreateInput, 
+  ProblemUpdateInput, 
+  ProblemSolution,
+  GeneratePaperRequest,
+  GeneratedPaper
+} from '@/types/problem';
 
 // 문제 목록 조회
 export function useProblemList() {
@@ -111,6 +118,21 @@ export function useDeleteProblem(id: string) {
         // 문제 관련 모든 캐시 무효화
         queryClient.removeQueries({ queryKey: queryKeys.problem(id) });
         queryClient.invalidateQueries({ queryKey: queryKeys.problems() });
+      },
+    }
+  );
+}
+
+// 시험지 생성
+export function useGeneratePaper() {
+  return useApiMutation<GeneratedPaper, GeneratePaperRequest>(
+    API_ENDPOINTS.PROBLEMS.GENERATE_PAPER,
+    {
+      onSuccess: (data) => {
+        console.log('Paper generated successfully:', data);
+      },
+      onError: (error) => {
+        console.error('Paper generation failed:', error);
       },
     }
   );

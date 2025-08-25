@@ -25,6 +25,9 @@ import type { Option } from "@/components/ui/multi-select"
 import type { SkillChapter } from "@/types/skill"
 import { ProblemDistributionProvider, useProblemDistribution } from "@/contexts/problem-distribution-context"
 import { useSimple1Aggregator, useNormal1Aggregator, useDetailedAggregator } from "@/hooks/use-aggregators"
+import { useGeneratePaper } from "@/hooks/use-problems"
+import { GeneratedPaper } from "@/types/problem"
+import PaperPrintView4 from "@/components/math-paper/template/paper-print-view4"
 import {
   Plus,
   Settings,
@@ -80,6 +83,10 @@ function ProblemCreatorContent() {
   }
   const [selectedFunctionProblems, setSelectedFunctionProblems] = useState<FunctionDialogProblem[]>([])
 
+  // 생성된 시험지 상태
+  const [generatedPaper, setGeneratedPaper] = useState<GeneratedPaper | null>(null)
+  const [isGeneratingPaper, setIsGeneratingPaper] = useState(false)
+
   // API 훅들
   const { data: lectures, isLoading: lecturesLoading } = useMyLectures()
   const { data: subjects, isLoading: subjectsLoading } = useSubjects()
@@ -88,6 +95,9 @@ function ProblemCreatorContent() {
   
   // 스킬별 문제 개수 조회
   const { data: skillCounts } = useSkillCounts(selectedLectureId)
+  
+  // 시험지 생성 API 훅
+  const generatePaperMutation = useGeneratePaper()
   
   // 선택된 트리 항목들로부터 범위 텍스트 생성
   const getRangeText = React.useMemo(() => {
@@ -497,6 +507,57 @@ function ProblemCreatorContent() {
     return curriculumData[selectedSubjectName as keyof typeof curriculumData] || {}
   }
 
+  // 자동출제 함수
+  const handleAutoGenerate = async () => {
+    try {
+      setIsGeneratingPaper(true)
+
+      // 선택된 과목 ID 추출
+      const selectedSubjectId = selectedSubjectKeys[0] // 현재 단일 선택
+      if (!selectedSubjectId) {
+        alert('과목을 선택해주세요.')
+        return
+      }
+
+      // 선택된 chapter ID들 (트리에서 선택된 항목들)
+      const chapterIds = selectedTreeItems.map(id => parseInt(id, 10))
+
+      // 선택된 skill ID들
+      const skillIds = selectedSkills
+
+      // payload 구성
+      const payload = {
+        categoriesFilter: [],
+        chapterIds: chapterIds,
+        fillProblems: true,
+        problemTypeCounts: currentDistribution, // 8x5 배열
+        skillIds: skillIds,
+        subjectId: selectedSubjectId,
+        title: `${selectedLectureId || 'Unknown'} 회차`
+      }
+
+      console.log('Generating paper with payload:', payload)
+      // API 호출
+      const result = await generatePaperMutation.mutateAsync({
+        ...payload,
+        subjectId: parseInt(selectedSubjectId, 10)
+      })
+      console.log('Generated paper result:', result)
+
+      // 시험지 데이터 저장
+      setGeneratedPaper(result)
+      
+      // 시험지 탭으로 이동
+      setActiveTab("exam")
+
+    } catch (error) {
+      console.error('Paper generation failed:', error)
+      alert('시험지 생성에 실패했습니다. 다시 시도해주세요.')
+    } finally {
+      setIsGeneratingPaper(false)
+    }
+  }
+
   // 초간단 탭 렌더링 함수 - aggregator 사용
   const renderSimpleTab = () => {
     console.log('renderSimpleTab - difficultyStats:', difficultyStats)
@@ -803,8 +864,9 @@ function ProblemCreatorContent() {
     const maxCount = Math.max(...difficultyData.map((d) => d.count))
 
     return (
-      <div className="space-y-6">
-        <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+      <ScrollArea className="h-full">
+        <div className="space-y-6 p-4">
+          <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
           <h3 className="font-semibold text-indigo-800 mb-2">문항 분석</h3>
           <p className="text-sm text-indigo-700">선택된 문항들의 난이도별 분포와 영역별 분포를 확인할 수 있습니다.</p>
         </div>
@@ -975,13 +1037,15 @@ function ProblemCreatorContent() {
             </table>
           </div>
         </div>
-      </div>
+        </div>
+      </ScrollArea>
     )
   }
 
   const renderStyleTab = () => (
-    <div className="space-y-6">
-      <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+    <ScrollArea className="h-full">
+      <div className="space-y-6 p-4">
+        <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
         <h3 className="font-semibold text-purple-800 mb-2">스타일 설정</h3>
         <p className="text-sm text-purple-700">시험지의 페이지 레이아웃과 헤더 스타일을 설정할 수 있습니다.</p>
       </div>
@@ -1086,8 +1150,9 @@ function ProblemCreatorContent() {
             ))}
           </div>
         </div>
+        </div>
       </div>
-    </div>
+    </ScrollArea>
   )
 
   const addProblemToPreview = (problem: any) => {
@@ -1126,6 +1191,49 @@ function ProblemCreatorContent() {
   }
 
   const renderExamTab = () => {
+    // 생성된 시험지가 있으면 PaperPrintView4 표시
+    if (generatedPaper) {
+      return (
+        <ScrollArea className="h-full">
+          <div className="space-y-4 p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">생성된 시험지</h2>
+              <Button 
+                variant="outline" 
+                onClick={() => setGeneratedPaper(null)}
+                size="sm"
+              >
+                새로 만들기
+              </Button>
+            </div>
+            
+            <PaperPrintView4
+              title={generatedPaper.title}
+              lectureTitle={generatedPaper.lectureTitle ?? ""}
+              chapterFrom={generatedPaper.chapterFrom ?? ""}
+              chapterTo={generatedPaper.chapterTo ?? ""}
+              minMargin={generatedPaper.minMargin ?? 0}
+              columns={generatedPaper.columns ?? 2}
+              pages={generatedPaper.pages ?? []}
+              subjectName={generatedPaper.subjectName ?? ""}
+              teacherName={generatedPaper.teacherName ?? ""}
+              studentName={generatedPaper.studentName ?? ""}
+              academyName={generatedPaper.academyName ?? ""}
+              academyLogo={generatedPaper.academyLogo ?? ""}
+              edit={false}
+              addBlankPage={(generatedPaper.pages?.length ?? 0) % 2 === 1}
+              headerStyle={generatedPaper.headerStyle}
+              totalProblem={generatedPaper.pages?.reduce(
+                (acc, page) =>
+                  acc + (page.leftSet?.length || 0) + (page.rightSet?.length || 0),
+                0
+              ) ?? 0}
+            />
+          </div>
+        </ScrollArea>
+      )
+    }
+
     const problemsData = getSelectedProblemsData()
 
     if (problemsData.length === 0) {
@@ -1133,7 +1241,7 @@ function ProblemCreatorContent() {
         <div className="flex items-center justify-center h-96 text-gray-500">
           <div className="text-center">
             <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p>왼쪽에서 문제를 선택해주세요</p>
+            <p>왼쪽에서 문제를 선택하거나 자동출제를 이용해주세요</p>
           </div>
         </div>
       )
@@ -1144,8 +1252,9 @@ function ProblemCreatorContent() {
     }
 
     return (
-      <div className="space-y-6">
-        {/* 헤더 스타일 적용 */}
+      <ScrollArea className="h-full">
+        <div className="space-y-6 p-4">
+          {/* 헤더 스타일 적용 */}
         <div
           className={`h-16 rounded-lg mb-4 flex items-center justify-center text-white font-bold ${headerStyles.find((s) => s.id === selectedHeaderStyle)?.color}`}
         >
@@ -1271,7 +1380,8 @@ function ProblemCreatorContent() {
             </div>
           )}
         </div>
-      </div>
+        </div>
+      </ScrollArea>
     )
   }
 
@@ -1290,8 +1400,9 @@ function ProblemCreatorContent() {
     }
 
     return (
-      <div className="space-y-4">
-        <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+      <ScrollArea className="h-full">
+        <div className="space-y-4 p-4">
+          <div className="p-4 bg-green-50 rounded-lg border border-green-200">
           <h3 className="font-semibold text-green-800 mb-2">빠른 답안 확인</h3>
           <p className="text-sm text-green-700">각 문제의 정답을 한눈에 확인할 수 있습니다.</p>
         </div>
@@ -1324,7 +1435,8 @@ function ProblemCreatorContent() {
             </div>
           ))}
         </div>
-      </div>
+        </div>
+      </ScrollArea>
     )
   }
 
@@ -1343,8 +1455,9 @@ function ProblemCreatorContent() {
     }
 
     return (
-      <div className="space-y-6">
-        <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+      <ScrollArea className="h-full">
+        <div className="space-y-6 p-4">
+          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
           <h3 className="font-semibold text-blue-800 mb-2">상세 정답지</h3>
           <p className="text-sm text-blue-700">각 문제의 정답, 해설, 학습 포인트를 상세히 확인할 수 있습니다.</p>
         </div>
@@ -1408,12 +1521,13 @@ function ProblemCreatorContent() {
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      </ScrollArea>
     )
   }
 
   return (
-    <div className="container mx-auto px-6 py-8">
+    <div className="container mx-auto px-2 py-8">
       {/* Header - 강좌명 */}
       <div className="mb-8 space-y-4">
         <div className="flex items-center justify-between">
@@ -1438,7 +1552,7 @@ function ProblemCreatorContent() {
             
             <div className="flex items-center gap-3 ml-8">
               <label className="font-semibold text-lg whitespace-nowrap">시험지</label>
-              <input 
+              <Input 
                 type="text" 
                 placeholder="제목을 입력하세요"
                 className="w-64 px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1501,7 +1615,7 @@ function ProblemCreatorContent() {
         className="h-[calc(100vh-200px)]"
       >
         {/* Left Sidebar - Settings */}
-        <ResizablePanel defaultSize={30} minSize={30} maxSize={60}>
+        <ResizablePanel defaultSize={28} minSize={28} maxSize={60}>
           <div className="h-full pr-3">
             <div className="space-y-6">
                 {/* 과목을 선택해 주세요 */}
@@ -1595,11 +1709,11 @@ function ProblemCreatorContent() {
                       2
                     </span>
                     항목을 선택해 주세요
-                    {selectedSkills.length > 0 && (
+                    {/* {selectedSkills.length > 0 && (
                       <span className="bg-purple-100 text-purple-800 rounded-full px-2 py-1 text-xs font-medium">
                         {selectedSkills.length}개 선택됨
                       </span>
-                    )}
+                    )} */}
                     <span className="text-sm text-gray-500 ml-auto">* 자동출제용</span>
                   </h3>
 
@@ -1676,7 +1790,7 @@ function ProblemCreatorContent() {
                                     <div className="flex items-center gap-3">
                                       <Checkbox
                                         checked={selectedSkills.includes(skill.skillId)}
-                                        readOnly
+                                        onCheckedChange={() => {}}
                                       />
                                       <span className="text-sm font-medium">{skill.skillName}</span>
                                     </div>
@@ -1743,11 +1857,12 @@ function ProblemCreatorContent() {
                 <div className="flex justify-center gap-2 mt-4">
                   <Button 
                     size="sm" 
-                    disabled={totalProblems === 0}
-                    className={totalProblems === 0 ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-blue-100 text-blue-800 hover:bg-blue-200"}
+                    disabled={totalProblems === 0 || isGeneratingPaper}
+                    className={totalProblems === 0 || isGeneratingPaper ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-blue-100 text-blue-800 hover:bg-blue-200"}
+                    onClick={handleAutoGenerate}
                   >
                     <Edit3 className="w-4 h-4 mr-1" />
-                    자동출제
+                    {isGeneratingPaper ? "생성 중..." : "자동출제"}
                   </Button>
                   <Button
                     size="sm"
@@ -1777,7 +1892,7 @@ function ProblemCreatorContent() {
         <ResizableHandle withHandle />
 
         {/* Right Side - Exam Paper */}
-        <ResizablePanel defaultSize={70} minSize={40}>
+        <ResizablePanel defaultSize={72} minSize={40}>
           <div className="h-full pl-3">
             <div className="bg-card text-card-foreground flex flex-col rounded-xl border h-full max-h-full overflow-hidden">
             <div className="grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 p-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
@@ -1808,14 +1923,15 @@ function ProblemCreatorContent() {
               </div>
             </div>
             <div className="px-6 flex-1 flex flex-col">
-              <ScrollArea className="flex-1">
-                {activeTab === "exam" && renderExamTab()}
-                {activeTab === "quick" && renderQuickAnswerTab()}
-                {activeTab === "detailed" && renderDetailedSolutionTab()}
-                {activeTab === "analysis" && renderAnalysisTab()}
-                {activeTab === "style" && renderStyleTab()}
+              <ScrollArea className="flex-1 h-0">
+                <div className="space-y-4 pb-6">
+                  {activeTab === "exam" && renderExamTab()}
+                  {activeTab === "quick" && renderQuickAnswerTab()}
+                  {activeTab === "detailed" && renderDetailedSolutionTab()}
+                  {activeTab === "analysis" && renderAnalysisTab()}
+                  {activeTab === "style" && renderStyleTab()}
+                </div>
               </ScrollArea>
-
             </div>
           </div>
           </div>

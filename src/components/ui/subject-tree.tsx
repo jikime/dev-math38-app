@@ -43,6 +43,7 @@ function SubjectTreeNode({ node, selectedKeys, onSelectionChange, level }: Subje
     return keys
   }
 
+
   const handleCheckboxChange = (checked: boolean) => {
     const keyString = node.key.toString()
     
@@ -136,6 +137,36 @@ export function SubjectTree({ data, selectedKeys, onSelectionChange, className }
     )
   }
 
+  // 상위 노드 자동 체크 로직을 포함한 선택 변경 처리
+  const handleSmartSelectionChange = (newSelectedKeys: string[]) => {
+    // 하위 항목들이 모두 선택되었을 때 상위 항목 자동 체크
+    const checkParentNodes = (keys: string[]): string[] => {
+      const updatedKeys = [...keys]
+      
+      const checkNodeParents = (nodes: SubjectTop[]) => {
+        for (const currentNode of nodes) {
+          if (currentNode.children && currentNode.children.length > 0) {
+            const directChildKeys = currentNode.children.map(child => child.key.toString())
+            const allChildrenSelected = directChildKeys.every(key => updatedKeys.includes(key))
+            
+            if (allChildrenSelected && !updatedKeys.includes(currentNode.key.toString())) {
+              updatedKeys.push(currentNode.key.toString())
+            }
+            
+            // 재귀적으로 하위 노드들도 체크
+            checkNodeParents(currentNode.children)
+          }
+        }
+      }
+      
+      checkNodeParents(data)
+      return updatedKeys
+    }
+    
+    const finalKeys = checkParentNodes(newSelectedKeys)
+    onSelectionChange(finalKeys)
+  }
+
   return (
     <div className={cn("space-y-1", className)}>
       {data.map((node) => (
@@ -143,7 +174,7 @@ export function SubjectTree({ data, selectedKeys, onSelectionChange, className }
           key={node.key}
           node={node}
           selectedKeys={selectedKeys}
-          onSelectionChange={onSelectionChange}
+          onSelectionChange={handleSmartSelectionChange}
           level={0}
         />
       ))}
