@@ -32,15 +32,30 @@ function SubjectTreeNode({ node, selectedKeys, onSelectionChange, level }: Subje
     }
   }
 
+  // 모든 하위 노드의 키를 재귀적으로 수집하는 함수
+  const getAllChildKeys = (node: SubjectTop): string[] => {
+    const keys = [node.key.toString()]
+    if (node.children && node.children.length > 0) {
+      for (const child of node.children) {
+        keys.push(...getAllChildKeys(child))
+      }
+    }
+    return keys
+  }
+
   const handleCheckboxChange = (checked: boolean) => {
     const keyString = node.key.toString()
     
     if (checked) {
-      if (!selectedKeys.includes(keyString)) {
-        onSelectionChange([...selectedKeys, keyString])
-      }
+      // 체크 시: 현재 노드와 모든 하위 노드를 선택
+      const allKeys = getAllChildKeys(node)
+      const newSelectedKeys = [...new Set([...selectedKeys, ...allKeys])]
+      onSelectionChange(newSelectedKeys)
     } else {
-      onSelectionChange(selectedKeys.filter(key => key !== keyString))
+      // 체크 해제 시: 현재 노드와 모든 하위 노드를 선택 해제
+      const allKeys = getAllChildKeys(node)
+      const newSelectedKeys = selectedKeys.filter(key => !allKeys.includes(key))
+      onSelectionChange(newSelectedKeys)
     }
   }
 

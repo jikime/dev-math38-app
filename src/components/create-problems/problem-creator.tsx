@@ -88,6 +88,43 @@ function ProblemCreatorContent() {
   
   // 스킬별 문제 개수 조회
   const { data: skillCounts } = useSkillCounts(selectedLectureId)
+  
+  // 선택된 트리 항목들로부터 범위 텍스트 생성
+  const getRangeText = React.useMemo(() => {
+    if (selectedTreeItems.length === 0) {
+      return "항목을 선택해주세요"
+    }
+    
+    // 모든 선택된 항목들의 title을 찾기
+    const findNodeTitles = (nodes: any[], keys: string[]): string[] => {
+      const titles: string[] = []
+      
+      const findInNode = (node: any) => {
+        if (keys.includes(node.key.toString())) {
+          titles.push(node.title)
+        }
+        if (node.children) {
+          node.children.forEach(findInNode)
+        }
+      }
+      
+      nodes.forEach(findInNode)
+      return titles
+    }
+    
+    if (subjectTops) {
+      const titles = findNodeTitles(subjectTops, selectedTreeItems)
+      if (titles.length > 0) {
+        // 첫 번째와 마지막 항목으로 범위 표시
+        if (titles.length === 1) {
+          return titles[0]
+        }
+        return `${titles[0]} ~ ${titles[titles.length - 1]}`
+      }
+    }
+    
+    return "항목을 선택해주세요"
+  }, [selectedTreeItems, subjectTops])
 
   // 첫 번째 강좌를 기본값으로 설정
   useEffect(() => {
@@ -1429,7 +1466,7 @@ function ProblemCreatorContent() {
             <div className="bg-white rounded-lg border p-4 h-20 flex flex-col justify-center">
               <h3 className="font-semibold text-sm mb-2">범위</h3>
               <div className="text-sm text-gray-700">
-                1.1 다항식의 연산 ~ 1.1.1 다항식의 연산
+                {getRangeText}
               </div>
             </div>
           </div>
@@ -1704,20 +1741,30 @@ function ProblemCreatorContent() {
                 </Tabs>
 
                 <div className="flex justify-center gap-2 mt-4">
-                  <Button size="sm" className="bg-blue-100 text-blue-800 hover:bg-blue-200">
+                  <Button 
+                    size="sm" 
+                    disabled={totalProblems === 0}
+                    className={totalProblems === 0 ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-blue-100 text-blue-800 hover:bg-blue-200"}
+                  >
                     <Edit3 className="w-4 h-4 mr-1" />
                     자동출제
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    className="bg-transparent"
+                    disabled={selectedTreeItems.length === 0 || selectedSkills.length > 0}
+                    className={(selectedTreeItems.length === 0 || selectedSkills.length > 0) ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-transparent"}
                     onClick={() => setShowFunctionDialog(true)}
                   >
                     <Edit3 className="w-4 h-4 mr-1" />
                     수동출제
                   </Button>
-                  <Button size="sm" variant="outline" className="bg-transparent">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    disabled={true}
+                    className="bg-gray-50 text-gray-400 cursor-not-allowed"
+                  >
                     <Plus className="w-4 h-4 mr-1" />
                     문제추가
                   </Button>
