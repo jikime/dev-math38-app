@@ -69,7 +69,7 @@ const ProblemView = ({
         problem={problem}
         showTags={showTags}
         reportError={() => setShowErrorReportModal(true)}
-      ></ProblemTitle>
+      />
 
       {printImage ? (
       <div className="flex justify-center items-center p-2">

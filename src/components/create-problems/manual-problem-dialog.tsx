@@ -3,17 +3,14 @@
 import React, { useCallback, useMemo, useState, useEffect } from "react"
 import { useManualProblemStore } from "@/stores/manual-problem-store"
 import { useProblemsBySkill } from "@/hooks/use-problems"
-import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Checkbox } from "@/components/ui/checkbox"
 import { ChevronLeft, ChevronRight, X, Filter, BookOpen, Award, Brain, Plus, Minus } from "lucide-react"
 import { ApiProblem } from "@/types/api-problem"
 import ProblemView from "@/components/math-paper/template/manual/problem-view"
-import { SpProblem } from "@/components/math-paper/typings"
 
 // API 문제를 UI에서 사용할 형태로 변환하는 타입
 interface UIProblem extends ApiProblem {
@@ -35,13 +32,14 @@ export function FunctionProblemDialog({
   onProblemsChange,
 }: FunctionProblemDialogProps) {
   const [currentPage, setCurrentPage] = useState(1)
+  const [problemListPage, setProblemListPage] = useState(1) // 문제 목록 페이징
+  const PROBLEMS_PER_PAGE = 20 // 페이지당 문제 수
   
   // zustand 스토어에서 항목 관련 상태 가져오기
   const { 
     skillChapters, 
-    selectedSkills, 
-    toggleSkill, 
-    toggleAllSkillsInChapter 
+    selectedSkill, 
+    selectSkill 
   } = useManualProblemStore()
   
   // 필터 상태
@@ -61,60 +59,48 @@ export function FunctionProblemDialog({
     { id: 1, columns: 2, problemIds: [], laneOf: {} },
   ])
 
-  // 선택된 스킬들의 문제를 각각 hook으로 가져오기
-  const [problemsData, setProblemsData] = useState<Record<string, UIProblem[]>>({})
+  // React Query를 사용해 선택된 단일 스킬의 문제를 가져오기
+  const { data: problemsData, isLoading, error } = useProblemsBySkill(selectedSkill || "")
   
-  // 각 선택된 스킬에 대해 개별적으로 API 호출
+  // 스킬명 찾기 및 데이터 변환
+  const skill = useMemo(() => {
+    if (!selectedSkill) return null
+    return skillChapters.flatMap(chapter => chapter.skillList)
+      .find(skill => skill.skillId === selectedSkill)
+  }, [selectedSkill, skillChapters])
+  
+  // API 데이터를 UI 형태로 변환
+  const problems: UIProblem[] = useMemo(() => {
+    if (!problemsData || !skill) return []
+    return problemsData.map(problem => ({
+      ...problem,
+      skillName: skill.skillName
+    }))
+  }, [problemsData, skill])
+  
+  // 디버깅 로그
   useEffect(() => {
-    const loadSkillProblems = async () => {
-      console.log('선택된 스킬들:', selectedSkills)
-      
-      for (const skillId of selectedSkills) {
-        if (problemsData[skillId]) {
-          console.log(`스킬 ${skillId}는 이미 로드됨`)
-          continue // 이미 로드된 스킬은 스킵
-        }
-        
-        console.log(`스킬 ${skillId}의 문제들을 로드 중...`)
-        try {
-          const response = await fetch(`https://math2.suzag.com/app/skill/${skillId}/problems`)
-          const data: ApiProblem[] = await response.json()
-          
-          console.log(`스킬 ${skillId}에서 ${data.length}개의 문제를 로드함`)
-          
-          // 스킬명 찾기
-          const skill = skillChapters.flatMap(chapter => chapter.skillList)
-            .find(skill => skill.skillId === skillId)
-          
-          const skillProblems = data.map(problem => ({ 
-            ...problem, 
-            skillName: skill?.skillName 
-          }))
-          
-          setProblemsData(prev => ({
-            ...prev,
-            [skillId]: skillProblems
-          }))
-        } catch (error) {
-          console.error(`스킬 ${skillId} 문제 로딩 실패:`, error)
-        }
-      }
+    console.log('선택된 스킬:', selectedSkill)
+    console.log('로딩 중:', isLoading)
+    console.log('로드된 문제 수:', problems.length)
+    if (error) {
+      console.error('API 에러:', error)
     }
-    
-    if (selectedSkills.length > 0) {
-      loadSkillProblems()
-    } else {
-      console.log('선택된 스킬이 없습니다')
+  }, [selectedSkill, isLoading, problems.length, error])
+  
+  // 스킬이 변경될 때마다 페이지 상태 초기화
+  useEffect(() => {
+    if (selectedSkill) {
+      setPages([{ id: 1, columns: 2, problemIds: [], laneOf: {} }])
+      setCurrentPage(1)
+      setProblemListPage(1) // 문제 목록 페이지도 초기화
     }
-  }, [selectedSkills, skillChapters, problemsData])
-  
-  // 모든 선택된 스킬의 문제들을 합치기
-  const allProblems = useMemo(() => {
-    return selectedSkills.flatMap(skillId => problemsData[skillId] || [])
-  }, [selectedSkills, problemsData])
-  
-  // allProblems는 이미 선택된 스킬의 문제들만 포함하고 있으므로 그대로 사용
-  const problems: UIProblem[] = allProblems
+  }, [selectedSkill])
+
+  // 필터가 변경될 때마다 문제 목록 페이지 초기화
+  useEffect(() => {
+    setProblemListPage(1)
+  }, [sourceFilter, methodFilter, difficultyFilter, domainFilter])
 
   // 필터링된 문제 목록 - API 데이터 구조에 맞게 수정
   const filteredProblems = problems.filter((problem) => {
@@ -154,10 +140,12 @@ export function FunctionProblemDialog({
     return true
   })
 
-
-  // 페이지 맵 페이지 수
-  const totalPages = pages.length
-
+  // 페이징 처리
+  const totalProblemPages = Math.ceil(filteredProblems.length / PROBLEMS_PER_PAGE)
+  const paginatedProblems = filteredProblems.slice(
+    (problemListPage - 1) * PROBLEMS_PER_PAGE,
+    problemListPage * PROBLEMS_PER_PAGE
+  )
 
 
   const selectedPageIndex = Math.max(0, Math.min(currentPage - 1, pages.length - 1))
@@ -165,7 +153,7 @@ export function FunctionProblemDialog({
   const getProblemById = useCallback((id: string) => problems.find((p) => p.problemId === id), [problems])
 
   // 초기 로딩 시 부모로부터 받은 선택 문제를 페이지 1에 채워 넣기
-  React.useEffect(() => {
+  useEffect(() => {
     if (selectedProblems.length > 0 && pages.every((p) => p.problemIds.length === 0)) {
       setPages((prev) => {
         const next = [...prev]
@@ -175,18 +163,8 @@ export function FunctionProblemDialog({
         return next
       })
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [selectedProblems, pages])
 
-  const removeFromPage = (pageIndex: number, problemId: string) => {
-    setPages((prev) => {
-      const next = prev.map((p) => ({ ...p, problemIds: [...p.problemIds], laneOf: { ...(p.laneOf ?? {}) } }))
-      const page = next[pageIndex]
-      page.problemIds = page.problemIds.filter((id) => id !== problemId)
-      if (page.laneOf) delete page.laneOf[problemId]
-      return next
-    })
-  }
 
   const arrangedCount = useMemo(
     () => pages.reduce((acc, p) => acc + p.problemIds.length, 0),
@@ -215,102 +193,14 @@ export function FunctionProblemDialog({
   }, [])
 
 
-  const handleA4DragEnd = (result: DropResult) => {
-    const { source, destination } = result
-    if (!destination) return
-
-    const [, pageIdxStr, , srcColStr] = source.droppableId.split("-") // page-<idx>-col-<colIdx>
-    const [, pageIdxStr2, , dstColStr] = destination.droppableId.split("-")
-    const pageIndex = parseInt(pageIdxStr)
-    const pageIndex2 = parseInt(pageIdxStr2)
-    if (Number.isNaN(pageIndex) || Number.isNaN(pageIndex2)) return
-
-    setPages((prev) => {
-      const next = prev.map((p) => ({ ...p, problemIds: [...p.problemIds], laneOf: { ...(p.laneOf ?? {}) } }))
-      const page = next[pageIndex]
-      const laneOf = page.laneOf ?? {}
-      const lanes = getLaneItems(page)
-      const srcCol = parseInt(srcColStr)
-      const dstCol = parseInt(dstColStr)
-
-      // 원래 위치에서 제거
-      const srcItems = [...lanes[srcCol]]
-      const [removed] = srcItems.splice(source.index, 1)
-      if (!removed) return prev
-
-      // 대상 위치에 삽입
-      const dstItems = srcCol === dstCol ? srcItems : [...lanes[dstCol]]
-      dstItems.splice(destination.index, 0, removed)
-
-      // 새로운 레인 배열 구성
-      const newLanes = lanes.map((arr, i) => {
-        if (i === srcCol && srcCol !== dstCol) return srcItems
-        if (i === dstCol) return dstItems
-        if (i === srcCol && srcCol === dstCol) return dstItems
-        return arr
-      })
-
-      // laneOf 업데이트 및 problemIds 재구성(좌→우 컬럼 순)
-      for (let i = 0; i < newLanes.length; i++) {
-        for (const id of newLanes[i]) laneOf[id] = i
-      }
-      page.problemIds = newLanes.flat()
-      page.laneOf = laneOf
-      return next
-    })
-  }
-
-  // 페이지 맵(오른쪽) 드래그 앤 드롭 핸들러
-  const handlePmapDragEnd = (result: DropResult) => {
-    const { source, destination } = result
-    if (!destination) return
-
-    const [srcPrefix, srcPageIdxStr, , srcColStr] = source.droppableId.split("-") // pmap-<pageIdx>-col-<colIdx>
-    const [dstPrefix, dstPageIdxStr, , dstColStr] = destination.droppableId.split("-")
-    if (srcPrefix !== "pmap" || dstPrefix !== "pmap") return
-    const pageIndex = parseInt(srcPageIdxStr)
-    const pageIndex2 = parseInt(dstPageIdxStr)
-    if (Number.isNaN(pageIndex) || Number.isNaN(pageIndex2)) return
-
-    setPages((prev) => {
-      const next = prev.map((p) => ({ ...p, problemIds: [...p.problemIds], laneOf: { ...(p.laneOf ?? {}) } }))
-      const page = next[pageIndex]
-      const laneOf = page.laneOf ?? {}
-      const lanes = getLaneItems(page)
-      const srcCol = parseInt(srcColStr)
-      const dstCol = parseInt(dstColStr)
-
-      // 원래 위치에서 제거
-      const srcItems = [...lanes[srcCol]]
-      const [removed] = srcItems.splice(source.index, 1)
-      if (!removed) return prev
-
-      // 대상 위치에 삽입
-      const dstItems = srcCol === dstCol ? srcItems : [...lanes[dstCol]]
-      dstItems.splice(destination.index, 0, removed)
-
-      // 새로운 레인 배열 구성
-      const newLanes = lanes.map((arr, i) => {
-        if (i === srcCol && srcCol !== dstCol) return srcItems
-        if (i === dstCol) return dstItems
-        if (i === srcCol && srcCol === dstCol) return dstItems
-        return arr
-      })
-
-      // laneOf 업데이트 및 problemIds 재구성
-      for (let i = 0; i < newLanes.length; i++) {
-        for (const id of newLanes[i]) laneOf[id] = i
-      }
-      page.problemIds = newLanes.flat()
-      page.laneOf = laneOf
-      return next
-    })
-  }
+  // 드래그 앤 드롭 핸들러는 더 이상 사용하지 않음 (간단한 드래그 앤 드롭으로 대체)
+  // const handleA4DragEnd = (result: DropResult) => { ... }
+  // const handlePmapDragEnd = (result: DropResult) => { ... }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="fixed inset-0 w-screen h-screen max-w-none max-h-none translate-x-0 translate-y-0 rounded-none border-0 p-0 m-0" showCloseButton={false}>
-        <DialogTitle className="sr-only">함수 문제 변경</DialogTitle>
+        <DialogTitle className="sr-only">유형 문제 변경</DialogTitle>
         <div className="flex flex-col h-screen w-screen bg-white">
           {/* 상단 헤더 */}
           <div className="p-4 border-b border-gray-200 bg-white">
@@ -484,6 +374,7 @@ export function FunctionProblemDialog({
                       setMethodFilter("전체")
                       setDifficultyFilter("전체")
                       setDomainFilter("전체")
+                      setProblemListPage(1) // 페이지도 초기화
                     }}
                     className="text-xs text-gray-500 hover:text-gray-700"
                   >
@@ -563,7 +454,7 @@ export function FunctionProblemDialog({
           </div>
 
           {/* 메인 컨텐츠 영역 - 3단 그리드 (항목 선택 | A4 | 페이지맵) */}
-          <div className="flex-1 grid grid-cols-[1.2fr_2.8fr_0.6fr] h-full">
+          <div className="flex-1 grid grid-cols-[1.0fr_2.8fr_0.6fr] h-full">
             {/* 1단: 항목 선택 (왼쪽) */}
             <div className="bg-gray-50 border-r border-gray-200 flex flex-col h-full min-h-0">
               <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
@@ -572,26 +463,26 @@ export function FunctionProblemDialog({
                 </h3>
 
                 {/* 선택된 스킬 표시 */}
-                {selectedSkills.length > 0 && (
+                {selectedSkill && (
                   <div className="mb-4">
-                    <div className="text-sm text-gray-600 mb-2">선택된 항목: {selectedSkills.length}개</div>
-                    <div className="flex flex-wrap gap-1">
-                      {selectedSkills.slice(0, 3).map((skillId) => {
-                        // skillId로 실제 skill 정보 찾기
-                        const skill = skillChapters.flatMap(chapter => chapter.skillList)
-                          .find(skill => skill.skillId === skillId)
-                        return skill ? (
-                          <Badge key={skillId} variant="outline" className="bg-purple-100 text-purple-800 text-xs">
-                            {skill.skillName.substring(0, 20)}...
-                          </Badge>
-                        ) : null
-                      })}
-                      {selectedSkills.length > 3 && (
-                        <Badge variant="outline" className="bg-purple-100 text-purple-800 text-xs">
-                          +{selectedSkills.length - 3}개 더
-                        </Badge>
-                      )}
+                    <div className="text-sm text-gray-600 mb-2">
+                      선택된 항목: {selectedSkill ? 1 : 0}개
+                      {isLoading && <span className="ml-2 text-blue-600">로딩 중...</span>}
                     </div>
+                    {selectedSkill && (
+                      <div className="flex flex-wrap gap-1">
+                        {(() => {
+                          // skillId로 실제 skill 정보 찾기
+                          const skill = skillChapters.flatMap(chapter => chapter.skillList)
+                            .find(skill => skill.skillId === selectedSkill)
+                          return skill ? (
+                            <Badge key={selectedSkill} variant="outline" className="bg-purple-100 text-purple-800 text-xs">
+                              {skill.skillName}
+                            </Badge>
+                          ) : null
+                        })()}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -604,19 +495,6 @@ export function FunctionProblemDialog({
                         {/* 챕터 헤더 */}
                         <div className="flex items-center justify-between pb-2 border-b">
                           <h4 className="font-medium text-gray-800">{chapter.chapterIndex} {chapter.chapterName}</h4>
-                          <button
-                            onClick={() => toggleAllSkillsInChapter(chapter)}
-                            className={`text-xs px-2 py-1 rounded transition-colors ${
-                              chapter.skillList.every(skill => selectedSkills.includes(skill.skillId))
-                                ? "text-blue-600 bg-blue-50 hover:bg-blue-100"
-                                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                            }`}
-                          >
-                            {chapter.skillList.every(skill => selectedSkills.includes(skill.skillId))
-                              ? "전체 해제"
-                              : "전체 선택"
-                            }
-                          </button>
                         </div>
 
                         {/* 스킬 목록 */}
@@ -625,18 +503,23 @@ export function FunctionProblemDialog({
                             <div
                               key={skill.skillId}
                               className={`p-4 rounded-lg border cursor-pointer transition-colors ${
-                                selectedSkills.includes(skill.skillId)
+                                selectedSkill === skill.skillId
                                   ? "border-blue-500 bg-blue-50"
                                   : "border-gray-200 hover:border-gray-300"
                               }`}
-                              onClick={() => toggleSkill(skill.skillId)}
+                              onClick={() => selectSkill(skill.skillId)}
                             >
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                  <Checkbox
-                                    checked={selectedSkills.includes(skill.skillId)}
-                                    onCheckedChange={() => {}}
-                                  />
+                                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                                    selectedSkill === skill.skillId
+                                      ? "border-blue-500 bg-blue-500"
+                                      : "border-gray-300"
+                                  }`}>
+                                    {selectedSkill === skill.skillId && (
+                                      <div className="w-2 h-2 bg-white rounded-full" />
+                                    )}
+                                  </div>
                                   <span className="text-sm font-medium">{skill.skillName}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -663,140 +546,101 @@ export function FunctionProblemDialog({
 
             {/* 2단: A4 페이지 편집기 (중앙) */}
             <div className="relative flex flex-col h-full">
-              {/* 상단 내비게이션 (페이지 이동) */}
-              <div className="p-4 border-b border-gray-200 grid grid-cols-[1fr_auto_1fr] items-center">
-                <div />
-                <div className="flex items-center gap-2 flex-wrap justify-center">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
-                    className="h-7 w-7 p-0"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  <div className="flex flex-wrap gap-1 justify-center">
-                    {pages.map((_, idx) => (
-                      <Button
-                        key={`page-btn-${idx + 1}`}
-                        size="sm"
-                        variant={currentPage === idx + 1 ? "default" : "outline"}
-                        className="h-7 px-2"
-                        onClick={() => setCurrentPage(idx + 1)}
-                      >
-                        {idx + 1}
-                      </Button>
-                    ))}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                    disabled={currentPage === totalPages}
-                    className="h-7 w-7 p-0"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </div>
-                <div className="flex items-center justify-end">
-                  <Button size="sm" onClick={handleSubmit} className="bg-amber-500 hover:bg-amber-600 text-white">수동 출제 적용</Button>
-                </div>
-              </div>
-
               {/* A4 미리보기 & 드롭 영역 */}
               <div className="flex-1 p-4 overflow-auto">
                 <div className="w-full h-full flex items-start justify-center">
-                  <div
-                    className="bg-white border border-gray-300 shadow-sm w-full max-w-none min-h-[80vh] p-4"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="text-sm text-gray-600">A4 미리보기</div>
-                      <div className="text-xs text-gray-500">컬럼: {pages[selectedPageIndex]?.columns ?? 1}</div>
-                    </div>
-                    <DragDropContext onDragEnd={handleA4DragEnd}>
-                      <div className="relative grid gap-4" style={{ gridTemplateColumns: `repeat(${pages[selectedPageIndex]?.columns ?? 1}, minmax(0, 1fr))` }}>
-                        {pages[selectedPageIndex]?.columns === 2 && (
-                          <div className="pointer-events-none absolute top-0 bottom-0 left-1/2 -translate-x-1/2 border-l border-dashed border-gray-300" />
-                        )}
-                        {pages[selectedPageIndex] && getLaneItems(pages[selectedPageIndex]).map((lane, laneIdx) => (
-                          <Droppable droppableId={`page-${selectedPageIndex}-col-${laneIdx}`} key={`lane-${laneIdx}`}>
-                            {(provided) => (
-                              <div ref={provided.innerRef} {...provided.droppableProps} className="min-h-[60vh] bg-transparent border border-dashed border-transparent">
-                                {lane.map((pid, index) => {
-                                  const problem = getProblemById(pid)
-                                  if (!problem) return null
-                                  
-                                  // SpProblem 형태로 변환
-                                  const spProblem: SpProblem = {
-                                    problemId: problem.problemId,
-                                    content: problem.content,
-                                    solution: problem.solution,
-                                    tags: problem.tags || [],
-                                    groupId: problem.groupId,
-                                    academyId: problem.academyId,
-                                    subjectId: problem.subjectId,
-                                    creator: problem.creator,
-                                    atype: problem.atype,
-                                    ltype: problem.ltype,
-                                    fileId: problem.fileId,
-                                    bookName: problem.bookName,
-                                    page: problem.page,
-                                    problemNumber: problem.problemNumber,
-                                    difficulty: problem.difficulty,
-                                    meta: problem.meta,
-                                    printHeight: problem.printHeight,
-                                    accessableIds: problem.accessableIds,
-                                    needToRecache: problem.needToRecache,
-                                    checkType: problem.checkType,
-                                    contentsImageId: problem.contentsImageId,
-                                    solutionImageId: problem.solutionImageId,
-                                    quotedFromDetail: problem.quotedFromDetail,
-                                    bookId: problem.bookId,
-                                    images: problem.images,
-                                    app: problem.app,
-                                    sample: problem.sample,
-                                    quotedFrom: problem.quotedFrom
-                                  }
-                                  
-                                  return (
-                                    <Draggable draggableId={pid} index={index} key={`drag-${pid}`}>
-                                      {(drag) => (
-                                        <div ref={drag.innerRef} {...drag.draggableProps} {...drag.dragHandleProps} className="cursor-move hover:shadow-md mb-4">
-                                          <div className="flex items-center justify-end mb-2">
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              className="h-6 w-6 p-0"
-                                              onClick={() => removeFromPage(selectedPageIndex, problem.problemId)}
-                                            >
-                                              <X className="w-4 h-4" />
-                                            </Button>
-                                          </div>
-                                          <ProblemView
-                                            problem={spProblem}
-                                            width={390}
-                                            margin={20}
-                                            level={Number(problem.difficulty)}
-                                            skillId={problem.tags?.find(tag => tag.type === "skill")?.skillId || ""}
-                                            ltype={problem.ltype}
-                                            answerType={problem.content?.answerType || "choice"}
-                                            skillName={problem.skillName}
-                                            solution={false}
-                                            showTags={false}
-                                          />
-                                        </div>
-                                      )}
-                                    </Draggable>
-                                  )
-                                })}
-                                {provided.placeholder}
-                              </div>
-                            )}
-                          </Droppable>
-                        ))}
+                  <div className="bg-white border border-gray-300 shadow-sm w-full max-w-none py-4">
+                    {/* 스킬이 선택되지 않았을 때 안내 메시지 */}
+                    {!selectedSkill ? (
+                      <div className="flex items-center justify-center h-[60vh] text-gray-500">
+                        <div className="text-center">
+                          <p className="text-lg mb-2">왼쪽에서 항목을 선택해주세요</p>
+                          <p className="text-sm">선택한 항목의 문제들이 여기에 표시됩니다</p>
+                        </div>
                       </div>
-                    </DragDropContext>
+                    ) : isLoading ? (
+                      <div className="flex items-center justify-center h-[60vh] text-gray-500">
+                        <div className="text-center">
+                          <p className="text-lg mb-2">문제를 불러오고 있습니다...</p>
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+                        </div>
+                      </div>
+                    ) : error ? (
+                      <div className="flex items-center justify-center h-[60vh] text-red-500">
+                        <div className="text-center">
+                          <p className="text-lg mb-2">문제를 불러오는 중 오류가 발생했습니다</p>
+                          <p className="text-sm">{error.message}</p>
+                        </div>
+                      </div>
+                    ) : problems.length === 0 ? (
+                      <div className="flex items-center justify-center h-[60vh] text-gray-500">
+                        <div className="text-center">
+                          <p className="text-lg mb-2">해당 항목에는 문제가 없습니다</p>
+                          <p className="text-sm">다른 항목을 선택해보세요</p>
+                        </div>
+                      </div>
+                    ) : (
+                    <div>
+                      {/* 문제 목록 영역 - 2 column layout with dotted line */}
+                      <div className="mb-4 px-1">
+                        <div className="flex items-center justify-between mb-3 pb-2 border-b px-4">
+                          <div className="text-sm font-medium text-gray-700">
+                            사용 가능한 문제 ({filteredProblems.length}개)
+                          </div>
+                          {/* 페이징 컨트롤 */}
+                          {totalProblemPages > 1 && (
+                            <div className="flex items-center gap-1 bg-white rounded-lg border px-2 py-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setProblemListPage(Math.max(1, problemListPage - 1))}
+                                disabled={problemListPage === 1}
+                                className="h-6 w-6 p-0 hover:bg-gray-100"
+                              >
+                                <ChevronLeft className="w-3 h-3" />
+                              </Button>
+                              <span className="text-sm font-medium text-gray-700 px-2 min-w-[60px] text-center">
+                                {problemListPage} / {totalProblemPages}
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setProblemListPage(Math.min(totalProblemPages, problemListPage + 1))}
+                                disabled={problemListPage === totalProblemPages}
+                                className="h-6 w-6 p-0 hover:bg-gray-100"
+                              >
+                                <ChevronRight className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                         <ScrollArea className="h-[calc(100vh-300px)] w-full px-2">
+                          {/* 가운데 점선 */}
+                          <div className="absolute left-1/2 top-2 bottom-2 border-l-2 border-dashed border-gray-300 -translate-x-1/2 z-10"></div>
+                          {/* ScrollArea로 스크롤 처리 */}
+                            {/* 2 column grid */}
+                            <div className="grid grid-cols-2 gap-4">
+                              {paginatedProblems.map((problem, index) => (
+                                <div key={problem.problemId} className={`${index % 2 === 0 ? 'pr-2' : 'pl-2'}`}>
+                                  <ProblemView
+                                    problem={problem as any}
+                                    width={390}
+                                    margin={20}
+                                    level={Number(problem.difficulty)}
+                                    skillId={problem.tags?.find(tag => tag.type === "skill")?.skillId || ""}
+                                    ltype={problem.ltype}
+                                    answerType={problem.content?.answerType || "choice"}
+                                    skillName={problem.skillName}
+                                    solution={false}
+                                    showTags={true}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </ScrollArea>
+                        </div>
+                    </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -880,7 +724,6 @@ export function FunctionProblemDialog({
                         </Button>
                       </div>
                     </div>
-                    <DragDropContext onDragEnd={handlePmapDragEnd}>
                       <div className="space-y-2">
                         {pages.map((pg, i) => (
                           <div
@@ -898,34 +741,24 @@ export function FunctionProblemDialog({
                               )}
                               <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${pg.columns}, minmax(0, 1fr))` }}>
                                 {getLaneItems(pg).map((lane, laneIdx) => (
-                                  <Droppable droppableId={`pmap-${i}-col-${laneIdx}`} key={`pmap-${i}-col-${laneIdx}`}>
-                                    {(provided) => (
-                                      <div ref={provided.innerRef} {...provided.droppableProps} className="min-h-6 border border-dashed border-transparent p-0.5">
+                                      <div key={`pmap-${i}-col-${laneIdx}`} className="min-h-6 border border-dashed border-transparent p-0.5">
                                         {lane.length === 0 && (
                                           <div className="h-6 rounded-sm border border-dashed border-gray-300 bg-gray-50 text-[11px] text-gray-400 flex items-center justify-center">
-                                            드롭
+                                            비어있음
                                           </div>
                                         )}
                                         {lane.map((pid, idx2) => (
-                                          <Draggable draggableId={`pmap-${i}-${pid}`} index={idx2} key={`mini-drag-${i}-${pid}`}>
-                                            {(drag) => (
-                                              <div ref={drag.innerRef} {...drag.draggableProps} {...drag.dragHandleProps} className="h-8 rounded-sm border bg-white text-[10px] text-gray-700 flex items-center justify-center truncate cursor-move mb-1" title={getProblemById(pid)?.content?.value || pid}>
-                                                {pid}
+                                              <div key={`mini-${pid}-${idx2}`} className="h-8 rounded-sm border bg-white text-[10px] text-gray-700 flex items-center justify-center truncate cursor-move mb-1">
+                                                문제 {idx2 + 1}
                                               </div>
-                                            )}
-                                          </Draggable>
                                         ))}
-                                        {provided.placeholder}
                                       </div>
-                                    )}
-                                  </Droppable>
                                 ))}
                               </div>
                             </div>
                           </div>
                         ))}
                       </div>
-                    </DragDropContext>
                   </div>
 
                   

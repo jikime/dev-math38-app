@@ -100,7 +100,7 @@ function ProblemCreatorContent() {
   const skillChaptersMutation = useSkillChapters()
   
   // zustand 스토어
-  const { setSkillChapters: setManualSkillChapters, setSelectedSkills: setManualSelectedSkills } = useManualProblemStore()
+  const { setSkillChapters: setManualSkillChapters, setSelectedSkill: setManualSelectedSkill } = useManualProblemStore()
   
   // 스킬별 문제 개수 조회
   const { data: skillCounts } = useSkillCounts(selectedLectureId)
@@ -1323,9 +1323,14 @@ function ProblemCreatorContent() {
                     disabled={selectedTreeItems.length === 0 || selectedSkills.length > 0}
                     className={(selectedTreeItems.length === 0 || selectedSkills.length > 0) ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-transparent"}
                     onClick={() => {
-                      // zustand 스토어에 현재 skillChapters와 selectedSkills 설정
+                      // zustand 스토어에 현재 skillChapters 설정
                       setManualSkillChapters(skillChapters)
-                      setManualSelectedSkills(selectedSkills)
+                      // 선택된 스킬이 있으면 첫 번째 스킬을 선택
+                      if (selectedSkills.length > 0) {
+                        setManualSelectedSkill(selectedSkills[0])
+                      } else {
+                        setManualSelectedSkill(null)
+                      }
                       setShowFunctionDialog(true)
                     }}
                   >
