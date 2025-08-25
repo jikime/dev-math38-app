@@ -2,6 +2,7 @@
 
 import React, { useCallback, useMemo, useState, useEffect } from "react"
 import { useManualProblemStore } from "@/stores/manual-problem-store"
+import { useProblemsBySkill } from "@/hooks/use-problems"
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -43,10 +44,6 @@ export function FunctionProblemDialog({
     toggleAllSkillsInChapter 
   } = useManualProblemStore()
   
-  // 선택된 스킬들의 문제 데이터 상태
-  const [allProblems, setAllProblems] = useState<UIProblem[]>([])
-  const [loadingSkills, setLoadingSkills] = useState<Set<string>>(new Set())
-  
   // 필터 상태
   const [sourceFilter, setSourceFilter] = useState("전체")
   const [methodFilter, setMethodFilter] = useState("전체")
@@ -64,63 +61,60 @@ export function FunctionProblemDialog({
     { id: 1, columns: 2, problemIds: [], laneOf: {} },
   ])
 
-
-  // 스킬 선택이 변경될 때마다 해당 스킬의 문제들을 로드
+  // 선택된 스킬들의 문제를 각각 hook으로 가져오기
+  const [problemsData, setProblemsData] = useState<Record<string, UIProblem[]>>({})
+  
+  // 각 선택된 스킬에 대해 개별적으로 API 호출
   useEffect(() => {
-    const loadProblemsForSkills = async () => {
-      const newSkillsToLoad = selectedSkills.filter(skillId => 
-        !loadingSkills.has(skillId) && 
-        !allProblems.some(p => p.tags?.some(tag => tag.skillId === skillId))
-      )
+    const loadSkillProblems = async () => {
+      console.log('선택된 스킬들:', selectedSkills)
       
-      if (newSkillsToLoad.length === 0) return
-      
-      setLoadingSkills(prev => {
-        const next = new Set(prev)
-        newSkillsToLoad.forEach(id => next.add(id))
-        return next
-      })
-      
-      try {
-        const problemPromises = newSkillsToLoad.map(async skillId => {
+      for (const skillId of selectedSkills) {
+        if (problemsData[skillId]) {
+          console.log(`스킬 ${skillId}는 이미 로드됨`)
+          continue // 이미 로드된 스킬은 스킵
+        }
+        
+        console.log(`스킬 ${skillId}의 문제들을 로드 중...`)
+        try {
           const response = await fetch(`https://math2.suzag.com/app/skill/${skillId}/problems`)
           const data: ApiProblem[] = await response.json()
+          
+          console.log(`스킬 ${skillId}에서 ${data.length}개의 문제를 로드함`)
           
           // 스킬명 찾기
           const skill = skillChapters.flatMap(chapter => chapter.skillList)
             .find(skill => skill.skillId === skillId)
           
-          return data.map(problem => ({ 
+          const skillProblems = data.map(problem => ({ 
             ...problem, 
             skillName: skill?.skillName 
           }))
-        })
-        
-        const results = await Promise.all(problemPromises)
-        const newProblems = results.flat()
-        
-        setAllProblems(prev => [...prev, ...newProblems])
-      } catch (error) {
-        console.error('문제 로딩 실패:', error)
-      } finally {
-        setLoadingSkills(prev => {
-          const next = new Set(prev)
-          newSkillsToLoad.forEach(id => next.delete(id))
-          return next
-        })
+          
+          setProblemsData(prev => ({
+            ...prev,
+            [skillId]: skillProblems
+          }))
+        } catch (error) {
+          console.error(`스킬 ${skillId} 문제 로딩 실패:`, error)
+        }
       }
     }
     
-    loadProblemsForSkills()
-  }, [selectedSkills, skillChapters, loadingSkills, allProblems])
+    if (selectedSkills.length > 0) {
+      loadSkillProblems()
+    } else {
+      console.log('선택된 스킬이 없습니다')
+    }
+  }, [selectedSkills, skillChapters, problemsData])
   
-  // Mock 데이터 제거 - 실제로는 allProblems를 사용
-  const problems: UIProblem[] = allProblems.filter(problem => {
-    // 선택된 스킬에 해당하는 문제만 표시
-    return problem.tags?.some(tag => 
-      tag.type === "skill" && tag.skillId && selectedSkills.includes(tag.skillId)
-    )
-  })
+  // 모든 선택된 스킬의 문제들을 합치기
+  const allProblems = useMemo(() => {
+    return selectedSkills.flatMap(skillId => problemsData[skillId] || [])
+  }, [selectedSkills, problemsData])
+  
+  // allProblems는 이미 선택된 스킬의 문제들만 포함하고 있으므로 그대로 사용
+  const problems: UIProblem[] = allProblems
 
   // 필터링된 문제 목록 - API 데이터 구조에 맞게 수정
   const filteredProblems = problems.filter((problem) => {
