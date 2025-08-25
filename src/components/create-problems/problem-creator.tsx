@@ -15,7 +15,7 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable"
 import { PrintSettingsDialog } from "@/components/common/print-settings-dialog"
-import { FunctionProblemDialog } from "@/components/create-problems/function-problem-dialog"
+import { FunctionProblemDialog } from "@/components/create-problems/manual-problem-dialog"
 import { useMyLectures, useLectureDetail, useLectureLastIndex } from "@/hooks/use-lecture"
 import { useSubjects, useSubjectTops } from "@/hooks/use-subjects"
 import { useSkillChapters, useSkillCounts } from "@/hooks/use-skills"

@@ -1,26 +1,16 @@
 "use client"
 
-import React, { useCallback, useMemo, useRef, useState } from "react"
-import {
-  DndContext,
-  DragOverlay,
-  useSensor,
-  useSensors,
-  PointerSensor,
-  KeyboardSensor,
-  useDraggable,
-  useDroppable,
-  type DragStartEvent,
-  type DragOverEvent,
-  type DragEndEvent,
-} from "@dnd-kit/core"
+import React, { useCallback, useMemo, useState } from "react"
+import { useManualProblemStore } from "@/stores/manual-problem-store"
+import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { ChevronLeft, ChevronRight, X, Search, Filter, BookOpen, Target, Award, Brain, Minus, Plus } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
+import { ChevronLeft, ChevronRight, X, Search, Filter, BookOpen, Target, Award, Brain, Plus, Minus } from "lucide-react"
 
 interface Problem {
   id: string
@@ -53,6 +43,14 @@ export function FunctionProblemDialog({
   const [selectedCategory, setSelectedCategory] = useState("D004")
   const [searchTerm, setSearchTerm] = useState("")
   
+  // zustand 스토어에서 항목 관련 상태 가져오기
+  const { 
+    skillChapters, 
+    selectedSkills, 
+    toggleSkill, 
+    toggleAllSkillsInChapter 
+  } = useManualProblemStore()
+  
   // 필터 상태
   const [sourceFilter, setSourceFilter] = useState("전체")
   const [methodFilter, setMethodFilter] = useState("전체")
@@ -64,72 +62,12 @@ export function FunctionProblemDialog({
     id: number
     columns: number
     problemIds: string[]
-    columnMap?: Record<string, number>
+    laneOf?: Record<string, number>
   }
   const [pages, setPages] = useState<PageLayout[]>([
-    { id: 1, columns: 2, problemIds: [], columnMap: {} },
+    { id: 1, columns: 2, problemIds: [], laneOf: {} },
   ])
 
-  // 드래그 인디케이터 상태 (삽입 위치 미리보기)
-  const [dragInsert, setDragInsert] = useState<null | { pageIndex: number; index: number; column?: number }>(null)
-  // 드래그 소스 상태 (현재 드래그 중인 아이템 메타)
-  const [activeDrag, setActiveDrag] = useState<
-    null | { source: "pool"; problemId: string } | { source: "page"; pageIndex: number; index: number; problemId: string }
-  >(null)
-
-  // A4 그리드 컨테이너 참조 (포인터 위치→컬럼 계산용)
-  const gridRef = useRef<HTMLDivElement | null>(null)
-  // Masonry 컬럼 보조 정보 저장
-  const colInfoRef = useRef<{ lastIndex: number[]; baseIndexToColumn: number[] }>({ lastIndex: [], baseIndexToColumn: [] })
-
-  // DnD 센서
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor)
-  )
-
-  // DragOverlay 렌더용
-  const renderDragOverlay = () => {
-    if (!activeDrag) return null
-    const pb = getProblemById(activeDrag.problemId)
-    if (!pb) return null
-    return (
-      <div className="bg-white border rounded-lg p-3 shadow-xl w-56">
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-xs">{pb.id}</span>
-            <Badge className={getDifficultyColor(pb.difficulty)} variant="outline">
-              {pb.difficulty}
-            </Badge>
-          </div>
-        </div>
-        <h4 className="font-medium text-sm mb-1 line-clamp-2">{pb.title}</h4>
-        <p className="text-[11px] text-gray-600 mb-2 line-clamp-2">{pb.description}</p>
-      </div>
-    )
-  }
-
-
-  // 문제 데이터 (이미지 기반으로 구성)
-  const categories = [
-    { id: "D004", title: "그래프에서 좌극한 구하기", count: 347 },
-    { id: "D005", title: "함수의 극한의 존재조건", count: 350 },
-    { id: "D006", title: "함수의 좌, 우, 양쪽 극한구하기", count: 69 },
-    { id: "D007", title: "함수단원의 극한 문제풀이", count: 346 },
-    { id: "D008", title: "함수의 극한값", count: 350 },
-    { id: "D009", title: "∞/∞ 꼴 극한값 계산", count: 178 },
-    { id: "D010", title: "0/0 꼴 극한값 계산", count: 366 },
-    { id: "D011", title: "∞ - ∞ 꼴 극한값 계산", count: 137 },
-    { id: "D012", title: "함수의 극한과 연속", count: 53 },
-    { id: "D013", title: "극한값을 이용한 미지수의 값", count: 617 },
-    { id: "D014", title: "∞ × ∞ 꼴 미지수의 값", count: 67 },
-    { id: "D015", title: "함수의 극한 대수 공식", count: 613 },
-    { id: "D016", title: "함수의 극한 데호", count: 319 },
-    { id: "D017", title: "∞/∞ 꼴 함수의 극한 활용", count: 340 },
-    { id: "D018", title: "∞² × ∞ 꼴 극한값 활용", count: 38 },
-    { id: "D019", title: "0/0 꼴 함수의 활용", count: 280 },
-    { id: "D020", title: "함수의 극한값 대입 상한법칙", count: 110 },
-  ]
 
   const problems: Problem[] = [
     {
@@ -740,11 +678,16 @@ export function FunctionProblemDialog({
     return true
   })
 
-  // 카테고리 선택에 따른 문제 풀 정제
-  const categoryFilteredPool = useMemo(
-    () => filteredProblems.filter((p) => p.id.startsWith(selectedCategory)),
-    [filteredProblems, selectedCategory],
-  )
+  // 카테고리 선택에 따른 문제 풀 정제 (이미 배치된 문제는 숨김)
+  const categoryFilteredPool = useMemo(() => {
+    const arrangedIdSet = new Set<string>()
+    for (const pg of pages) {
+      for (const id of pg.problemIds) arrangedIdSet.add(id)
+    }
+    return filteredProblems
+      .filter((p) => p.id.startsWith(selectedCategory))
+      .filter((p) => !arrangedIdSet.has(p.id))
+  }, [filteredProblems, selectedCategory, pages])
 
   // 페이지 맵 페이지 수
   const totalPages = pages.length
@@ -767,209 +710,26 @@ export function FunctionProblemDialog({
 
   const getProblemById = useCallback((id: string) => problems.find((p) => p.id === id), [problems])
 
-  // @dnd-kit 요소들: 드롭/드래그 가능한 래퍼 컴포넌트들
-  function DroppablePageArea({ pageIndex, count, children }: { pageIndex: number; count: number; children: React.ReactNode }) {
-    const { setNodeRef, isOver } = useDroppable({ id: `page-container-${pageIndex}`, data: { kind: 'page-container', pageIndex, count } })
-    return (
-      <div ref={setNodeRef} className={`relative ${isOver ? 'outline outline-2 outline-blue-300/60' : ''}`}>{children}</div>
-    )
-  }
-
-  function DroppablePageCard({ pageIndex, index, children }: { pageIndex: number; index: number; children: React.ReactNode }) {
-    const { setNodeRef, isOver } = useDroppable({ id: `page-card-${pageIndex}-${index}`, data: { kind: 'page-card', pageIndex, index } })
-    return (
-      <div ref={setNodeRef} className="relative">
-        {dragInsert && dragInsert.pageIndex === pageIndex && dragInsert.index === index && (
-          <div className="pointer-events-none absolute inset-0 border-2 border-dashed border-blue-400/80 bg-blue-50/40 rounded-lg" />
-        )}
-        {children}
-      </div>
-    )
-  }
-
-  function DraggableProblemCard({ pageIndex, index, problemId, hidden }: { pageIndex: number; index: number; problemId: string; hidden?: boolean }) {
-    const pb = getProblemById(problemId)
-    const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: `page-${pageIndex}-${index}`, data: { source: 'page', pageIndex, index, problemId } })
-    if (!pb) return null
-    return (
-      <div ref={setNodeRef} {...attributes} {...listeners} className={`bg-white border rounded-lg p-4 cursor-move hover:shadow-md w-full ${hidden ? 'opacity-0' : ''}`}>
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-sm">{pb.id}</span>
-            <Badge className={getDifficultyColor(pb.difficulty)} variant="outline">{pb.difficulty}</Badge>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 w-6 p-0"
-            onClick={() => removeFromPage(pageIndex, index)}
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
-        <h4 className="font-medium text-sm mb-2 line-clamp-2">{pb.title}</h4>
-        <p className="text-xs text-gray-600 mb-3">{pb.description}</p>
-        <div className="bg-gray-50 rounded p-2 mb-3">
-          <div className="text-xs font-mono text-center">{pb.formula}</div>
-        </div>
-        <div className="space-y-1 mb-3">
-          {pb.choices.slice(0, 2).map((choice, idx) => (
-            <div key={idx} className="text-xs text-gray-700 line-clamp-1">{choice}</div>
-          ))}
-        </div>
-        <div className="flex items-center justify-between">
-          <Badge variant="outline" className="text-xs">{pb.type}</Badge>
-          <span className="text-xs text-gray-500">배치됨</span>
-        </div>
-      </div>
-    )
-  }
-
-  function DraggablePoolCard({ problem }: { problem: Problem }) {
-    const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: `pool-${problem.id}`, data: { source: 'pool', problemId: problem.id } })
-    return (
-      <div ref={setNodeRef} {...attributes} {...listeners} className="bg-white border rounded-lg p-3 cursor-move hover:shadow-md">
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-xs">{problem.id}</span>
-            <Badge className={getDifficultyColor(problem.difficulty)} variant="outline">{problem.difficulty}</Badge>
-          </div>
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-7 text-xs"
-            onClick={() => setPages((prev) => {
-              const next = prev.map((pg) => ({ ...pg, problemIds: [...pg.problemIds] }))
-              const target = next[selectedPageIndex]
-              if (!target.problemIds.includes(problem.id)) target.problemIds.push(problem.id)
-              return next
-            })}
-          >
-            추가
-          </Button>
-        </div>
-        <h4 className="font-medium text-sm mb-1 line-clamp-2">{problem.title}</h4>
-        <p className="text-[11px] text-gray-600 mb-2 line-clamp-2">{problem.description}</p>
-        <div className="bg-gray-50 rounded p-2 mb-2">
-          <div className="text-[11px] font-mono text-center break-words">{problem.formula}</div>
-        </div>
-        <div className="space-y-1 mb-2">
-          {problem.choices.slice(0, 2).map((choice, index) => (
-            <div key={index} className="text-[11px] text-gray-700 line-clamp-1">{choice}</div>
-          ))}
-        </div>
-        <div className="flex items-center justify-between">
-          <Badge variant="outline" className="text-[10px]">{problem.type}</Badge>
-          <span className="text-[10px] text-gray-500">A5 미리보기</span>
-        </div>
-      </div>
-    )
-  }
-
-  function DroppableColSlot({ pageIndex, column, index, compact }: { pageIndex: number; column: number; index: number; compact?: boolean }) {
-    const { setNodeRef, isOver } = useDroppable({ id: `col-slot-${pageIndex}-${column}-${index}`, data: { kind: 'col-slot', pageIndex, column, index } })
-    const active = dragInsert && dragInsert.pageIndex === pageIndex && dragInsert.column === column && dragInsert.index === index
-    const activeCls = compact ? 'min-h-6' : 'min-h-28'
-    return (
-      <div ref={setNodeRef} className={`w-full ${active || isOver ? `border-2 border-dashed border-blue-300/70 bg-blue-50/30 rounded-lg ${activeCls}` : (compact ? 'h-1.5' : 'h-2')}`} />
-    )
-  }
-
-  function DroppableMiniMapContainer({ pageIndex, count, children }: { pageIndex: number; count: number; children: React.ReactNode }) {
-    const { setNodeRef, isOver } = useDroppable({ id: `pagemap-container-${pageIndex}`, data: { kind: 'pagemap-container', pageIndex, count } })
-    return (
-      <div ref={setNodeRef} className={`relative ${isOver ? 'outline outline-1 outline-blue-300/60' : ''}`}>{children}</div>
-    )
-  }
-
-  const getEstimatedHeight = (id: string) => {
-    const pb = getProblemById(id)
-    if (!pb) return 1
-    const base = 1
-    const desc = Math.ceil((pb.description?.length ?? 0) / 60)
-    const form = Math.ceil((pb.formula?.length ?? 0) / 80)
-    return base + desc * 0.5 + form * 0.5
-  }
-
-  const getColumnEntries = (pageIndex: number, columns: number) => {
-    const page = pages[pageIndex]
-    const entries = page.problemIds.map((id, baseIndex) => ({ id, baseIndex, column: page.columnMap?.[id] ?? 0 }))
-    const result: Array<Array<{ id: string; baseIndex: number }>> = new Array(columns).fill(null).map(() => [])
-    for (const e of entries) {
-      const col = Math.max(0, Math.min(columns - 1, e.column))
-      result[col].push({ id: e.id, baseIndex: e.baseIndex })
-    }
-    return result
-  }
-
-  const chooseTargetColumn = (pageIndex: number, columns: number) => {
-    const byCol = getColumnEntries(pageIndex, columns)
-    const heights = byCol.map((col) => col.reduce((acc, e) => acc + getEstimatedHeight(e.id), 0))
-    let minIdx = 0
-    for (let i = 1; i < columns; i += 1) if (heights[i] < heights[minIdx]) minIdx = i
-    return minIdx
-  }
-
-  const insertAtColumn = (pageIndex: number, column: number, indexInColumn: number, problemId: string) => {
-    setPages((prev) => {
-      const next = prev.map((p) => ({ ...p, problemIds: [...p.problemIds], columnMap: { ...(p.columnMap ?? {}) } }))
-      const page = next[pageIndex]
-      // 이미 존재하면 먼저 제거
-      const currentIdx = page.problemIds.indexOf(problemId)
-      if (currentIdx >= 0) page.problemIds.splice(currentIdx, 1)
-      page.columnMap![problemId] = column
-      const byCol = getColumnEntries(pageIndex, page.columns)
-      const colList = byCol[column]
-      let insertPos = page.problemIds.length
-      if (colList.length === 0) {
-        insertPos = column === 0 ? 0 : page.problemIds.length
-      } else if (indexInColumn < colList.length) {
-        // 대상 컬럼의 index 위치 아이템 앞에 삽입
-        const beforeId = colList[indexInColumn].id
-        insertPos = page.problemIds.indexOf(beforeId)
-        if (insertPos < 0) insertPos = page.problemIds.length
-    } else {
-        // 대상 컬럼의 마지막 아이템 뒤에 삽입
-        const lastId = colList[colList.length - 1].id
-        const lastPos = page.problemIds.indexOf(lastId)
-        insertPos = lastPos >= 0 ? lastPos + 1 : page.problemIds.length
-      }
-      page.problemIds.splice(insertPos, 0, problemId)
-      return next
-    })
-  }
-
-  function MiniMapDroppableCard({ pageIndex, index, pid, title, column }: { pageIndex: number; index: number; pid: string; title?: string; column?: number }) {
-    const { setNodeRef: setDropRef, isOver } = useDroppable({ id: `mini-card-${pageIndex}-${index}`, data: { kind: 'pagemap-card', pageIndex, index } })
-    const { attributes, listeners, setNodeRef: setDragRef } = useDraggable({ id: `mini-drag-${pageIndex}-${index}`, data: { source: 'page', pageIndex, index, problemId: pid } })
-    return (
-      <div ref={(node) => { setDropRef(node); setDragRef(node as HTMLElement) }} {...attributes} {...listeners}
-        className={`h-8 rounded-sm border bg-white text-[10px] text-gray-700 flex items-center justify-center truncate cursor-move ${isOver ? 'ring-2 ring-blue-300/70' : ''}`}
-        title={title}
-      >
-        {pid}
-      </div>
-    )
-  }
-
   // 초기 로딩 시 부모로부터 받은 선택 문제를 페이지 1에 채워 넣기 (있을 경우, 최초 1회)
   React.useEffect(() => {
     if (selectedProblems.length > 0 && pages.every((p) => p.problemIds.length === 0)) {
       setPages((prev) => {
         const next = [...prev]
-        next[0] = { ...next[0], problemIds: selectedProblems.map((p) => p.id) }
+        const laneOf: Record<string, number> = {}
+        selectedProblems.forEach((p) => { laneOf[p.id] = 0 })
+        next[0] = { ...next[0], problemIds: selectedProblems.map((p) => p.id), laneOf }
         return next
       })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // HTML5 DnD 핸들러 전부 제거 → @dnd-kit 이벤트 기반으로 대체
-
-  const removeFromPage = (pageIndex: number, indexInPage: number) => {
+  const removeFromPage = (pageIndex: number, problemId: string) => {
     setPages((prev) => {
-      const next = prev.map((p) => ({ ...p, problemIds: [...p.problemIds] }))
-      next[pageIndex].problemIds.splice(indexInPage, 1)
+      const next = prev.map((p) => ({ ...p, problemIds: [...p.problemIds], laneOf: { ...(p.laneOf ?? {}) } }))
+      const page = next[pageIndex]
+      page.problemIds = page.problemIds.filter((id) => id !== problemId)
+      if (page.laneOf) delete page.laneOf[problemId]
       return next
     })
   }
@@ -986,6 +746,119 @@ export function FunctionProblemDialog({
       .filter(Boolean) as Problem[]
     onProblemsChange(arrangedProblemsFlat)
     onOpenChange(false)
+  }
+
+  // ----- A4 칸반 유틸 -----
+  const getLaneItems = useCallback((page: PageLayout): string[][] => {
+    const laneCount = Math.max(1, Math.min(2, page.columns))
+    const lanes: string[][] = Array.from({ length: laneCount }, () => [])
+    const laneOf = page.laneOf ?? {}
+    for (const id of page.problemIds) {
+      const laneIndex = Math.max(0, Math.min(laneCount - 1, laneOf[id] ?? 0))
+      lanes[laneIndex].push(id)
+    }
+    return lanes
+  }, [])
+
+  const pickShortestLaneIndex = (page: PageLayout): number => {
+    const lanes = getLaneItems(page)
+    let minIdx = 0
+    for (let i = 1; i < lanes.length; i++) {
+      if (lanes[i].length < lanes[minIdx].length) minIdx = i
+    }
+    return minIdx
+  }
+
+  const handleA4DragEnd = (result: DropResult) => {
+    const { source, destination, draggableId } = result
+    if (!destination) return
+
+    const [_, pageIdxStr, __, srcColStr] = source.droppableId.split("-") // page-<idx>-col-<colIdx>
+    const [___, pageIdxStr2, ____, dstColStr] = destination.droppableId.split("-")
+    const pageIndex = parseInt(pageIdxStr)
+    const pageIndex2 = parseInt(pageIdxStr2)
+    if (Number.isNaN(pageIndex) || Number.isNaN(pageIndex2)) return
+
+    setPages((prev) => {
+      const next = prev.map((p) => ({ ...p, problemIds: [...p.problemIds], laneOf: { ...(p.laneOf ?? {}) } }))
+      const page = next[pageIndex]
+      const laneOf = page.laneOf ?? {}
+      const lanes = getLaneItems(page)
+      const srcCol = parseInt(srcColStr)
+      const dstCol = parseInt(dstColStr)
+
+      // 원래 위치에서 제거
+      const srcItems = [...lanes[srcCol]]
+      const [removed] = srcItems.splice(source.index, 1)
+      if (!removed) return prev
+
+      // 대상 위치에 삽입
+      const dstItems = srcCol === dstCol ? srcItems : [...lanes[dstCol]]
+      dstItems.splice(destination.index, 0, removed)
+
+      // 새로운 레인 배열 구성
+      const newLanes = lanes.map((arr, i) => {
+        if (i === srcCol && srcCol !== dstCol) return srcItems
+        if (i === dstCol) return dstItems
+        if (i === srcCol && srcCol === dstCol) return dstItems
+        return arr
+      })
+
+      // laneOf 업데이트 및 problemIds 재구성(좌→우 컬럼 순)
+      for (let i = 0; i < newLanes.length; i++) {
+        for (const id of newLanes[i]) laneOf[id] = i
+      }
+      page.problemIds = newLanes.flat()
+      page.laneOf = laneOf
+      return next
+    })
+  }
+
+  // 페이지 맵(오른쪽) 드래그 앤 드롭 핸들러
+  const handlePmapDragEnd = (result: DropResult) => {
+    const { source, destination } = result
+    if (!destination) return
+
+    const [srcPrefix, srcPageIdxStr, _srcMid, srcColStr] = source.droppableId.split("-") // pmap-<pageIdx>-col-<colIdx>
+    const [dstPrefix, dstPageIdxStr, _dstMid, dstColStr] = destination.droppableId.split("-")
+    if (srcPrefix !== "pmap" || dstPrefix !== "pmap") return
+    const pageIndex = parseInt(srcPageIdxStr)
+    const pageIndex2 = parseInt(dstPageIdxStr)
+    if (Number.isNaN(pageIndex) || Number.isNaN(pageIndex2)) return
+
+    setPages((prev) => {
+      const next = prev.map((p) => ({ ...p, problemIds: [...p.problemIds], laneOf: { ...(p.laneOf ?? {}) } }))
+      const page = next[pageIndex]
+      const laneOf = page.laneOf ?? {}
+      const lanes = getLaneItems(page)
+      const srcCol = parseInt(srcColStr)
+      const dstCol = parseInt(dstColStr)
+
+      // 원래 위치에서 제거
+      const srcItems = [...lanes[srcCol]]
+      const [removed] = srcItems.splice(source.index, 1)
+      if (!removed) return prev
+
+      // 대상 위치에 삽입
+      const dstItems = srcCol === dstCol ? srcItems : [...lanes[dstCol]]
+      dstItems.splice(destination.index, 0, removed)
+
+      // 새로운 레인 배열 구성
+      const newLanes = lanes.map((arr, i) => {
+        if (i === srcCol && srcCol !== dstCol) return srcItems
+        if (i === dstCol) return dstItems
+        if (i === srcCol && srcCol === dstCol) return dstItems
+        return arr
+      })
+
+      // laneOf 업데이트 및 problemIds 재구성
+      for (let i = 0; i < newLanes.length; i++) {
+        for (const id of newLanes[i]) laneOf[id] = i
+      }
+      page.problemIds = newLanes.flat()
+      page.laneOf = laneOf
+      return next
+    })
   }
 
   return (
@@ -1243,305 +1116,224 @@ export function FunctionProblemDialog({
             )}
           </div>
 
-          {/* 메인 컨텐츠 영역 - 4단 그리드 (항목 선택 | 문제 선택 | A4 | 페이지맵) */}
-          <div className="flex-1 grid grid-cols-[0.6fr_0.9fr_3fr_0.6fr] h-full">
+          {/* 메인 컨텐츠 영역 - 3단 그리드 (항목 선택 | A4 | 페이지맵) */}
+          <div className="flex-1 grid grid-cols-[1.2fr_2.8fr_0.6fr] h-full">
             {/* 1단: 항목 선택 (왼쪽) */}
             <div className="bg-gray-50 border-r border-gray-200 flex flex-col h-full min-h-0">
               <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
-                <h3 className="font-semibold text-lg mb-2">항목을 선택하세요</h3>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <Input
-                    placeholder="문제 검색..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
+                <h3 className="font-semibold text-lg mb-1 flex items-center gap-2">
+                  항목을 선택해 주세요
+                </h3>
+
+                {/* 선택된 스킬 표시 */}
+                {selectedSkills.length > 0 && (
+                  <div className="mb-4">
+                    <div className="text-sm text-gray-600 mb-2">선택된 항목: {selectedSkills.length}개</div>
+                    <div className="flex flex-wrap gap-1">
+                      {selectedSkills.slice(0, 3).map((skillId) => {
+                        // skillId로 실제 skill 정보 찾기
+                        const skill = skillChapters.flatMap(chapter => chapter.skillList)
+                          .find(skill => skill.skillId === skillId)
+                        return skill ? (
+                          <Badge key={skillId} variant="outline" className="bg-purple-100 text-purple-800 text-xs">
+                            {skill.skillName.substring(0, 20)}...
+                          </Badge>
+                        ) : null
+                      })}
+                      {selectedSkills.length > 3 && (
+                        <Badge variant="outline" className="bg-purple-100 text-purple-800 text-xs">
+                          +{selectedSkills.length - 3}개 더
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <ScrollArea className="flex-1 min-h-0 overflow-auto">
-                <div className="p-4 space-y-1">
-                  {categories.map((category) => (
-                    <div
-                      key={category.id}
-                      className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
-                        selectedCategory === category.id
-                          ? "bg-blue-100 text-blue-800 border border-blue-200"
-                          : "hover:bg-gray-100"
-                      }`}
-                      onClick={() => setSelectedCategory(category.id)}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm">{category.id}.</span>
-                        <span className="text-sm">{category.title}</span>
+                {skillChapters.length > 0 ? (
+                  <div className="p-4 space-y-6">
+                    {skillChapters.map((chapter) => (
+                      <div key={chapter.chapterId} className="space-y-3">
+                        {/* 챕터 헤더 */}
+                        <div className="flex items-center justify-between pb-2 border-b">
+                          <h4 className="font-medium text-gray-800">{chapter.chapterIndex} {chapter.chapterName}</h4>
+                          <button
+                            onClick={() => toggleAllSkillsInChapter(chapter)}
+                            className={`text-xs px-2 py-1 rounded transition-colors ${
+                              chapter.skillList.every(skill => selectedSkills.includes(skill.skillId))
+                                ? "text-blue-600 bg-blue-50 hover:bg-blue-100"
+                                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                            }`}
+                          >
+                            {chapter.skillList.every(skill => selectedSkills.includes(skill.skillId))
+                              ? "전체 해제"
+                              : "전체 선택"
+                            }
+                          </button>
+                        </div>
+
+                        {/* 스킬 목록 */}
+                        <div className="space-y-2">
+                          {chapter.skillList.map((skill) => (
+                            <div
+                              key={skill.skillId}
+                              className={`p-4 rounded-lg border cursor-pointer transition-colors ${
+                                selectedSkills.includes(skill.skillId)
+                                  ? "border-blue-500 bg-blue-50"
+                                  : "border-gray-200 hover:border-gray-300"
+                              }`}
+                              onClick={() => toggleSkill(skill.skillId)}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <Checkbox
+                                    checked={selectedSkills.includes(skill.skillId)}
+                                    onCheckedChange={() => {}}
+                                  />
+                                  <span className="text-sm font-medium">{skill.skillName}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Badge className="bg-blue-100 text-blue-800 text-xs px-2 py-1">
+                                    {skill.counts}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <Badge variant="outline" className="text-xs">
-                        {category.count}
-                      </Badge>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-32 text-gray-500">
+                    <div className="text-center">
+                      <p>선택된 상세 항목에 대한 문제가 없습니다</p>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
               </ScrollArea>
             </div>
 
-            {/* 2단: 문제 선택 (중좌) */}
-            <div className="bg-white border-r border-gray-200 flex flex-col h-full min-h-0">
-              <div className="p-4 h-16 border-b border-gray-200 flex items-center">
-                <h3 className="font-semibold text-lg">문제 선택</h3>
-                <div className="flex items-center gap-2 justify-between w-full">
-                  <Input
-                    placeholder="문제 검색..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-48"
-                  />
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setSelectedCategory((c) => (c === 'D004' ? 'D007' : 'D004'))}
-                  >
-                    카테고리: {selectedCategory}
-                  </Button>
-                </div>
-              </div>
-              <ScrollArea className="flex-1 min-h-0 overflow-auto">
-                <div className="p-4 grid grid-cols-1 gap-3">
-                  {categoryFilteredPool.map((p) => (
-                    <div key={`panel-${p.id}`}>
-                      <DraggablePoolCard problem={p} />
-                    </div>
-                  ))}
-                  {categoryFilteredPool.length === 0 && (
-                    <div className="text-xs text-gray-500">조건에 맞는 문제가 없습니다.</div>
-                  )}
-                </div>
-              </ScrollArea>
-            </div>
-
-            {/* 3단: A4 페이지 편집기 (중앙) */}
+            {/* 2단: A4 페이지 편집기 (중앙) */}
             <div className="relative flex flex-col h-full">
               {/* 상단 내비게이션 (페이지 이동) */}
-              <div className="p-4 h-16 border-b border-gray-200 flex items-center justify-center">
-                <div className="flex items-center gap-2">
+              <div className="p-4 border-b border-gray-200 grid grid-cols-[1fr_auto_1fr] items-center">
+                <div />
+                <div className="flex items-center gap-2 flex-wrap justify-center">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
+                    className="h-7 w-7 p-0"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </Button>
-                  <span className="text-sm">페이지 {currentPage} / {totalPages}</span>
+                  <div className="flex flex-wrap gap-1 justify-center">
+                    {pages.map((_, idx) => (
+                      <Button
+                        key={`page-btn-${idx + 1}`}
+                        size="sm"
+                        variant={currentPage === idx + 1 ? "default" : "outline"}
+                        className="h-7 px-2"
+                        onClick={() => setCurrentPage(idx + 1)}
+                      >
+                        {idx + 1}
+                      </Button>
+                    ))}
+                  </div>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                     disabled={currentPage === totalPages}
+                    className="h-7 w-7 p-0"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </Button>
                 </div>
+                <div className="flex items-center justify-end">
+                  <Button size="sm" onClick={handleSubmit} className="bg-amber-500 hover:bg-amber-600 text-white">수동 출제 적용</Button>
+                </div>
               </div>
 
-              {/* A4 미리보기 & 드롭 영역 - @dnd-kit 적용 */}
+              {/* A4 미리보기 & 드롭 영역 */}
               <div className="flex-1 p-4 overflow-auto">
-                <DndContext
-                  sensors={sensors}
-                  onDragStart={(event: DragStartEvent) => {
-                    const data = (event.active.data.current ?? null) as any
-                    if (!data) return
-                    if (data.source === 'pool') {
-                      setActiveDrag({ source: 'pool', problemId: data.problemId })
-                    } else if (data.source === 'page') {
-                      setActiveDrag({ source: 'page', pageIndex: data.pageIndex, index: data.index, problemId: data.problemId })
-                    }
-                  }}
-                  onDragOver={(event: DragOverEvent) => {
-                    const overData = (event.over?.data.current ?? null) as any
-                    if (!overData) return
-                    if (overData.kind === 'page-container') {
-                      setDragInsert({ pageIndex: overData.pageIndex, index: overData.count })
-                    } else if (overData.kind === 'page-card') {
-                      setDragInsert({ pageIndex: overData.pageIndex, index: overData.index })
-                    } else if (overData.kind === 'col-slot') {
-                      setDragInsert({ pageIndex: overData.pageIndex, index: overData.index, column: overData.column })
-                    } else if (overData.kind === 'pagemap-card') {
-                      setDragInsert({ pageIndex: overData.pageIndex, index: overData.index })
-                    } else if (overData.kind === 'pagemap-container') {
-                      setDragInsert({ pageIndex: overData.pageIndex, index: overData.count })
-                    }
-                  }}
-                  onDragEnd={(event: DragEndEvent) => {
-                    const activeData = (event.active.data.current ?? null) as any
-                    const overData = (event.over?.data.current ?? null) as any
-                    if (!activeData || !overData) {
-                      setActiveDrag(null)
-                      setDragInsert(null)
-                      return
-                    }
-                    setPages((prev) => {
-                      const next = prev.map((p) => ({ ...p, problemIds: [...p.problemIds] }))
-                      // 독립 컬럼 슬롯으로 드롭된 경우: 정확한 컬럼/인덱스에 삽입
-                      if (overData.kind === 'col-slot') {
-                        const targetPageIndex = overData.pageIndex as number
-                        const targetColumn = overData.column as number
-                        const indexInColumn = overData.index as number
-                        if (activeData.source === 'pool') {
-                          const pid = activeData.problemId as string
-                          insertAtColumn(targetPageIndex, targetColumn, indexInColumn, pid)
-                        } else if (activeData.source === 'page') {
-                          const { pageIndex: fromPage, index: fromIndex, problemId } = activeData
-                          // 원본에서 제거 후 대상 컬럼/슬롯에 삽입
-                          const page = next[fromPage]
-                          const removedIndex = page.problemIds.indexOf(problemId)
-                          if (removedIndex >= 0) page.problemIds.splice(removedIndex, 1)
-                          // 상태 반영은 insertAtColumn 내부 setPages와 충돌하므로 여기선 반환만 하고 아래에서 별도 처리
-                        }
-                        return next
-                      }
-                      if (overData.kind === 'page-container' || overData.kind === 'page-card') {
-                        const targetPageIndex = overData.pageIndex
-                        // 컬럼 독립 동작을 위해 컬럼을 선택하고 해당 컬럼 맨 뒤로 삽입
-                        const page = next[targetPageIndex]
-                        const cols = Math.max(1, Math.min(2, page.columns))
-                        const targetColumn = chooseTargetColumn(targetPageIndex, cols)
-                        const byCol = getColumnEntries(targetPageIndex, cols)
-                        const targetIndex = byCol[targetColumn].length
-                        // insertAtColumn이 setPages를 갱신하므로 여기서는 next 반환
-                        if (activeData.source === 'pool') {
-                          const pid = activeData.problemId as string
-                          insertAtColumn(targetPageIndex, targetColumn, targetIndex, pid)
-                        } else if (activeData.source === 'page') {
-                          const { pageIndex: fromPage, index: fromIndex, problemId } = activeData
-                          // 먼저 원본 페이지에서 제거
-                          const fromList = next[fromPage].problemIds
-                          const rmIdx = fromList.indexOf(problemId)
-                          if (rmIdx >= 0) fromList.splice(rmIdx, 1)
-                          insertAtColumn(targetPageIndex, targetColumn, targetIndex, problemId)
-                        }
-                      }
-                      if (overData.kind === 'pagemap-container' || overData.kind === 'pagemap-card') {
-                        const targetPageIndex = overData.pageIndex
-                        // 페이지 맵 드롭도 컬럼 선택 후 해당 컬럼 위치로 삽입
-                        const page = next[targetPageIndex]
-                        const cols = Math.max(1, Math.min(2, page.columns))
-                        const targetColumn = chooseTargetColumn(targetPageIndex, cols)
-                        const byCol = getColumnEntries(targetPageIndex, cols)
-                        const targetIndex = byCol[targetColumn].length
-                        if (activeData.source === 'pool') {
-                          const pid = activeData.problemId as string
-                          insertAtColumn(targetPageIndex, targetColumn, targetIndex, pid)
-                        } else if (activeData.source === 'page') {
-                          const { pageIndex: fromPage, index: fromIndex, problemId } = activeData
-                          const fromList = next[fromPage].problemIds
-                          const rmIdx = fromList.indexOf(problemId)
-                          if (rmIdx >= 0) fromList.splice(rmIdx, 1)
-                          insertAtColumn(targetPageIndex, targetColumn, targetIndex, problemId)
-                        }
-                      }
-                      return next
-                    })
-                    setActiveDrag(null)
-                    setDragInsert(null)
-                  }}
-                >
                 <div className="w-full h-full flex items-start justify-center">
-                  <div className="bg-white border border-gray-300 shadow-sm w-full max-w-none min-h-[80vh] p-4">
+                  <div
+                    className="bg-white border border-gray-300 shadow-sm w-full max-w-none min-h-[80vh] p-4"
+                  >
                     <div className="flex items-center justify-between mb-3">
                       <div className="text-sm text-gray-600">A4 미리보기</div>
                       <div className="text-xs text-gray-500">컬럼: {pages[selectedPageIndex]?.columns ?? 1}</div>
-                          </div>
-                    <div className="relative"
-                      onDragLeave={() => setDragInsert((d) => (d && d.pageIndex === selectedPageIndex ? null : d))}
-                    >
-                      {pages[selectedPageIndex]?.columns === 2 && (
-                        <div className="pointer-events-none absolute top-0 bottom-0 left-1/2 -translate-x-1/2 border-l border-dashed border-gray-300" />
-                      )}
-                      {(() => {
-                        const page = pages[selectedPageIndex]
-                        const baseIds = page?.problemIds ?? []
-                        const columns = page?.columns ?? 1
-                        // 문제/인디케이터 리스트 구성
-                        const items: Array<{ kind: 'problem'; id: string } | { kind: 'indicator' }> = []
-                        for (let i = 0; i < baseIds.length; i += 1) {
-                          if (dragInsert && dragInsert.pageIndex === selectedPageIndex && dragInsert.index === i) {
-                            items.push({ kind: 'indicator' })
-                          }
-                          items.push({ kind: 'problem', id: baseIds[i] })
-                        }
-                        if (dragInsert && dragInsert.pageIndex === selectedPageIndex && dragInsert.index >= baseIds.length) {
-                          items.push({ kind: 'indicator' })
-                        }
-                        // Masonry를 위해 행 분할 제거하고, column-count 기반으로 렌더링
-                        return (
-                          <div ref={gridRef} className="grid gap-4" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
-                            {(() => {
-                              // Masonry 배치: 왼쪽→오른쪽으로 각 컬럼 스택 쌓기
-                              const columnHeights = new Array(columns).fill(0)
-                              const stacks: Array<Array<{ key: string; render: React.ReactNode; baseIndex?: number }>> = new Array(columns).fill(null).map(() => [])
-                              const pushToColumn = (node: { key: string; render: React.ReactNode; baseIndex?: number }, estHeight = 1) => {
-                                const target = columnHeights.indexOf(Math.min(...columnHeights))
-                                stacks[target].push(node)
-                                columnHeights[target] += estHeight
-                              }
-                              // 추정 높이: 문제 텍스트 길이 기반 간단 추정(정교화 가능)
-                              const estimate = (id: string) => {
-                                const pb = getProblemById(id)
-                                if (!pb) return 1
-                                const base = 1
-                                const desc = Math.ceil((pb.description?.length ?? 0) / 60)
-                                const form = Math.ceil((pb.formula?.length ?? 0) / 80)
-                                return base + desc * 0.5 + form * 0.5
-                              }
-                              // baseIndex 순회 (인디케이터는 per-problem 시점에 삽입)
-                              baseIds.forEach((id, baseIndex) => {
-                                const pb = getProblemById(id)
-                                if (!pb) {
-                                  pushToColumn({ key: `empty-${baseIndex}`, render: <div key={`empty-${baseIndex}`} /> }, 1)
-                                  return
-                                }
-                                const target = columnHeights.indexOf(Math.min(...columnHeights))
-                                const isHidden = activeDrag && activeDrag.source === 'page' && activeDrag.pageIndex === selectedPageIndex && activeDrag.index === baseIndex
-                                pushToColumn({ key: `page-${selectedPageIndex}-item-${id}-${baseIndex}`, render: (
-                                  <DroppablePageCard pageIndex={selectedPageIndex} index={baseIndex}>
-                                    <DraggableProblemCard pageIndex={selectedPageIndex} index={baseIndex} problemId={id} hidden={!!isHidden} />
-                                  </DroppablePageCard>
-                                ), baseIndex }, estimate(id))
-                              })
-                              // 하단 인디케이터 (컬럼별 마지막 뒤)
-                              const lastIndexByCol: number[] = stacks.map((col) => {
-                                const last = [...col].reverse().find((n) => typeof n.baseIndex === 'number')
-                                return (last?.baseIndex as number | undefined) ?? -1
-                              })
-                              colInfoRef.current.lastIndex = lastIndexByCol
-                              return stacks.map((col, colIdx) => (
-                                <div key={`col-${colIdx}`} className="flex flex-col gap-4 relative">
-                                  {col.map((n) => (
-                                    <React.Fragment key={n.key}>{n.render}</React.Fragment>
-                                  ))}
-                                  {/* 컬럼 하단 인디케이터 */}
-                                  {dragInsert && dragInsert.pageIndex === selectedPageIndex && dragInsert.column === colIdx && dragInsert.index > lastIndexByCol[colIdx] && (
-                                    <div className="border-2 border-dashed border-blue-300/70 bg-blue-50/30 rounded-lg min-h-28 w-full" />
-                                  )}
-                        </div>
-                              ))
-                            })()}
+                    </div>
+                    <DragDropContext onDragEnd={handleA4DragEnd}>
+                      <div className="relative grid gap-4" style={{ gridTemplateColumns: `repeat(${pages[selectedPageIndex]?.columns ?? 1}, minmax(0, 1fr))` }}>
+                        {pages[selectedPageIndex]?.columns === 2 && (
+                          <div className="pointer-events-none absolute top-0 bottom-0 left-1/2 -translate-x-1/2 border-l border-dashed border-gray-300" />
+                        )}
+                        {pages[selectedPageIndex] && getLaneItems(pages[selectedPageIndex]).map((lane, laneIdx) => (
+                          <Droppable droppableId={`page-${selectedPageIndex}-col-${laneIdx}`} key={`lane-${laneIdx}`}>
+                            {(provided) => (
+                              <div ref={provided.innerRef} {...provided.droppableProps} className="min-h-[60vh] bg-transparent border border-dashed border-transparent">
+                                {lane.map((pid, index) => {
+                                  const problem = getProblemById(pid)
+                                  if (!problem) return null
+                                  return (
+                                    <Draggable draggableId={pid} index={index} key={`drag-${pid}`}>
+                                      {(drag) => (
+                                        <div ref={drag.innerRef} {...drag.draggableProps} {...drag.dragHandleProps} className="bg-white border rounded-lg p-4 cursor-move hover:shadow-md mb-4">
+                                          <h4 className="font-medium text-sm mb-2 line-clamp-2">{problem.title}</h4>
+                                          <div className="flex items-start justify-between mb-3">
+                                            <div className="flex items-center gap-2">
+                                              <span className="font-bold text-sm">{problem.id}</span>
+                                              <Badge className={getDifficultyColor(problem.difficulty)} variant="outline">
+                                                {problem.difficulty}
+                                              </Badge>
+                                            </div>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              className="h-6 w-6 p-0"
+                                              onClick={() => removeFromPage(selectedPageIndex, problem.id)}
+                                            >
+                                              <X className="w-4 h-4" />
+                                            </Button>
+                                          </div>
+                                          <p className="text-xs text-gray-600 mb-3">{problem.description}</p>
+                                          <div className="bg-gray-50 rounded p-2 mb-3">
+                                            <div className="text-xs font-mono text-center">{problem.formula}</div>
+                                          </div>
+                                          <div className="space-y-1 mb-3">
+                                            {problem.choices.slice(0, 2).map((choice, idx) => (
+                                              <div key={idx} className="text-xs text-gray-700 line-clamp-1">{choice}</div>
+                                            ))}
+                                          </div>
+                                          <div className="flex items-center justify-between">
+                                            <Badge variant="outline" className="text-xs">{problem.type}</Badge>
+                                            <span className="text-xs text-gray-500">배치됨</span>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </Draggable>
+                                  )
+                                })}
+                                {provided.placeholder}
+                              </div>
+                            )}
+                          </Droppable>
+                        ))}
                       </div>
-                    )
-                      })()}
-                </div>
+                    </DragDropContext>
                   </div>
                 </div>
-                {/* 드래그 오버레이 */}
-                <DragOverlay dropAnimation={null}>{renderDragOverlay()}</DragOverlay>
-                </DndContext>
               </div>
             </div>
 
-            {/* 4단: 페이지 맵 (오른쪽) */}
+            {/* 3단: 페이지 맵 (오른쪽) */}
             <div className="bg-gray-50 border-l border-gray-200 flex flex-col h-full">
-              <div className="p-4 h-18 border-b border-gray-200">
+              <div className="p-4 h-16 border-b border-gray-200">
                 <h3 className="font-semibold text-lg">페이지 맵</h3>
               </div>
               
@@ -1550,7 +1342,7 @@ export function FunctionProblemDialog({
                   <div className="bg-white rounded-lg border p-3">
                     <div className="text-sm font-medium mb-2">현재 페이지</div>
                     <div className="flex items-center justify-between">
-                    <div className="text-2xl font-bold text-blue-600">{currentPage}</div>
+                      <div className="text-2xl font-bold text-blue-600">{currentPage}</div>
                       <div className="flex items-center gap-2">
                         <Button
                           size="sm"
@@ -1578,105 +1370,94 @@ export function FunctionProblemDialog({
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="bg-white rounded-lg border p-3">
                     <div className="text-sm font-medium mb-2">배치된 문제</div>
                     <div className="text-lg font-semibold">{arrangedCount}개</div>
                   </div>
-                  
+
                   <div className="bg-white rounded-lg border p-3">
                     <div className="flex items-center justify-between mb-2">
                       <div className="text-sm font-medium">페이지 목록</div>
                       <div className="flex items-center gap-2">
-                        <Popover>
-                          <PopoverTrigger asChild>
                         <Button
-                              size="icon" variant="outline" className="h-7 w-7" aria-label="페이지 삭제"
-                              onClick={() => setPages((prev) => {
-                                if (prev.length <= 1) return prev
-                                const idx = selectedPageIndex
-                                const next = prev.filter((_, i) => i !== idx)
-                                setCurrentPage((p) => Math.max(1, Math.min(p, next.length)))
-                                return next
-                              })}
-                            >
-                              <Minus className="h-3.5 w-3.5" />
+                          size="sm"
+                          variant="outline"
+                          className="h-7 w-7 p-0"
+                          title="페이지 삭제"
+                          onClick={() => setPages((prev) => {
+                            if (prev.length <= 1) return prev
+                            const idx = selectedPageIndex
+                            const next = prev.filter((_, i) => i !== idx)
+                            // 현재 페이지 재조정
+                            setCurrentPage((p) => Math.max(1, Math.min(p, next.length)))
+                            return next
+                          })}
+                        >
+                          <Minus className="w-4 h-4" />
                         </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="text-xs">현재 페이지를 삭제</PopoverContent>
-                        </Popover>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              size="icon" variant="outline" className="h-7 w-7" aria-label="페이지 추가"
-                              onClick={() => setPages((prev) => {
-                                const newId = (prev[prev.length - 1]?.id ?? 0) + 1
-                                return [...prev, { id: newId, columns: Math.max(1, Math.min(2, prev[selectedPageIndex]?.columns ?? 2)), problemIds: [] }]
-                              })}
-                            >
-                              <Plus className="h-3.5 w-3.5" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="text-xs">새 페이지를 추가</PopoverContent>
-                        </Popover>
+                        <Button
+                          size="sm"
+                          className="h-7 w-7 p-0"
+                          title="페이지 추가"
+                          onClick={() => setPages((prev) => {
+                            const newId = (prev[prev.length - 1]?.id ?? 0) + 1
+                            return [...prev, { id: newId, columns: Math.max(1, Math.min(2, prev[selectedPageIndex]?.columns ?? 2)), problemIds: [], laneOf: {} }]
+                          })}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      {pages.map((pg, i) => (
-                        <div
-                          key={`pagemap-${pg.id}`}
-                          className={`rounded-md border p-2 ${i === selectedPageIndex ? 'border-blue-400 bg-blue-50' : 'border-gray-200 bg-white'}`}
-                          onClick={() => setCurrentPage(i + 1)}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="text-xs font-medium">페이지 {i + 1}</div>
-                            <div className="text-[10px] text-gray-500">{pg.problemIds.length}개</div>
-                          </div>
-                          <div className="relative">
-                            {pg.columns === 2 && (
-                              <div className="pointer-events-none absolute top-0 bottom-0 left-1/2 -translate-x-1/2 border-l border-dashed border-gray-300" />
-                            )}
-                            <DroppableMiniMapContainer pageIndex={i} count={pg.problemIds.length}>
+                    <DragDropContext onDragEnd={handlePmapDragEnd}>
+                      <div className="space-y-2">
+                        {pages.map((pg, i) => (
+                          <div
+                            key={`pagemap-${pg.id}`}
+                            className={`rounded-md border p-2 ${i === selectedPageIndex ? 'border-blue-400 bg-blue-50' : 'border-gray-200 bg-white'}`}
+                            onClick={() => setCurrentPage(i + 1)}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="text-xs font-medium">페이지 {i + 1}</div>
+                              <div className="text-[10px] text-gray-500">{pg.problemIds.length}개</div>
+                            </div>
+                            <div className="relative">
+                              {pg.columns === 2 && (
+                                <div className="pointer-events-none absolute top-0 bottom-0 left-1/2 -translate-x-1/2 border-l border-dashed border-gray-300" />
+                              )}
                               <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${pg.columns}, minmax(0, 1fr))` }}>
-                                {Array.from({ length: pg.columns }).map((_, colIdx) => (
-                                  <div key={`mini-col-${pg.id}-${colIdx}`} className="flex flex-col gap-1.5">
-                                    <DroppableColSlot pageIndex={i} column={colIdx} index={0} compact />
-                                    {pg.problemIds
-                                      .filter((pid) => (pages[i].columnMap?.[pid] ?? 0) === colIdx)
-                                      .map((pid, colPos) => (
-                                        <React.Fragment key={`mini-entry-${pg.id}-${pid}-${colPos}`}>
-                                          <MiniMapDroppableCard pageIndex={i} index={pages[i].problemIds.indexOf(pid)} pid={pid} title={getProblemById(pid)?.title} column={colIdx} />
-                                          <DroppableColSlot pageIndex={i} column={colIdx} index={colPos + 1} compact />
-                                        </React.Fragment>
-                                      ))}
-                                  </div>
+                                {getLaneItems(pg).map((lane, laneIdx) => (
+                                  <Droppable droppableId={`pmap-${i}-col-${laneIdx}`} key={`pmap-${i}-col-${laneIdx}`}>
+                                    {(provided) => (
+                                      <div ref={provided.innerRef} {...provided.droppableProps} className="min-h-6 border border-dashed border-transparent p-0.5">
+                                        {lane.length === 0 && (
+                                          <div className="h-6 rounded-sm border border-dashed border-gray-300 bg-gray-50 text-[11px] text-gray-400 flex items-center justify-center">
+                                            드롭
+                                          </div>
+                                        )}
+                                        {lane.map((pid, idx2) => (
+                                          <Draggable draggableId={`pmap-${i}-${pid}`} index={idx2} key={`mini-drag-${i}-${pid}`}>
+                                            {(drag) => (
+                                              <div ref={drag.innerRef} {...drag.draggableProps} {...drag.dragHandleProps} className="h-8 rounded-sm border bg-white text-[10px] text-gray-700 flex items-center justify-center truncate cursor-move mb-1" title={getProblemById(pid)?.title}>
+                                                {pid}
+                                              </div>
+                                            )}
+                                          </Draggable>
+                                        ))}
+                                        {provided.placeholder}
+                                      </div>
+                                    )}
+                                  </Droppable>
                                 ))}
                               </div>
-                            </DroppableMiniMapContainer>
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    </DragDropContext>
                   </div>
 
-                  <div className="bg-white rounded-lg border p-3">
-                    <div className="text-sm font-medium mb-2">빠른 이동</div>
-                    <Input
-                      type="number"
-                      placeholder="페이지 번호"
-                      min={1}
-                      max={totalPages}
-                      className="w-full"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          const value = parseInt((e.target as HTMLInputElement).value)
-                          if (!Number.isNaN(value) && value >= 1 && value <= totalPages) {
-                            setCurrentPage(value)
-                          }
-                        }
-                      }}
-                    />
-                  </div>
+                  
                 </div>
               </div>
             </div>
