@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/resizable"
 import { PrintSettingsDialog } from "@/components/common/print-settings-dialog"
 import { FunctionProblemDialog } from "@/components/create-problems/function-problem-dialog"
-import { useMyLectures } from "@/hooks/use-lecture"
+import { useMyLectures, useLectureDetail } from "@/hooks/use-lecture"
 import { useSubjects, useSubjectTops } from "@/hooks/use-subjects"
 import { useSkillChapters, useSkillCounts } from "@/hooks/use-skills"
 import { MultiSelect } from "@/components/ui/multi-select"
@@ -42,6 +42,8 @@ import {
   BarChart3,
   Printer
 } from "lucide-react"
+import AnswerSummaryPrint from "./answer-summary-print"
+import SolutionPagesPrint from "../math-paper/template/solution-pages-print"
 
 function ProblemCreatorContent() {
   // 강좌 관련 상태
@@ -96,6 +98,9 @@ function ProblemCreatorContent() {
   // 스킬별 문제 개수 조회
   const { data: skillCounts } = useSkillCounts(selectedLectureId)
   
+  // 강의 상세정보 조회 (teacher 정보 포함)
+  const { data: lectureDetail } = useLectureDetail(selectedLectureId || "")
+  
   // 시험지 생성 API 훅
   const generatePaperMutation = useGeneratePaper()
   
@@ -134,6 +139,42 @@ function ProblemCreatorContent() {
     }
     
     return "항목을 선택해주세요"
+  }, [selectedTreeItems, subjectTops])
+
+  // chapterFrom과 chapterTo를 위한 범위 계산
+  const getChapterRange = React.useMemo(() => {
+    if (selectedTreeItems.length === 0) {
+      return { from: "", to: "" }
+    }
+    
+    // 모든 선택된 항목들의 title을 찾기
+    const findNodeTitles = (nodes: any[], keys: string[]): string[] => {
+      const titles: string[] = []
+      
+      const findInNode = (node: any) => {
+        if (keys.includes(node.key.toString())) {
+          titles.push(node.title)
+        }
+        if (node.children) {
+          node.children.forEach(findInNode)
+        }
+      }
+      
+      nodes.forEach(findInNode)
+      return titles
+    }
+    
+    if (subjectTops) {
+      const titles = findNodeTitles(subjectTops, selectedTreeItems)
+      if (titles.length > 0) {
+        if (titles.length === 1) {
+          return { from: titles[0], to: titles[0] }
+        }
+        return { from: titles[0], to: titles[titles.length - 1] }
+      }
+    }
+    
+    return { from: "", to: "" }
   }, [selectedTreeItems, subjectTops])
 
   // 첫 번째 강좌를 기본값으로 설정
@@ -284,7 +325,6 @@ function ProblemCreatorContent() {
     { id: "exam", label: "시험지", icon: FileText },
     { id: "quick", label: "빠른답안", icon: CheckCircle },
     { id: "detailed", label: "상세 정답지", icon: BookOpenCheck },
-    { id: "analysis", label: "문항 분석", icon: BarChart3 },
     { id: "style", label: "스타일 설정", icon: Settings },
   ]
 
@@ -543,6 +583,11 @@ function ProblemCreatorContent() {
         subjectId: parseInt(selectedSubjectId, 10)
       })
       console.log('Generated paper result:', result)
+
+      result.teacherName = lectureDetail?.teacher?.name ?? ""
+      result.lectureTitle = lectureDetail?.name ?? ""
+      result.chapterFrom = getChapterRange.from ?? ""
+      result.chapterTo = getChapterRange.to ?? ""
 
       // 시험지 데이터 저장
       setGeneratedPaper(result)
@@ -819,231 +864,9 @@ function ProblemCreatorContent() {
     return selectedData
   }
 
-  const renderAnalysisTab = () => {
-    const problemsData = getSelectedProblemsData()
-
-    if (problemsData.length === 0) {
-      return (
-        <div className="flex items-center justify-center h-96 text-gray-500">
-          <div className="text-center">
-            <BarChart3 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p>왼쪽에서 문제를 선택해주세요</p>
-          </div>
-        </div>
-      )
-    }
-
-    // 난이도별 분포 데이터
-    const difficultyData = [
-      { level: "최하", count: 3, color: "bg-purple-300" },
-      { level: "하", count: 6, color: "bg-purple-400" },
-      { level: "중", count: 8, color: "bg-purple-500" },
-      { level: "상", count: 1, color: "bg-purple-600" },
-      { level: "최상", count: 0, color: "bg-purple-700" },
-    ]
-
-    // 영역별 분포 데이터
-    const domainData = [
-      { domain: "계산", count: 8, color: "bg-blue-500", percentage: 44.4 },
-      { domain: "이해", count: 7, color: "bg-green-500", percentage: 38.9 },
-      { domain: "해결", count: 2, color: "bg-orange-500", percentage: 11.1 },
-      { domain: "추론", count: 1, color: "bg-red-500", percentage: 5.6 },
-      { domain: "기타", count: 0, color: "bg-gray-400", percentage: 0 },
-    ]
-
-    // 문항 목록 데이터
-    const itemList = [
-      { number: 1, type: "A001. 다항식의 덧셈과 뺄셈", difficulty: "중", domain: "이해" },
-      { number: 2, type: "A002. 단항식의 곱셈", difficulty: "상", domain: "해결" },
-      { number: 3, type: "A003. 다항식의 곱셈", difficulty: "하", domain: "계산" },
-      { number: 4, type: "A004. 인수분해", difficulty: "중", domain: "이해" },
-      { number: 5, type: "A005. 완전제곱식", difficulty: "하", domain: "계산" },
-      { number: 6, type: "A006. 인수분해 공식", difficulty: "상", domain: "해결" },
-    ]
-
-    const maxCount = Math.max(...difficultyData.map((d) => d.count))
-
-    return (
-      <ScrollArea className="h-full">
-        <div className="space-y-6 p-4">
-          <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
-          <h3 className="font-semibold text-indigo-800 mb-2">문항 분석</h3>
-          <p className="text-sm text-indigo-700">선택된 문항들의 난이도별 분포와 영역별 분포를 확인할 수 있습니다.</p>
-        </div>
-
-        {/* 차트 영역 */}
-        <div className="grid grid-cols-2 gap-8">
-          {/* 난이도별 분포 - Bar Chart */}
-          <div className="bg-white p-6 rounded-lg border">
-            <h4 className="text-lg font-semibold mb-4 text-center">난이도별 분포</h4>
-            <div className="space-y-3">
-              {difficultyData.map((item) => (
-                <div key={item.level} className="flex items-center gap-3">
-                  <div className="w-12 text-sm font-medium text-right">{item.level}</div>
-                  <div className="flex-1 bg-gray-200 rounded-full h-8 relative">
-                    <div
-                      className={`${item.color} h-8 rounded-full flex items-center justify-end pr-2 transition-all duration-500`}
-                      style={{ width: `${maxCount > 0 ? (item.count / maxCount) * 100 : 0}%` }}
-                    >
-                      {item.count > 0 && <span className="text-white text-sm font-medium">{item.count}</span>}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 text-center">
-              <div className="inline-flex items-center gap-2 text-sm text-gray-600">
-                <div className="w-3 h-3 bg-purple-500 rounded"></div>
-                <span>문항 수</span>
-              </div>
-            </div>
-          </div>
-
-          {/* 영역별 분포 - Pie Chart */}
-          <div className="bg-white p-6 rounded-lg border">
-            <h4 className="text-lg font-semibold mb-4 text-center">영역별 분포</h4>
-            <div className="flex items-center justify-center mb-4">
-              <div className="relative w-48 h-48">
-                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                  {(() => {
-                    let cumulativePercentage = 0
-                    return domainData
-                      .filter((item) => item.count > 0)
-                      .map((item, index) => {
-                        const startAngle = (cumulativePercentage / 100) * 360
-                        const endAngle = ((cumulativePercentage + item.percentage) / 100) * 360
-                        cumulativePercentage += item.percentage
-
-                        const startAngleRad = (startAngle * Math.PI) / 180
-                        const endAngleRad = (endAngle * Math.PI) / 180
-
-                        const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1"
-
-                        const x1 = 50 + 40 * Math.cos(startAngleRad)
-                        const y1 = 50 + 40 * Math.sin(startAngleRad)
-                        const x2 = 50 + 40 * Math.cos(endAngleRad)
-                        const y2 = 50 + 40 * Math.sin(endAngleRad)
-
-                        const pathData = [
-                          `M 50 50`,
-                          `L ${x1} ${y1}`,
-                          `A 40 40 0 ${largeArcFlag} 1 ${x2} ${y2}`,
-                          `Z`,
-                        ].join(" ")
-
-                        const colors = {
-                          "bg-blue-500": "#3b82f6",
-                          "bg-green-500": "#10b981",
-                          "bg-orange-500": "#f97316",
-                          "bg-red-500": "#ef4444",
-                          "bg-gray-400": "#9ca3af",
-                        }
-
-                        return (
-                          <path
-                            key={item.domain}
-                            d={pathData}
-                            fill={colors[item.color as keyof typeof colors]}
-                            stroke="white"
-                            strokeWidth="1"
-                          />
-                        )
-                      })
-                  })()}
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-800">18</div>
-                    <div className="text-sm text-gray-600">총 문항</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="space-y-2">
-              {domainData
-                .filter((item) => item.count > 0)
-                .map((item) => (
-                  <div key={item.domain} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 ${item.color} rounded`}></div>
-                      <span className="text-sm font-medium">{item.domain}</span>
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {item.count}개 ({item.percentage.toFixed(1)}%)
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </div>
-        </div>
-
-        {/* 문항 목록 테이블 */}
-        <div className="bg-white rounded-lg border">
-          <div className="p-4 border-b border-gray-200">
-            <h4 className="text-lg font-semibold">문항 목록</h4>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 border-r">번호</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 border-r">유형명</th>
-                  <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 border-r">난이도</th>
-                  <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">인지영역</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {itemList.map((item) => (
-                  <tr key={item.number} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm font-medium text-gray-900 border-r">{item.number}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700 border-r">{item.type}</td>
-                    <td className="px-4 py-3 text-center border-r">
-                      <Badge
-                        className={`text-xs ${
-                          item.difficulty === "최상"
-                            ? "bg-red-100 text-red-800"
-                            : item.difficulty === "상"
-                              ? "bg-orange-100 text-orange-800"
-                              : item.difficulty === "중"
-                                ? "bg-blue-100 text-blue-800"
-                                : item.difficulty === "하"
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-teal-100 text-teal-800"
-                        }`}
-                      >
-                        {item.difficulty}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <Badge
-                        className={`text-xs ${
-                          item.domain === "계산"
-                            ? "bg-blue-100 text-blue-800"
-                            : item.domain === "이해"
-                              ? "bg-green-100 text-green-800"
-                              : item.domain === "해결"
-                                ? "bg-orange-100 text-orange-800"
-                                : item.domain === "추론"
-                                  ? "bg-red-100 text-red-800"
-                                  : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {item.domain}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-        </div>
-      </ScrollArea>
-    )
-  }
 
   const renderStyleTab = () => (
-    <ScrollArea className="h-full">
+    <ScrollArea className="h-[calc(100vh-430px)]">
       <div className="space-y-6 p-4">
         <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
         <h3 className="font-semibold text-purple-800 mb-2">스타일 설정</h3>
@@ -1194,24 +1017,13 @@ function ProblemCreatorContent() {
     // 생성된 시험지가 있으면 PaperPrintView4 표시
     if (generatedPaper) {
       return (
-        <ScrollArea className="h-full">
-          <div className="space-y-4 p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">생성된 시험지</h2>
-              <Button 
-                variant="outline" 
-                onClick={() => setGeneratedPaper(null)}
-                size="sm"
-              >
-                새로 만들기
-              </Button>
-            </div>
-            
+        <ScrollArea className="h-[calc(100vh-430px)]">
+          <div className="space-y-2 px-2">
             <PaperPrintView4
               title={generatedPaper.title}
               lectureTitle={generatedPaper.lectureTitle ?? ""}
-              chapterFrom={generatedPaper.chapterFrom ?? ""}
-              chapterTo={generatedPaper.chapterTo ?? ""}
+              chapterFrom={generatedPaper.chapterFrom}
+              chapterTo={generatedPaper.chapterTo}
               minMargin={generatedPaper.minMargin ?? 0}
               columns={generatedPaper.columns ?? 2}
               pages={generatedPaper.pages ?? []}
@@ -1252,7 +1064,7 @@ function ProblemCreatorContent() {
     }
 
     return (
-      <ScrollArea className="h-full">
+      <ScrollArea className="h-[calc(100vh-430px)]">
         <div className="space-y-6 p-4">
           {/* 헤더 스타일 적용 */}
         <div
@@ -1386,142 +1198,32 @@ function ProblemCreatorContent() {
   }
 
   const renderQuickAnswerTab = () => {
-    const problemsData = getSelectedProblemsData()
-
-    if (problemsData.length === 0) {
-      return (
-        <div className="flex items-center justify-center h-96 text-gray-500">
-          <div className="text-center">
-            <CheckCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p>왼쪽에서 문제를 선택해주세요</p>
-          </div>
-        </div>
-      )
-    }
-
     return (
-      <ScrollArea className="h-full">
-        <div className="space-y-4 p-4">
-          <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-          <h3 className="font-semibold text-green-800 mb-2">빠른 답안 확인</h3>
-          <p className="text-sm text-green-700">각 문제의 정답을 한눈에 확인할 수 있습니다.</p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          {problemsData.map((problem) => (
-            <div key={problem.id} className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6  border-gray-200">
-              <div className="px-6 p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-lg">{problem.id}</span>
-                    <Badge variant="outline" className="text-xs">
-                      {problem.title}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Badge className="bg-blue-100 text-blue-800 text-xs">쉬움</Badge>
-                    <Badge className="bg-gray-100 text-gray-800 text-xs">객관</Badge>
-                  </div>
-                </div>
-                <div className="mb-3 relative">
-                  <Input value={problem.equation} className="text-center font-mono text-sm pr-16" readOnly />
-                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-                    <Badge className="bg-green-100 text-green-800 font-bold text-lg px-3 py-1">
-                      {problem.quickAnswer}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
+      <ScrollArea className="h-[calc(100vh-430px)]">
+        <div className="space-y-6 p-4">
+          { generatedPaper ? <AnswerSummaryPrint paper={generatedPaper} showBlankPage={true} /> :
+          <div className="flex items-center justify-center h-96 text-gray-500">
+            <div className="text-center">
+              <BookOpenCheck className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <p>왼쪽에서 문제를 선택해주세요</p>
             </div>
-          ))}
-        </div>
+          </div>}
         </div>
       </ScrollArea>
     )
   }
 
   const renderDetailedSolutionTab = () => {
-    const problemsData = getSelectedProblemsData()
 
-    if (problemsData.length === 0) {
-      return (
+    return (
+      <ScrollArea className="h-[calc(100vh-430px)]">
+        { generatedPaper ? <SolutionPagesPrint paper={generatedPaper} /> : 
         <div className="flex items-center justify-center h-96 text-gray-500">
           <div className="text-center">
             <BookOpenCheck className="w-12 h-12 mx-auto mb-4 text-gray-300" />
             <p>왼쪽에서 문제를 선택해주세요</p>
           </div>
-        </div>
-      )
-    }
-
-    return (
-      <ScrollArea className="h-full">
-        <div className="space-y-6 p-4">
-          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <h3 className="font-semibold text-blue-800 mb-2">상세 정답지</h3>
-          <p className="text-sm text-blue-700">각 문제의 정답, 해설, 학습 포인트를 상세히 확인할 수 있습니다.</p>
-        </div>
-
-        {problemsData.map((problem) => (
-          <div key={problem.id} className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6  border-gray-200">
-            <div className="px-6 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-xl">{problem.id}</span>
-                  <Badge variant="outline" className="text-sm">
-                    {problem.title}
-                  </Badge>
-                  <Badge className="bg-blue-100 text-blue-800 text-xs">쉬움</Badge>
-                  <Badge className="bg-gray-100 text-gray-800 text-xs">객관</Badge>
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
-                  <FileText className="w-4 h-4" />
-                  문제
-                </h4>
-                <p className="text-gray-700 leading-relaxed mb-3">{problem.content}</p>
-                <div className="p-3 bg-gray-50 rounded-lg border">
-                  <div className="text-center font-mono text-lg">{problem.equation}</div>
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <h4 className="font-medium text-green-700 mb-2 flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4" />
-                  정답
-                </h4>
-                <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                  <div className="text-center">
-                    <span className="text-green-800 font-bold text-2xl">{problem.quickAnswer}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <h4 className="font-medium text-blue-700 mb-2 flex items-center gap-2">
-                  <BookOpen className="w-4 h-4" />
-                  상세 해설
-                </h4>
-                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-blue-800 leading-relaxed">{problem.detailedSolution}</p>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-medium text-purple-700 mb-2 flex items-center gap-2">
-                  <Target className="w-4 h-4" />
-                  학습 포인트
-                </h4>
-                <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-                  <p className="text-purple-800 text-sm leading-relaxed">{problem.explanation}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-        </div>
+        </div>}
       </ScrollArea>
     )
   }
@@ -1576,7 +1278,7 @@ function ProblemCreatorContent() {
       {/* 범위 및 출제유형 */}
       <div className="mb-6">
         <div className="flex">
-          <div className="w-[30%] pr-3">
+          <div className="w-[28%] pr-3">
             <div className="bg-white rounded-lg border p-4 h-20 flex flex-col justify-center">
               <h3 className="font-semibold text-sm mb-2">범위</h3>
               <div className="text-sm text-gray-700">
@@ -1585,7 +1287,7 @@ function ProblemCreatorContent() {
             </div>
           </div>
           
-          <div className="w-[70%] pl-3">
+          <div className="w-[72%] pl-3">
             <div className="bg-white rounded-lg border p-4 h-20 flex flex-col justify-center">
               <h3 className="font-semibold text-sm mb-2">출제유형</h3>
               <div className="flex gap-1">
@@ -1922,16 +1624,13 @@ function ProblemCreatorContent() {
                 </div>
               </div>
             </div>
-            <div className="px-6 flex-1 flex flex-col">
-              <ScrollArea className="flex-1 h-0">
+            <div className="px-2 flex-1 flex flex-col">
                 <div className="space-y-4 pb-6">
                   {activeTab === "exam" && renderExamTab()}
                   {activeTab === "quick" && renderQuickAnswerTab()}
                   {activeTab === "detailed" && renderDetailedSolutionTab()}
-                  {activeTab === "analysis" && renderAnalysisTab()}
                   {activeTab === "style" && renderStyleTab()}
                 </div>
-              </ScrollArea>
             </div>
           </div>
           </div>

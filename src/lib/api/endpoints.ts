@@ -153,6 +153,7 @@ export const API_ENDPOINTS = {
     MY_LECTURES: '/api/m38/lecture/mylectures',
     LIST: '/api/m38/lecture',
     DETAIL: (id: string) => `/api/m38/lecture/${id}`,
+    GET_DETAIL: (id: string) => `/api/m38/lecture/get/${id}`,
     CREATE: '/api/m38/lecture',
     UPDATE: (id: string) => `/api/m38/lecture/${id}`,
     DELETE: (id: string) => `/api/m38/lecture/${id}`,
