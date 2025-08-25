@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useCallback, useMemo, useState, useEffect } from "react"
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd"
 import { useManualProblemStore } from "@/stores/manual-problem-store"
 import { useProblemsBySkill } from "@/hooks/use-problems"
 import { Button } from "@/components/ui/button"
@@ -170,11 +171,79 @@ export function ManualProblemDialog({
     return lanes
   }, [])
 
+  // 드래그앤드랍 핸들러
+  const handleDragEnd = useCallback((result: DropResult) => {
+    if (!result.destination) {
+      return
+    }
+
+    const { source, destination, draggableId } = result
+    
+    // 같은 위치로 드롭한 경우 무시
+    if (source.droppableId === destination.droppableId && source.index === destination.index) {
+      return
+    }
+
+    setPages(prev => {
+      const nextPages = prev.map(page => ({
+        ...page,
+        problemIds: [...page.problemIds],
+        laneOf: { ...(page.laneOf || {}) }
+      }))
+
+      // 소스와 대상 페이지 및 컬럼 정보 파싱
+      const [, sourcePageId, sourceColumn] = source.droppableId.split('-')
+      const [, destPageId, destColumn] = destination.droppableId.split('-')
+      
+      const sourcePageIndex = nextPages.findIndex(p => p.id === parseInt(sourcePageId))
+      const destPageIndex = nextPages.findIndex(p => p.id === parseInt(destPageId))
+      
+      if (sourcePageIndex === -1 || destPageIndex === -1) return prev
+
+      const sourcePage = nextPages[sourcePageIndex]
+      const destPage = nextPages[destPageIndex]
+      const problemId = draggableId
+      const destColumnIndex = parseInt(destColumn)
+      
+      // 같은 페이지 내에서 이동하는 경우
+      if (sourcePageIndex === destPageIndex) {
+        const sourceColumnIndex = parseInt(sourceColumn)
+        
+        // 같은 컬럼 내에서 순서만 변경
+        if (sourceColumnIndex === destColumnIndex) {
+          const laneItems = getLaneItems(sourcePage)
+          const lane = [...laneItems[sourceColumnIndex]]
+          const [movedItem] = lane.splice(source.index, 1)
+          lane.splice(destination.index, 0, movedItem)
+          
+          // problemIds와 laneOf 업데이트 필요하지 않음 (같은 컬럼)
+        } else {
+          // 다른 컬럼으로 이동
+          destPage.laneOf[problemId] = destColumnIndex
+        }
+      } else {
+        // 다른 페이지로 이동
+        // 소스에서 문제 제거
+        sourcePage.problemIds = sourcePage.problemIds.filter(id => id !== problemId)
+        delete sourcePage.laneOf[problemId]
+        
+        // 대상 페이지에 문제 추가
+        if (!destPage.problemIds.includes(problemId)) {
+          destPage.problemIds.push(problemId)
+        }
+        destPage.laneOf[problemId] = destColumnIndex
+      }
+
+      return nextPages
+    })
+  }, [getLaneItems])
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="fixed inset-0 w-screen h-screen max-w-none max-h-none translate-x-0 translate-y-0 rounded-none border-0 p-0 m-0" showCloseButton={false}>
         <DialogTitle className="sr-only">유형 문제 변경</DialogTitle>
-        <div className="flex flex-col h-screen w-screen bg-white">
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <div className="flex flex-col h-screen w-screen bg-white">
           {/* 상단 헤더 */}
           <div className="p-4 border-b border-gray-200 bg-white">
             <div className="flex items-center justify-between">
@@ -809,22 +878,48 @@ export function ManualProblemDialog({
                             )}
                             <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${pg.columns}, minmax(0, 1fr))` }}>
                               {getLaneItems(pg).map((lane, laneIdx) => (
-                                <div key={`pmap-${i}-col-${laneIdx}`} className="min-h-6 border border-dashed border-transparent p-0.5">
-                                  {lane.length === 0 && (
-                                    <div className="h-6 rounded-sm border border-dashed border-gray-300 bg-gray-50 text-[11px] text-gray-400 flex items-center justify-center">
-                                      비어있음
+                                <Droppable key={`pmap-${i}-col-${laneIdx}`} droppableId={`page-${pg.id}-${laneIdx}`} type="problem">
+                                  {(provided, snapshot) => (
+                                    <div 
+                                      ref={provided.innerRef}
+                                      {...provided.droppableProps}
+                                      className={`min-h-6 border border-dashed p-0.5 transition-colors ${
+                                        snapshot.isDraggingOver 
+                                          ? "border-blue-400 bg-blue-50" 
+                                          : "border-gray-300 bg-transparent"
+                                      }`}
+                                    >
+                                      {lane.length === 0 && !snapshot.isDraggingOver && (
+                                        <div className="h-6 rounded-sm border border-dashed border-gray-300 bg-gray-50 text-[11px] text-gray-400 flex items-center justify-center">
+                                          비어있음
+                                        </div>
+                                      )}
+                                      {lane.map((pid, idx2) => {
+                                        const problem = getProblemById(pid)
+                                        const problemNumber = problem?.problemNumber || problem?.problemId || pid
+                                        return (
+                                          <Draggable key={pid} draggableId={pid} index={idx2}>
+                                            {(provided, snapshot) => (
+                                              <div
+                                                ref={provided.innerRef}
+                                                {...provided.draggableProps}
+                                                {...provided.dragHandleProps}
+                                                className={`h-8 rounded-sm border text-[10px] text-gray-700 flex items-center justify-center truncate cursor-move mb-1 transition-shadow ${
+                                                  snapshot.isDragging 
+                                                    ? "bg-blue-100 border-blue-300 shadow-md" 
+                                                    : "bg-white border-gray-200 hover:bg-gray-50"
+                                                }`}
+                                              >
+                                                문제 {problemNumber}
+                                              </div>
+                                            )}
+                                          </Draggable>
+                                        )
+                                      })}
+                                      {provided.placeholder}
                                     </div>
                                   )}
-                                  {lane.map((pid, idx2) => {
-                                    const problem = getProblemById(pid)
-                                    const problemNumber = problem?.problemNumber || problem?.problemId || pid
-                                    return (
-                                      <div key={`mini-${pid}-${idx2}`} className="h-8 rounded-sm border bg-white text-[10px] text-gray-700 flex items-center justify-center truncate cursor-move mb-1">
-                                        문제 {problemNumber}
-                                      </div>
-                                    )
-                                  })}
-                                </div>
+                                </Droppable>
                               ))}
                             </div>
                           </div>
@@ -858,6 +953,7 @@ export function ManualProblemDialog({
             </div>
           </div>
         </div>
+        </DragDropContext>
       </DialogContent>
     </Dialog>
   )
