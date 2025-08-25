@@ -1,36 +1,30 @@
 "use client"
 
-import React, { useCallback, useMemo, useState } from "react"
+import React, { useCallback, useMemo, useState, useEffect } from "react"
 import { useManualProblemStore } from "@/stores/manual-problem-store"
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ChevronLeft, ChevronRight, X, Search, Filter, BookOpen, Target, Award, Brain, Plus, Minus } from "lucide-react"
+import { ChevronLeft, ChevronRight, X, Filter, BookOpen, Award, Brain, Plus, Minus } from "lucide-react"
+import { ApiProblem } from "@/types/api-problem"
+import ProblemView from "@/components/math-paper/template/manual/problem-view"
+import { SpProblem } from "@/components/math-paper/typings"
 
-interface Problem {
-  id: string
-  title: string
-  description: string
-  formula: string
-  choices: string[]
-  difficulty: "쉬움" | "중간" | "어려움"
-  type: "객관식" | "주관식"
-  category: string
-  count: number
-  source: "교과서" | "문제집" | "기출" | "모의고사"
-  domain: "계산" | "이해" | "추론" | "해결"
+// API 문제를 UI에서 사용할 형태로 변환하는 타입
+interface UIProblem extends ApiProblem {
+  // UI에서 필요한 추가 속성들
+  skillName?: string;
 }
 
 interface FunctionProblemDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  selectedProblems: Problem[]
-  onProblemsChange: (problems: Problem[]) => void
+  selectedProblems: UIProblem[]
+  onProblemsChange: (problems: UIProblem[]) => void
 }
 
 export function FunctionProblemDialog({
@@ -40,8 +34,6 @@ export function FunctionProblemDialog({
   onProblemsChange,
 }: FunctionProblemDialogProps) {
   const [currentPage, setCurrentPage] = useState(1)
-  const [selectedCategory, setSelectedCategory] = useState("D004")
-  const [searchTerm, setSearchTerm] = useState("")
   
   // zustand 스토어에서 항목 관련 상태 가져오기
   const { 
@@ -50,6 +42,10 @@ export function FunctionProblemDialog({
     toggleSkill, 
     toggleAllSkillsInChapter 
   } = useManualProblemStore()
+  
+  // 선택된 스킬들의 문제 데이터 상태
+  const [allProblems, setAllProblems] = useState<UIProblem[]>([])
+  const [loadingSkills, setLoadingSkills] = useState<Set<string>>(new Set())
   
   // 필터 상태
   const [sourceFilter, setSourceFilter] = useState("전체")
@@ -69,655 +65,127 @@ export function FunctionProblemDialog({
   ])
 
 
-  const problems: Problem[] = [
-    {
-      id: "D004",
-      title: "함수단원의 극한 문제풀이",
-      description: "다음 극한값을 구하시오.",
-      formula: "lim(x→1) (x²-1)/(x-1) = lim(x→1) (x+1) = 2",
-      choices: ["① lim(x→1) (x²+1)/(x-1)", "② lim(x→a) x", "③ lim(x→1) (4x²+3)", "④ x→∞"],
-      difficulty: "쉬움",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 346,
-      source: "교과서",
-      domain: "계산"
-    },
-    {
-      id: "D004-15",
-      title: "무한등비수열과 극한",
-      description: "수열의 극한을 이용하여 함수 극한을 구하시오.",
-      formula: "lim(n→∞) (1 + 1/n)^n = e",
-      choices: ["① e", "② 1", "③ 0", "④ 존재하지 않음"],
-      difficulty: "어려움",
-      type: "주관식",
-      category: "함수의 극한",
-      count: 60,
-      source: "모의고사",
-      domain: "해결"
-    },
-    {
-      id: "D004-16",
-      title: "삼각함수 극한 기본",
-      description: "기본 삼각함수 극한 공식을 활용하시오.",
-      formula: "lim(x→0) sin x / x = 1",
-      choices: ["① 0", "② 1", "③ -1", "④ 존재하지 않음"],
-      difficulty: "쉬움",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 200,
-      source: "교과서",
-      domain: "계산"
-    },
-    {
-      id: "D004-17",
-      title: "삼각함수 극한 응용",
-      description: "삼각함수의 합성으로 극한을 구하시오.",
-      formula: "lim(x→0) (1-cos x)/x² = 1/2",
-      choices: ["① 1/2", "② 1", "③ 0", "④ 2"],
-      difficulty: "중간",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 160,
-      source: "문제집",
-      domain: "이해"
-    },
-    {
-      id: "D004-18",
-      title: "지수함수의 극한",
-      description: "지수함수의 극한을 계산하시오.",
-      formula: "lim(x→∞) (1+2/x)^x = e²",
-      choices: ["① e", "② e²", "③ 2e", "④ 1"],
-      difficulty: "어려움",
-      type: "주관식",
-      category: "함수의 극한",
-      count: 70,
-      source: "기출",
-      domain: "추론"
-    },
-    {
-      id: "D004-19",
-      title: "로그함수의 극한",
-      description: "로그함수의 성질을 이용하여 극한을 구하시오.",
-      formula: "lim(x→0) ln(1+x)/x = 1",
-      choices: ["① 0", "② 1", "③ -1", "④ 존재하지 않음"],
-      difficulty: "중간",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 110,
-      source: "문제집",
-      domain: "이해"
-    },
-    {
-      id: "D004-20",
-      title: "유리식 변형과 극한",
-      description: "인수분해 후 극한을 계산하시오.",
-      formula: "lim(x→-1) (x²-1)/(x+1) = -2",
-      choices: ["① -1", "② -2", "③ 0", "④ 2"],
-      difficulty: "쉬움",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 140,
-      source: "교과서",
-      domain: "계산"
-    },
-    {
-      id: "D004-21",
-      title: "극한과 불연속점",
-      description: "점 x=a에서의 불연속 유형을 분류하시오.",
-      formula: "점프 불연속/제거가능 불연속/무한대 불연속",
-      choices: ["① 제거가능", "② 점프", "③ 무한대", "④ 연속"],
-      difficulty: "중간",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 95,
-      source: "모의고사",
-      domain: "추론"
-    },
-    {
-      id: "D004-22",
-      title: "0/0 꼴 유리화 연습",
-      description: "유리화를 통해 극한을 구하시오.",
-      formula: "lim(x→4) (√x-2)/(x-4)",
-      choices: ["① 1/2", "② 1/4", "③ 1/8", "④ 0"],
-      difficulty: "중간",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 150,
-      source: "문제집",
-      domain: "해결"
-    },
-    {
-      id: "D004-23",
-      title: "다항식 인수분해와 극한",
-      description: "인수분해를 활용하여 극한을 구하시오.",
-      formula: "lim(x→2) (x³-8)/(x-2) = 12",
-      choices: ["① 8", "② 10", "③ 12", "④ 16"],
-      difficulty: "쉬움",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 155,
-      source: "교과서",
-      domain: "계산"
-    },
-    {
-      id: "D004-24",
-      title: "좌우극한 수치판단",
-      description: "좌우극한의 값을 계산하시오.",
-      formula: "lim(x→0-) x/|x|, lim(x→0+) x/|x|",
-      choices: ["① -1, 1", "② 1, -1", "③ 0, 0", "④ 존재하지 않음"],
-      difficulty: "중간",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 90,
-      source: "기출",
-      domain: "추론"
-    },
-    {
-      id: "D004-25",
-      title: "무리식 곱셈 유리화",
-      description: "유리화 공식을 적용하여 극한을 구하시오.",
-      formula: "lim(x→0) (√(1+2x)-1)/x = 1",
-      choices: ["① 1", "② 2", "③ 1/2", "④ 0"],
-      difficulty: "쉬움",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 190,
-      source: "문제집",
-      domain: "계산"
-    },
-    {
-      id: "D004-26",
-      title: "무한대 차수 비교",
-      description: "최고차항 비교로 극한을 구하시오.",
-      formula: "lim(x→∞) (7x³+...)/(2x³-...) = 7/2",
-      choices: ["① 3/2", "② 7/2", "③ 2/7", "④ 0"],
-      difficulty: "중간",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 175,
-      source: "모의고사",
-      domain: "이해"
-    },
-    {
-      id: "D004-27",
-      title: "연속성 판별",
-      description: "다음 함수가 x=1에서 연속이 되도록 상수 a를 구하시오.",
-      formula: "f(x) = { (x²-1)/(x-1), x≠1; a, x=1 }",
-      choices: ["① a=1", "② a=2", "③ a=3", "④ a=4"],
-      difficulty: "어려움",
-      type: "주관식",
-      category: "함수의 극한",
-      count: 80,
-      source: "기출",
-      domain: "해결"
-    },
-    {
-      id: "D004-28",
-      title: "삼각함수 변형 극한",
-      description: "삼각함수 기본 극한을 활용하시오.",
-      formula: "lim(x→0) tan x / x = 1",
-      choices: ["① 0", "② 1", "③ -1", "④ 존재하지 않음"],
-      difficulty: "쉬움",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 130,
-      source: "교과서",
-      domain: "계산"
-    },
-    {
-      id: "D004-29",
-      title: "지수-로그 혼합 극한",
-      description: "지수와 로그의 결합식을 극한으로 평가하시오.",
-      formula: "lim(x→0) (e^x-1)/x = 1",
-      choices: ["① 0", "② 1", "③ e", "④ 존재하지 않음"],
-      difficulty: "중간",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 145,
-      source: "문제집",
-      domain: "이해"
-    },
-    {
-      id: "D004-30",
-      title: "복합 유리화 훈련",
-      description: "복수의 근호를 유리화하여 극한을 구하시오.",
-      formula: "lim(x→0) (√(x+1)-√(1-x))/x",
-      choices: ["① 0", "② 1", "③ 2", "④ 1/2"],
-      difficulty: "어려움",
-      type: "주관식",
-      category: "함수의 극한",
-      count: 60,
-      source: "모의고사",
-      domain: "해결"
-    },
-    {
-      id: "D004-31",
-      title: "유리식-무리식 혼합",
-      description: "인수분해/유리화를 조합하여 극한을 구하시오.",
-      formula: "lim(x→1) (√(x+3)-2)/(x-1)",
-      choices: ["① 1/2", "② 1/4", "③ 1", "④ 0"],
-      difficulty: "중간",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 100,
-      source: "문제집",
-      domain: "해결"
-    },
-    {
-      id: "D004-32",
-      title: "연속 함수의 합성",
-      description: "연속함수의 합성에서 극한을 구하시오.",
-      formula: "lim(x→a) g(f(x)) = g(lim f(x))",
-      choices: ["① 항상 성립", "② 조건부 성립", "③ 성립하지 않음", "④ 모름"],
-      difficulty: "중간",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 105,
-      source: "교과서",
-      domain: "이해"
-    },
-    {
-      id: "D004-33",
-      title: "연속 연산 법칙",
-      description: "극한의 연산 법칙을 적용하시오.",
-      formula: "lim(x→a)(f+g)=lim f + lim g",
-      choices: ["① 참", "② 거짓", "③ 조건부", "④ 정보부족"],
-      difficulty: "쉬움",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 115,
-      source: "교과서",
-      domain: "이해"
-    },
-    {
-      id: "D004-34",
-      title: "극한-상한법칙",
-      description: "상한법칙을 이용해 값을 추정하시오.",
-      formula: "a≤f(x)≤b ⇒ a≤lim f(x)≤b",
-      choices: ["① 참", "② 거짓", "③ 조건부", "④ 정보부족"],
-      difficulty: "어려움",
-      type: "주관식",
-      category: "함수의 극한",
-      count: 55,
-      source: "기출",
-      domain: "추론"
-    },
-    {
-      id: "D004-35",
-      title: "극한 존재 조건",
-      description: "좌우극한과 극한의 존재관계를 확인.",
-      formula: "lim(x→a-)f=lim(x→a+)f=L ⇒ lim(x→a)f=L",
-      choices: ["① 참", "② 거짓", "③ 조건부", "④ 정보부족"],
-      difficulty: "쉬움",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 190,
-      source: "교과서",
-      domain: "이해"
-    },
-    {
-      id: "D004-36",
-      title: "수열로 본 함수의 극한",
-      description: "수열 치환으로 극한을 구하시오.",
-      formula: "x_n→a ⇒ f(x_n)→L",
-      choices: ["① 항상 참", "② 반례 존재", "③ 불가능", "④ 정보부족"],
-      difficulty: "어려움",
-      type: "주관식",
-      category: "함수의 극한",
-      count: 65,
-      source: "모의고사",
-      domain: "추론"
-    },
-    {
-      id: "D004-37",
-      title: "무한대로의 비율",
-      description: "최고차항 계수의 비로 극한 계산.",
-      formula: "lim(x→∞) (ax^n+...)/(bx^n+...) = a/b",
-      choices: ["① 참", "② 거짓", "③ 조건부", "④ 정보부족"],
-      difficulty: "쉬움",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 175,
-      source: "교과서",
-      domain: "계산"
-    },
-    {
-      id: "D004-38",
-      title: "지수-극한 치환",
-      description: "표준극한으로 치환 후 계산.",
-      formula: "(1+1/n)^n → e",
-      choices: ["① e", "② 1", "③ 0", "④ 2"],
-      difficulty: "중간",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 125,
-      source: "문제집",
-      domain: "계산"
-    },
-    {
-      id: "D004-39",
-      title: "로그-극한 치환",
-      description: "ln(1+x) 표준극한 활용.",
-      formula: "ln(1+x) ~ x",
-      choices: ["① 참", "② 거짓", "③ 조건부", "④ 정보부족"],
-      difficulty: "중간",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 95,
-      source: "문제집",
-      domain: "이해"
-    },
-    {
-      id: "D004-40",
-      title: "무리식-다항식 혼합",
-      description: "적절한 변형으로 극한 계산.",
-      formula: "lim(x→0) (√(x+9)-3 - x/6)/x²",
-      choices: ["① 0", "② 1/12", "③ 1/18", "④ 존재하지 않음"],
-      difficulty: "어려움",
-      type: "주관식",
-      category: "함수의 극한",
-      count: 50,
-      source: "기출",
-      domain: "해결"
-    },
-    {
-      id: "D004-41",
-      title: "연속성-함수값 일치",
-      description: "연속점에서 함수값과 극한값의 관계.",
-      formula: "연속이면 lim f(a)=f(a)",
-      choices: ["① 참", "② 거짓", "③ 조건부", "④ 정보부족"],
-      difficulty: "쉬움",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 140,
-      source: "교과서",
-      domain: "이해"
-    },
-    {
-      id: "D004-42",
-      title: "연속성-합성함수",
-      description: "합성함수의 연속성 판정.",
-      formula: "f,g 연속 ⇒ g∘f 연속",
-      choices: ["① 항상 참", "② 반례 존재", "③ 불가능", "④ 정보부족"],
-      difficulty: "중간",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 100,
-      source: "교과서",
-      domain: "이해"
-    },
-    {
-      id: "D004-43",
-      title: "연속성-절댓값",
-      description: "절댓값과 연속성 관계.",
-      formula: "|f| 연속 ⇐ f 연속",
-      choices: ["① 참", "② 거짓", "③ 조건부", "④ 정보부족"],
-      difficulty: "중간",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 90,
-      source: "모의고사",
-      domain: "추론"
-    },
-    {
-      id: "D004-44",
-      title: "극한-드릴 종합",
-      description: "여러 기법을 종합해 극한을 구하시오.",
-      formula: "복합식의 극한 계산",
-      choices: ["① 가능", "② 불가능", "③ 조건부", "④ 정보부족"],
-      difficulty: "어려움",
-      type: "주관식",
-      category: "함수의 극한",
-      count: 40,
-      source: "문제집",
-      domain: "해결"
-    },
-    {
-      id: "D004-2",
-      title: "함수단원의 극한 문제풀이", 
-      description: "다음 중 옳은 것은?",
-      formula: "lim(x→∞) (3x²-5x+1)/(2x²+x-3) = 3/2",
-      choices: ["① 극한값은 존재한다.", "② 극한 □ 같다.", "③ lim(x→1) (4x²+3)", "④ x→∞"],
-      difficulty: "중간",
-      type: "객관식", 
-      category: "함수의 극한",
-      count: 346,
-      source: "문제집",
-      domain: "이해"
-    },
-    {
-      id: "D004-3",
-      title: "함수단원의 극한 문제풀이",
-      description: "다음 극한값을 구하시오.",
-      formula: "lim(x→0) (√(x+1)-1)/x = 1/2",
-      choices: ["① 극한값은 존재한다.", "② 극한 □ 같다.", "③ lim(x→1) = ∞", "④ lim(x→1) (x²-1)/(x-1) = ∞"],
-      difficulty: "어려움",
-      type: "주관식",
-      category: "함수의 극한", 
-      count: 346,
-      source: "기출",
-      domain: "추론"
-    },
-    {
-      id: "D004-4",
-      title: "함수단원의 극한 문제풀이",
-      description: "다음 중 옳은 것을 모두 고르시오.",
-      formula: "lim(x→2) (x²-4)/(x-2) = 4",
-      choices: ["① 극한값을 옳지않다. □ 극한 없다.", "② 극한값은 존재한다.", "③ lim(x→1) (4x²+3)", "④ ∞로 발산한다."],
-      difficulty: "쉬움",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 346,
-      source: "모의고사",
-      domain: "해결"
-    },
-    {
-      id: "D004-5",
-      title: "유리함수의 극한",
-      description: "다음 극한값을 구하시오.",
-      formula: "lim(x→3) (x²-9)/(x-3) = 6",
-      choices: ["① 3", "② 6", "③ 9", "④ 존재하지 않음"],
-      difficulty: "쉬움",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 210,
-      source: "교과서",
-      domain: "계산"
-    },
-    {
-      id: "D004-6",
-      title: "무리함수의 극한",
-      description: "합성근호를 유리화하여 극한을 구하시오.",
-      formula: "lim(x→0) (√(x+4)-2)/x = 1/4",
-      choices: ["① 1/2", "② 1/4", "③ 1/8", "④ 0"],
-      difficulty: "중간",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 180,
-      source: "문제집",
-      domain: "이해"
-    },
-    {
-      id: "D004-7",
-      title: "절댓값 함수의 극한",
-      description: "좌우극한을 비교하여 극한의 존재여부를 판단하시오.",
-      formula: "lim(x→0) |x|/x",
-      choices: ["① 1", "② -1", "③ 0", "④ 존재하지 않음"],
-      difficulty: "중간",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 160,
-      source: "기출",
-      domain: "추론"
-    },
-    {
-      id: "D004-8",
-      title: "다항식 나눗셈과 극한",
-      description: "극한값을 구하시오.",
-      formula: "lim(x→1) (x³-1)/(x-1) = 3",
-      choices: ["① 1", "② 2", "③ 3", "④ 4"],
-      difficulty: "쉬움",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 145,
-      source: "교과서",
-      domain: "계산"
-    },
-    {
-      id: "D004-9",
-      title: "무한대로의 극한",
-      description: "다음 극한값을 구하시오.",
-      formula: "lim(x→∞) (5x²+1)/(x²-4) = 5",
-      choices: ["① 1", "② 4", "③ 5", "④ 존재하지 않음"],
-      difficulty: "쉬움",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 200,
-      source: "모의고사",
-      domain: "이해"
-    },
-    {
-      id: "D004-10",
-      title: "0/0 꼴 극한의 변형",
-      description: "유리화 또는 인수분해를 활용하여 극한을 구하시오.",
-      formula: "lim(x→2) (√(x+2)-2)/(x-2)",
-      choices: ["① 1/4", "② 1/2", "③ 1", "④ 존재하지 않음"],
-      difficulty: "중간",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 210,
-      source: "문제집",
-      domain: "해결"
-    },
-    {
-      id: "D004-11",
-      title: "연속성과 극한",
-      description: "연속함수의 극한값을 구하시오.",
-      formula: "lim(x→1) (x²+3x+2) = 6",
-      choices: ["① 4", "② 5", "③ 6", "④ 7"],
-      difficulty: "쉬움",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 120,
-      source: "교과서",
-      domain: "이해"
-    },
-    {
-      id: "D004-12",
-      title: "좌극한과 우극한 비교",
-      description: "다음 함수의 x=0에서 극한의 존재 여부를 판단하시오.",
-      formula: "f(x) = { x, x≥0; -x, x<0 }",
-      choices: ["① 존재한다", "② 존재하지 않는다", "③ 0", "④ 1"],
-      difficulty: "중간",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 130,
-      source: "기출",
-      domain: "추론"
-    },
-    {
-      id: "D004-13",
-      title: "무리수 형태의 극한",
-      description: "유리화를 통해 극한을 구하시오.",
-      formula: "lim(x→0) (√(9+x)-3)/x = 1/6",
-      choices: ["① 1/3", "② 1/6", "③ 1/9", "④ 0"],
-      difficulty: "중간",
-      type: "객관식",
-      category: "함수의 극한",
-      count: 170,
-      source: "문제집",
-      domain: "계산"
-    },
-    {
-      id: "D004-14",
-      title: "정의역 분할 함수의 극한",
-      description: "정의에 의해 극한을 판단하시오.",
-      formula: "f(x) = { x², x<1; 2x-1, x≥1 }",
-      choices: ["① 연속이다", "② 불연속이다", "③ 극한은 1", "④ 극한은 2"],
-      difficulty: "어려움",
-      type: "주관식",
-      category: "함수의 극한",
-      count: 90,
-      source: "기출",
-      domain: "추론"
-    },
-  ]
-
-  // 필터링된 문제 목록
-  const filteredProblems = problems.filter((problem) => {
-    // 문제 출처 필터
-    if (sourceFilter !== "전체" && problem.type !== sourceFilter) return false
-    
-    // 출제방식 필터
-    if (methodFilter !== "전체" && problem.source !== methodFilter) return false
-    
-    // 난이도 필터 (한국어 매핑)
-    const difficultyMap: { [key: string]: string } = {
-      "최상": "어려움",
-      "상": "어려움", 
-      "중": "중간",
-      "하": "쉬움",
-      "최하": "쉬움"
+  // 스킬 선택이 변경될 때마다 해당 스킬의 문제들을 로드
+  useEffect(() => {
+    const loadProblemsForSkills = async () => {
+      const newSkillsToLoad = selectedSkills.filter(skillId => 
+        !loadingSkills.has(skillId) && 
+        !allProblems.some(p => p.tags?.some(tag => tag.skillId === skillId))
+      )
+      
+      if (newSkillsToLoad.length === 0) return
+      
+      setLoadingSkills(prev => {
+        const next = new Set(prev)
+        newSkillsToLoad.forEach(id => next.add(id))
+        return next
+      })
+      
+      try {
+        const problemPromises = newSkillsToLoad.map(async skillId => {
+          const response = await fetch(`https://math2.suzag.com/app/skill/${skillId}/problems`)
+          const data: ApiProblem[] = await response.json()
+          
+          // 스킬명 찾기
+          const skill = skillChapters.flatMap(chapter => chapter.skillList)
+            .find(skill => skill.skillId === skillId)
+          
+          return data.map(problem => ({ 
+            ...problem, 
+            skillName: skill?.skillName 
+          }))
+        })
+        
+        const results = await Promise.all(problemPromises)
+        const newProblems = results.flat()
+        
+        setAllProblems(prev => [...prev, ...newProblems])
+      } catch (error) {
+        console.error('문제 로딩 실패:', error)
+      } finally {
+        setLoadingSkills(prev => {
+          const next = new Set(prev)
+          newSkillsToLoad.forEach(id => next.delete(id))
+          return next
+        })
+      }
     }
+    
+    loadProblemsForSkills()
+  }, [selectedSkills, skillChapters, loadingSkills, allProblems])
+  
+  // Mock 데이터 제거 - 실제로는 allProblems를 사용
+  const problems: UIProblem[] = allProblems.filter(problem => {
+    // 선택된 스킬에 해당하는 문제만 표시
+    return problem.tags?.some(tag => 
+      tag.type === "skill" && tag.skillId && selectedSkills.includes(tag.skillId)
+    )
+  })
+
+  // 필터링된 문제 목록 - API 데이터 구조에 맞게 수정
+  const filteredProblems = problems.filter((problem) => {
+    // 문제 출처 필터 (answerType 기준)
+    if (sourceFilter !== "전체") {
+      const apiAnswerType = problem.content?.answerType
+      const mappedType = apiAnswerType === "choice" ? "객관식" : "주관식"
+      if (mappedType !== sourceFilter) return false
+    }
+    
+    // 출제방식 필터 - API에는 source 필드가 없으므로 tags에서 category 확인
+    if (methodFilter !== "전체") {
+      const sourceTag = problem.tags?.find(tag => 
+        tag.type === "category" && 
+        ["교과서", "문제집", "기출", "모의고사"].includes(tag.value)
+      )
+      if (!sourceTag || sourceTag.value !== methodFilter) return false
+    }
+    
+    // 난이도 필터
     if (difficultyFilter !== "전체") {
+      const difficultyMap: { [key: string]: string } = {
+        "최상": "5",
+        "상": "4", 
+        "중": "3",
+        "하": "2",
+        "최하": "1"
+      }
       const mappedDifficulty = difficultyMap[difficultyFilter] || difficultyFilter
       if (problem.difficulty !== mappedDifficulty) return false
     }
     
-    // 문제 영역 필터
-    if (domainFilter !== "전체" && problem.domain !== domainFilter) return false
+    // 문제 영역 필터 - API에는 domain 필드가 없으므로 생략하거나 ltype으로 대체
+    // if (domainFilter !== "전체" && problem.ltype !== domainFilter) return false
     
-    // 검색어 필터
+    // 검색어 필터 - API 구조에 맞게 수정
     if (searchTerm.trim()) {
       const q = searchTerm.trim().toLowerCase()
-      const inText = `${problem.title} ${problem.description} ${problem.formula}`.toLowerCase()
+      const content = problem.content?.value || ""
+      const bookName = problem.bookName || ""
+      const inText = `${content} ${bookName}`.toLowerCase()
       if (!inText.includes(q)) return false
     }
     
     return true
   })
 
-  // 카테고리 선택에 따른 문제 풀 정제 (이미 배치된 문제는 숨김)
-  const categoryFilteredPool = useMemo(() => {
-    const arrangedIdSet = new Set<string>()
-    for (const pg of pages) {
-      for (const id of pg.problemIds) arrangedIdSet.add(id)
-    }
-    return filteredProblems
-      .filter((p) => p.id.startsWith(selectedCategory))
-      .filter((p) => !arrangedIdSet.has(p.id))
-  }, [filteredProblems, selectedCategory, pages])
 
   // 페이지 맵 페이지 수
   const totalPages = pages.length
 
-  // 필터 변경 시 페이지를 1로 리셋
-  React.useEffect(() => {
-    setCurrentPage(1)
-  }, [sourceFilter, methodFilter, difficultyFilter, domainFilter])
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case "쉬움": return "bg-blue-100 text-blue-800"
-      case "중간": return "bg-green-100 text-green-800" 
-      case "어려움": return "bg-red-100 text-red-800"
-      default: return "bg-gray-100 text-gray-800"
-    }
-  }
 
   const selectedPageIndex = Math.max(0, Math.min(currentPage - 1, pages.length - 1))
 
-  const getProblemById = useCallback((id: string) => problems.find((p) => p.id === id), [problems])
+  const getProblemById = useCallback((id: string) => problems.find((p) => p.problemId === id), [problems])
 
-  // 초기 로딩 시 부모로부터 받은 선택 문제를 페이지 1에 채워 넣기 (있을 경우, 최초 1회)
+  // 초기 로딩 시 부모로부터 받은 선택 문제를 페이지 1에 채워 넣기
   React.useEffect(() => {
     if (selectedProblems.length > 0 && pages.every((p) => p.problemIds.length === 0)) {
       setPages((prev) => {
         const next = [...prev]
         const laneOf: Record<string, number> = {}
-        selectedProblems.forEach((p) => { laneOf[p.id] = 0 })
-        next[0] = { ...next[0], problemIds: selectedProblems.map((p) => p.id), laneOf }
+        selectedProblems.forEach((p) => { laneOf[p.problemId] = 0 })
+        next[0] = { ...next[0], problemIds: selectedProblems.map((p) => p.problemId), laneOf }
         return next
       })
     }
@@ -740,10 +208,10 @@ export function FunctionProblemDialog({
   )
 
   const handleSubmit = () => {
-    const arrangedProblemsFlat: Problem[] = pages
+    const arrangedProblemsFlat: UIProblem[] = pages
       .flatMap((pg) => pg.problemIds)
       .map((id) => getProblemById(id))
-      .filter(Boolean) as Problem[]
+      .filter(Boolean) as UIProblem[]
     onProblemsChange(arrangedProblemsFlat)
     onOpenChange(false)
   }
@@ -760,21 +228,13 @@ export function FunctionProblemDialog({
     return lanes
   }, [])
 
-  const pickShortestLaneIndex = (page: PageLayout): number => {
-    const lanes = getLaneItems(page)
-    let minIdx = 0
-    for (let i = 1; i < lanes.length; i++) {
-      if (lanes[i].length < lanes[minIdx].length) minIdx = i
-    }
-    return minIdx
-  }
 
   const handleA4DragEnd = (result: DropResult) => {
-    const { source, destination, draggableId } = result
+    const { source, destination } = result
     if (!destination) return
 
-    const [_, pageIdxStr, __, srcColStr] = source.droppableId.split("-") // page-<idx>-col-<colIdx>
-    const [___, pageIdxStr2, ____, dstColStr] = destination.droppableId.split("-")
+    const [, pageIdxStr, , srcColStr] = source.droppableId.split("-") // page-<idx>-col-<colIdx>
+    const [, pageIdxStr2, , dstColStr] = destination.droppableId.split("-")
     const pageIndex = parseInt(pageIdxStr)
     const pageIndex2 = parseInt(pageIdxStr2)
     if (Number.isNaN(pageIndex) || Number.isNaN(pageIndex2)) return
@@ -819,8 +279,8 @@ export function FunctionProblemDialog({
     const { source, destination } = result
     if (!destination) return
 
-    const [srcPrefix, srcPageIdxStr, _srcMid, srcColStr] = source.droppableId.split("-") // pmap-<pageIdx>-col-<colIdx>
-    const [dstPrefix, dstPageIdxStr, _dstMid, dstColStr] = destination.droppableId.split("-")
+    const [srcPrefix, srcPageIdxStr, , srcColStr] = source.droppableId.split("-") // pmap-<pageIdx>-col-<colIdx>
+    const [dstPrefix, dstPageIdxStr, , dstColStr] = destination.droppableId.split("-")
     if (srcPrefix !== "pmap" || dstPrefix !== "pmap") return
     const pageIndex = parseInt(srcPageIdxStr)
     const pageIndex2 = parseInt(dstPageIdxStr)
@@ -1280,40 +740,65 @@ export function FunctionProblemDialog({
                                 {lane.map((pid, index) => {
                                   const problem = getProblemById(pid)
                                   if (!problem) return null
+                                  
+                                  // SpProblem 형태로 변환
+                                  const spProblem: SpProblem = {
+                                    problemId: problem.problemId,
+                                    content: problem.content,
+                                    solution: problem.solution,
+                                    tags: problem.tags || [],
+                                    groupId: problem.groupId,
+                                    academyId: problem.academyId,
+                                    subjectId: problem.subjectId,
+                                    creator: problem.creator,
+                                    atype: problem.atype,
+                                    ltype: problem.ltype,
+                                    fileId: problem.fileId,
+                                    bookName: problem.bookName,
+                                    page: problem.page,
+                                    problemNumber: problem.problemNumber,
+                                    difficulty: problem.difficulty,
+                                    meta: problem.meta,
+                                    printHeight: problem.printHeight,
+                                    accessableIds: problem.accessableIds,
+                                    needToRecache: problem.needToRecache,
+                                    checkType: problem.checkType,
+                                    contentsImageId: problem.contentsImageId,
+                                    solutionImageId: problem.solutionImageId,
+                                    quotedFromDetail: problem.quotedFromDetail,
+                                    bookId: problem.bookId,
+                                    images: problem.images,
+                                    app: problem.app,
+                                    sample: problem.sample,
+                                    quotedFrom: problem.quotedFrom
+                                  }
+                                  
                                   return (
                                     <Draggable draggableId={pid} index={index} key={`drag-${pid}`}>
                                       {(drag) => (
-                                        <div ref={drag.innerRef} {...drag.draggableProps} {...drag.dragHandleProps} className="bg-white border rounded-lg p-4 cursor-move hover:shadow-md mb-4">
-                                          <h4 className="font-medium text-sm mb-2 line-clamp-2">{problem.title}</h4>
-                                          <div className="flex items-start justify-between mb-3">
-                                            <div className="flex items-center gap-2">
-                                              <span className="font-bold text-sm">{problem.id}</span>
-                                              <Badge className={getDifficultyColor(problem.difficulty)} variant="outline">
-                                                {problem.difficulty}
-                                              </Badge>
-                                            </div>
+                                        <div ref={drag.innerRef} {...drag.draggableProps} {...drag.dragHandleProps} className="cursor-move hover:shadow-md mb-4">
+                                          <div className="flex items-center justify-end mb-2">
                                             <Button
                                               variant="ghost"
                                               size="sm"
                                               className="h-6 w-6 p-0"
-                                              onClick={() => removeFromPage(selectedPageIndex, problem.id)}
+                                              onClick={() => removeFromPage(selectedPageIndex, problem.problemId)}
                                             >
                                               <X className="w-4 h-4" />
                                             </Button>
                                           </div>
-                                          <p className="text-xs text-gray-600 mb-3">{problem.description}</p>
-                                          <div className="bg-gray-50 rounded p-2 mb-3">
-                                            <div className="text-xs font-mono text-center">{problem.formula}</div>
-                                          </div>
-                                          <div className="space-y-1 mb-3">
-                                            {problem.choices.slice(0, 2).map((choice, idx) => (
-                                              <div key={idx} className="text-xs text-gray-700 line-clamp-1">{choice}</div>
-                                            ))}
-                                          </div>
-                                          <div className="flex items-center justify-between">
-                                            <Badge variant="outline" className="text-xs">{problem.type}</Badge>
-                                            <span className="text-xs text-gray-500">배치됨</span>
-                                          </div>
+                                          <ProblemView
+                                            problem={spProblem}
+                                            width={390}
+                                            margin={20}
+                                            level={Number(problem.difficulty)}
+                                            skillId={problem.tags?.find(tag => tag.type === "skill")?.skillId || ""}
+                                            ltype={problem.ltype}
+                                            answerType={problem.content?.answerType || "choice"}
+                                            skillName={problem.skillName}
+                                            solution={false}
+                                            showTags={false}
+                                          />
                                         </div>
                                       )}
                                     </Draggable>
@@ -1438,7 +923,7 @@ export function FunctionProblemDialog({
                                         {lane.map((pid, idx2) => (
                                           <Draggable draggableId={`pmap-${i}-${pid}`} index={idx2} key={`mini-drag-${i}-${pid}`}>
                                             {(drag) => (
-                                              <div ref={drag.innerRef} {...drag.draggableProps} {...drag.dragHandleProps} className="h-8 rounded-sm border bg-white text-[10px] text-gray-700 flex items-center justify-center truncate cursor-move mb-1" title={getProblemById(pid)?.title}>
+                                              <div ref={drag.innerRef} {...drag.draggableProps} {...drag.dragHandleProps} className="h-8 rounded-sm border bg-white text-[10px] text-gray-700 flex items-center justify-center truncate cursor-move mb-1" title={getProblemById(pid)?.content?.value || pid}>
                                                 {pid}
                                               </div>
                                             )}

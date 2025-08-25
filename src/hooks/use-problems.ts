@@ -10,6 +10,7 @@ import type {
   GeneratePaperRequest,
   GeneratedPaper
 } from '@/types/problem';
+import type { ApiProblemsResponse, SkillProblemsParams } from '@/types/api-problem';
 
 // 문제 목록 조회
 export function useProblemList() {
@@ -134,6 +135,17 @@ export function useGeneratePaper() {
       onError: (error) => {
         console.error('Paper generation failed:', error);
       },
+    }
+  );
+}
+
+// 스킬별 문제 조회
+export function useProblemsBySkill(skillId: string) {
+  return useApiQuery<ApiProblemsResponse>(
+    ['problems', 'skill', skillId],
+    `https://math2.suzag.com/app/skill/${skillId}/problems`,
+    {
+      enabled: !!skillId,
     }
   );
 }
