@@ -160,6 +160,7 @@ export const API_ENDPOINTS = {
     STATUS: (id: string) => `/api/m38/lecture/${id}/status`,
     STUDENTS: (id: string) => `/api/m38/lecture/${id}/students`,
     CLONE: '/api/m38/lecture/clone',
+    LAST_INDEX: (id: string) => `/api/m38/lecture/${id}/lastIndex`,
   },
 
   // 과목 관련

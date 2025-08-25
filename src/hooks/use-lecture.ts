@@ -261,3 +261,21 @@ export function useCloneLecture() {
     }
   );
 }
+
+// 강의 마지막 인덱스 조회 (시험지 회차용)
+export interface LectureLastIndex {
+  lastIndex: number;
+  lectureId: string;
+}
+
+export function useLectureLastIndex(lectureId: string) {
+  return useApiQuery<LectureLastIndex>(
+    [...lectureKeys.all, 'lastIndex', lectureId],
+    API_ENDPOINTS.LECTURES.LAST_INDEX(lectureId),
+    {
+      enabled: !!lectureId,
+      staleTime: 0, // 항상 최신 값을 가져오도록 설정
+      cacheTime: 0, // 캐시하지 않음
+    }
+  );
+}

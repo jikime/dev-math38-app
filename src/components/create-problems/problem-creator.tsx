@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useMemo } from "react"
+import React, { useState, useEffect, useMemo, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/resizable"
 import { PrintSettingsDialog } from "@/components/common/print-settings-dialog"
 import { FunctionProblemDialog } from "@/components/create-problems/function-problem-dialog"
-import { useMyLectures, useLectureDetail } from "@/hooks/use-lecture"
+import { useMyLectures, useLectureDetail, useLectureLastIndex } from "@/hooks/use-lecture"
 import { useSubjects, useSubjectTops } from "@/hooks/use-subjects"
 import { useSkillChapters, useSkillCounts } from "@/hooks/use-skills"
 import { MultiSelect } from "@/components/ui/multi-select"
@@ -48,6 +48,9 @@ import SolutionPagesPrint from "../math-paper/template/solution-pages-print"
 function ProblemCreatorContent() {
   // 강좌 관련 상태
   const [selectedLectureId, setSelectedLectureId] = useState<string>("")
+  
+  // 시험지명 상태
+  const [examTitle, setExamTitle] = useState<string>("")
   
   // 과목 관련 상태
   const [selectedSubjectKeys, setSelectedSubjectKeys] = useState<string[]>([])
@@ -101,8 +104,25 @@ function ProblemCreatorContent() {
   // 강의 상세정보 조회 (teacher 정보 포함)
   const { data: lectureDetail } = useLectureDetail(selectedLectureId || "")
   
+  // 강의 마지막 인덱스 조회 (시험지 회차용)
+  const { data: lastIndexData } = useLectureLastIndex(selectedLectureId || "")
+  
   // 시험지 생성 API 훅
   const generatePaperMutation = useGeneratePaper()
+
+  // 난이도 레벨 구성 - 메모제이션
+  const levelConfig = useMemo(() => [
+    { key: 0, label: '최상', color: 'bg-red-100' },
+    { key: 1, label: '상', color: 'bg-orange-100' },
+    { key: 2, label: '중', color: 'bg-blue-100' },
+    { key: 3, label: '하', color: 'bg-green-100' },
+    { key: 4, label: '최하', color: 'bg-teal-100' }
+  ], [])
+
+  // 문제 유형 라벨 구성 - 메모제이션
+  const typeLabels = useMemo(() => ['계산', '이해', '해결', '추론'], [])
+  const difficultyLabels = useMemo(() => ['최상', '상', '중', '하', '최하'], [])
+  const difficultyColors = useMemo(() => ['bg-red-50', 'bg-orange-50', 'bg-blue-50', 'bg-green-50', 'bg-teal-50'], [])
   
   // 선택된 트리 항목들로부터 범위 텍스트 생성
   const getRangeText = React.useMemo(() => {
@@ -184,17 +204,27 @@ function ProblemCreatorContent() {
     }
   }, [lectures, selectedLectureId])
 
-  // 첫 번째 강의의 subjectId와 일치하는 과목을 기본값으로 설정
+  // lastIndex가 변경될 때 시험지명 자동 설정
   useEffect(() => {
-    if (lectures && lectures.length > 0 && subjects && subjects.length > 0 && selectedSubjectKeys.length === 0) {
-      const firstLecture = lectures[0]
-      const matchingSubject = subjects.find(subject => subject.key === firstLecture.subjectId)
-      
-      if (matchingSubject) {
-        setSelectedSubjectKeys([matchingSubject.key.toString()])
+    if (lastIndexData && lastIndexData.lastIndex !== undefined) {
+      const nextIndex = lastIndexData.lastIndex + 1
+      setExamTitle(`${nextIndex} 회차`)
+    }
+  }, [lastIndexData])
+
+  // 선택된 강의의 subjectId와 일치하는 과목을 자동으로 설정
+  useEffect(() => {
+    if (selectedLectureId && lectures && subjects && subjects.length > 0) {
+      const selectedLecture = lectures.find(l => l.lectureId === selectedLectureId)
+      if (selectedLecture) {
+        const matchingSubject = subjects.find(subject => subject.key === selectedLecture.subjectId)
+        
+        if (matchingSubject) {
+          setSelectedSubjectKeys([matchingSubject.key.toString()])
+        }
       }
     }
-  }, [lectures, subjects, selectedSubjectKeys])
+  }, [selectedLectureId, lectures, subjects])
 
 
   // 문제 타입 정의
@@ -213,122 +243,17 @@ function ProblemCreatorContent() {
     [key: string]: SubCategory
   }
 
-  type CurriculumData = {
-    [key: string]: Category
-  }
 
-  // 교육과정 데이터 구조
-  const curriculumData: CurriculumData = {
-    "중학교 1학년 수학": {
-      "1 자연수의 성질": {
-        "1.1 소인수분해": [
-          { id: "A01", title: "유한소수, 무한소수 구별하기", selected: 13, total: 73 },
-          { id: "A02", title: "순환소수의 표현", selected: 2, total: 143 },
-          { id: "A03", title: "순환마디 구하기", selected: 13, total: 83 },
-          { id: "A04", title: "순환소수의 표현 - 분수", selected: 10, total: 36 },
-          { id: "A05", title: "순환마디 구하기 - 분수", selected: 2, total: 75 },
-          { id: "A06", title: "순환소수의 표현 - 대소 관계", selected: 0, total: 39 },
-        ],
-        "1.2 최대공약수와 최소공배수": [
-          { id: "A07", title: "소수점 아래 n번째 자리의 숫자 구하기", selected: 2, total: 67 },
-          { id: "A08", title: "소수점 아래 n번째 자리의 숫자 구하기", selected: 5, total: 173 },
-        ],
-      },
-      "2 정수와 유리수": {
-        "2.1 정수와 유리수": [
-          { id: "B01", title: "정수의 개념", selected: 0, total: 45 },
-          { id: "B02", title: "유리수의 개념", selected: 0, total: 32 },
-        ],
-        "2.2 유리수의 계산": [
-          { id: "B03", title: "유리수의 덧셈", selected: 0, total: 28 },
-          { id: "B04", title: "유리수의 뺄셈", selected: 0, total: 41 },
-        ],
-      },
-      "3 방정식": {
-        "3.1 문자와 식": [
-          { id: "C01", title: "문자의 사용", selected: 0, total: 29 },
-          { id: "C02", title: "식의 값", selected: 0, total: 35 },
-        ],
-        "3.2 일차방정식의 풀이": [
-          { id: "C03", title: "일차방정식의 해", selected: 0, total: 42 },
-          { id: "C04", title: "일차방정식의 풀이", selected: 0, total: 38 },
-        ],
-      },
-    },
-    "중학교 2학년 수학": {
-      "1 유리수와 실수": {
-        "1.1 유리수와 순환소수": [{ id: "D01", title: "유리수와 순환소수", selected: 0, total: 45 }],
-      },
-    },
-  }
-
-  // 난이도별 통계 (상세 버전)
-  const [detailedDifficultyStats, setDetailedDifficultyStats] = useState({
-    객관식: {
-      최상: { selected: 0, total: 0 },
-      상: { selected: 0, total: 4 },
-      중: { selected: 1, total: 3 },
-      하: { selected: 0, total: 17 },
-      최하: { selected: 0, total: 7 },
-    },
-    주관식: {
-      최상: { selected: 0, total: 0 },
-      상: { selected: 0, total: 0 },
-      중: { selected: 0, total: 4 },
-      하: { selected: 0, total: 20 },
-      최하: { selected: 0, total: 23 },
-    },
-  })
-
-  // 간단 탭용 데이터
-  const simpleTableData = {
-    객관식: {
-      계산: { 최상: 0, 상: 0, 중: 0, 하: 9, 최하: 0 },
-      이해: { 최상: 0, 상: 0, 중: 1, 하: 8, 최하: 7 },
-      해결: { 최상: 0, 상: 0, 중: 0, 하: 0, 최하: 0 },
-      추론: { 최상: 0, 상: 0, 중: 0, 하: 0, 최하: 0 },
-    },
-    주관식: {
-      계산: { 최상: 0, 상: 0, 중: 0, 하: 13, 최하: 18 },
-      이해: { 최상: 0, 상: 0, 중: 4, 하: 7, 최하: 5 },
-      해결: { 최상: 0, 상: 0, 중: 0, 하: 0, 최하: 0 },
-      추론: { 최상: 0, 상: 0, 중: 0, 하: 0, 최하: 0 },
-    },
-  }
-
-  // 자세히 탭용 상태 추가 (simpleTableData 아래에)
-  const [detailedTableData, setDetailedTableData] = useState({
-    객관식: {
-      계산: { 최상: 0, 상: 0, 중: 0, 하: 9, 최하: 0 },
-      이해: { 최상: 0, 상: 0, 중: 1, 하: 8, 최하: 7 },
-      해결: { 최상: 0, 상: 0, 중: 0, 하: 0, 최하: 0 },
-      추론: { 최상: 0, 상: 0, 중: 0, 하: 0, 최하: 0 },
-    },
-    주관식: {
-      계산: { 최상: 0, 상: 0, 중: 0, 하: 13, 최하: 18 },
-      이해: { 최상: 0, 상: 0, 중: 4, 하: 7, 최하: 5 },
-      해결: { 최상: 0, 상: 0, 중: 0, 하: 0, 최하: 0 },
-      추론: { 최상: 0, 상: 0, 중: 0, 하: 0, 최하: 0 },
-    },
-  })
-
-  // 초간단 탭용 상태 추가
-  const [simpleDifficultyInputs, setSimpleDifficultyInputs] = useState({
-    highest: 0,
-    high: 0,
-    medium: 0,
-    low: 0,
-    lowest: 0,
-  })
-
-  const tabs = [
+  // 탭 구성 - 메모제이션
+  const tabs = useMemo(() => [
     { id: "exam", label: "시험지", icon: FileText },
     { id: "quick", label: "빠른답안", icon: CheckCircle },
     { id: "detailed", label: "상세 정답지", icon: BookOpenCheck },
     { id: "style", label: "스타일 설정", icon: Settings },
-  ]
+  ], [])
 
-  const headerStyles = [
+  // 헤더 스타일 구성 - 메모제이션
+  const headerStyles = useMemo(() => [
     { id: 1, name: "스타일 1", color: "bg-gray-100", description: "기본 스타일" },
     { id: 2, name: "스타일 2", color: "bg-gradient-to-br from-blue-400 to-blue-600", description: "파란색 그라데이션" },
     { id: 3, name: "스타일 3", color: "bg-gradient-to-br from-teal-400 to-cyan-500", description: "청록색 그라데이션" },
@@ -340,12 +265,27 @@ function ProblemCreatorContent() {
       color: "bg-gradient-to-r from-pink-300 via-yellow-300 to-green-300",
       description: "무지개 그라데이션",
     },
-  ]
+  ], [])
 
-  // 강좌 변경 시 교육과정 데이터 초기화
+  // 강좌 변경 시 일부 데이터 초기화 (aggregator 훅 사용 전)
   useEffect(() => {
+    // 1. 트리 항목 초기화 (과목은 자동 선택되므로 초기화하지 않음)
+    setSelectedTreeItems([])
+    
+    // 2. 항목(Skill) 관련 초기화
+    setSkillChapters([])
+    setSelectedSkills([])
+    
+    // 3. 생성된 시험지 데이터 초기화
+    setGeneratedPaper(null)
+    
+    // 4. 기타 선택 상태 초기화
     setExpandedCategories([])
     setSelectedProblems([])
+    setSelectedProblemsPreview([])
+    setSelectedFunctionProblems([])
+    
+    // 문항수 관련 초기화는 aggregator 훅 선언 이후에 처리
   }, [selectedLectureId])
 
   // 과목 변경 시 트리 항목 선택 초기화
@@ -384,34 +324,6 @@ function ProblemCreatorContent() {
   // 선택된 강좌의 과목명 추출
   const selectedSubjectName = selectedLectureId && lectures?.find(l => l.lectureId === selectedLectureId)?.subjectName
 
-  // 선택된 문제 수 계산
-  useEffect(() => {
-    const currentData = curriculumData[selectedSubjectName as keyof typeof curriculumData]
-    if (!currentData) return
-
-    let total = 0
-    Object.values(currentData).forEach((category) => {
-      Object.values(category).forEach((problems) => {
-        problems.forEach((problem) => {
-          if (selectedProblems.includes(problem.id)) {
-            total += problem.selected
-          }
-        })
-      })
-    })
-  }, [selectedProblems, selectedSubjectName])
-
-  const toggleCategory = (category: string) => {
-    setExpandedCategories((prev) =>
-      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category],
-    )
-  }
-
-  const toggleProblem = (problemId: string) => {
-    setSelectedProblems((prev) =>
-      prev.includes(problemId) ? prev.filter((id) => id !== problemId) : [...prev, problemId],
-    )
-  }
 
   // 과목 데이터를 MultiSelect 옵션으로 변환
   const subjectOptions: Option[] = subjects?.map(subject => ({
@@ -500,6 +412,25 @@ function ProblemCreatorContent() {
   const { objectiveSums, subjectiveSums, setNormal1Values } = useNormal1Aggregator()
   const { currentDistribution, setDistribution } = useDetailedAggregator()
 
+  // 강좌 변경 시 문항수 관련 초기화 (aggregator 훅 사용)
+  useEffect(() => {
+    if (selectedLectureId) {
+      // 8x5 빈 배열 생성 (초기화용)
+      const emptyMaxFeasible = Array(8).fill(null).map(() => Array(5).fill(0))
+      
+      // 문항수 관련 초기화
+      setSimpleValues([0, 0, 0, 0, 0], emptyMaxFeasible)
+      setNormal1Values([0, 0, 0, 0, 0], [0, 0, 0, 0, 0], emptyMaxFeasible)
+      // currentDistribution은 8x5 배열 초기화
+      for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 5; col++) {
+          setDistribution(row, col, 0)
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedLectureId])
+
   // 전체 문항수 계산
   const totalProblems = React.useMemo(() => {
     let total = 0
@@ -543,10 +474,6 @@ function ProblemCreatorContent() {
     return feasible
   }, [skillChapters, selectedSkills])
 
-  const getCurrentCurriculumData = () => {
-    return curriculumData[selectedSubjectName as keyof typeof curriculumData] || {}
-  }
-
   // 자동출제 함수
   const handleAutoGenerate = async () => {
     try {
@@ -573,7 +500,7 @@ function ProblemCreatorContent() {
         problemTypeCounts: currentDistribution, // 8x5 배열
         skillIds: skillIds,
         subjectId: selectedSubjectId,
-        title: `${selectedLectureId || 'Unknown'} 회차`
+        title: examTitle || `${lastIndexData?.lastIndex ? lastIndexData.lastIndex + 1 : 1} 회차`
       }
 
       console.log('Generating paper with payload:', payload)
@@ -603,18 +530,10 @@ function ProblemCreatorContent() {
     }
   }
 
-  // 초간단 탭 렌더링 함수 - aggregator 사용
-  const renderSimpleTab = () => {
+  // 초간단 탭 렌더링 함수 - aggregator 사용 (메모제이션)
+  const renderSimpleTab = useMemo(() => {
     console.log('renderSimpleTab - difficultyStats:', difficultyStats)
     console.log('renderSimpleTab - simpleValues:', simpleValues)
-    
-    const levelConfig = [
-      { key: 0, label: '최상', color: 'bg-red-100' },
-      { key: 1, label: '상', color: 'bg-orange-100' },
-      { key: 2, label: '중', color: 'bg-blue-100' },
-      { key: 3, label: '하', color: 'bg-green-100' },
-      { key: 4, label: '최하', color: 'bg-teal-100' }
-    ]
 
     return (
       <div className="grid grid-cols-5 gap-1">
@@ -643,22 +562,14 @@ function ProblemCreatorContent() {
         ))}
       </div>
     )
-  }
+  }, [difficultyStats, simpleValues, setSimpleValues, maxFeasible, levelConfig])
 
   // 간단 탭 렌더링 함수를 다음과 같이 변경 (박스에 맞는 크기로 조정):
-  // 간단 탭 렌더링 함수 - aggregator 사용
-  const renderIntermediateTab = () => {
+  // 간단 탭 렌더링 함수 - aggregator 사용 (메모제이션)
+  const renderIntermediateTab = useMemo(() => {
     console.log('renderIntermediateTab - objectiveSums:', objectiveSums)
     console.log('renderIntermediateTab - subjectiveSums:', subjectiveSums)
     console.log('renderIntermediateTab - maxFeasible:', maxFeasible)
-    
-    const levelConfig = [
-      { key: 0, label: '최상', color: 'bg-red-100' },
-      { key: 1, label: '상', color: 'bg-orange-100' },
-      { key: 2, label: '중', color: 'bg-blue-100' },
-      { key: 3, label: '하', color: 'bg-green-100' },
-      { key: 4, label: '최하', color: 'bg-teal-100' }
-    ]
 
     return (
       <div className="space-y-6">
@@ -725,16 +636,12 @@ function ProblemCreatorContent() {
         </div>
       </div>
     )
-  }
+  }, [objectiveSums, subjectiveSums, maxFeasible, setNormal1Values, levelConfig])
 
-  // 자세히 탭 렌더링 함수 - aggregator 사용
-  const renderDetailedTab = () => {
+  // 자세히 탭 렌더링 함수 - aggregator 사용 (메모제이션)
+  const renderDetailedTab = useMemo(() => {
     console.log('renderDetailedTab - currentDistribution:', currentDistribution)
     console.log('renderDetailedTab - maxFeasible:', maxFeasible)
-    
-    const typeLabels = ['계산', '이해', '해결', '추론']
-    const difficultyLabels = ['최상', '상', '중', '하', '최하']
-    const difficultyColors = ['bg-red-50', 'bg-orange-50', 'bg-blue-50', 'bg-green-50', 'bg-teal-50']
 
     return (
       <div className="space-y-4">
@@ -835,37 +742,10 @@ function ProblemCreatorContent() {
         </div>
       </div>
     )
-  }
+  }, [currentDistribution, maxFeasible, setDistribution, typeLabels, difficultyLabels, difficultyColors])
 
-  const getSelectedProblemsData = () => {
-    const currentData = getCurrentCurriculumData()
-    const selectedData: any[] = []
-
-    Object.values(currentData).forEach((category) => {
-      Object.values(category).forEach((problems) => {
-        problems.forEach((problem) => {
-          if (selectedProblems.includes(problem.id)) {
-            selectedData.push({
-              id: problem.id.slice(1), // A01 -> 01
-              title: problem.title,
-              content: `다음 문제를 해결하세요.`,
-              equation: `${problem.title} 관련 문제`,
-              difficulty: "쉬움",
-              type: "객관식",
-              quickAnswer: "정답",
-              detailedSolution: `${problem.title}에 대한 상세한 해설입니다.`,
-              explanation: `${problem.title}의 핵심 개념을 이해하는 문제입니다.`,
-            })
-          }
-        })
-      })
-    })
-
-    return selectedData
-  }
-
-
-  const renderStyleTab = () => (
+  // 스타일 탭 렌더링 함수 - 메모제이션
+  const renderStyleTab = useMemo(() => (
     <ScrollArea className="h-[calc(100vh-430px)]">
       <div className="space-y-6 p-4">
         <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
@@ -976,9 +856,9 @@ function ProblemCreatorContent() {
         </div>
       </div>
     </ScrollArea>
-  )
+  ), [questionsPerPage, selectedHeaderStyle, headerStyles])
 
-  const addProblemToPreview = (problem: any) => {
+  const addProblemToPreview = useCallback((problem: any) => {
     setSelectedProblemsPreview((prev) => {
       // 이미 추가된 문제인지 확인
       const isAlreadyAdded = prev.some((p) => p.id === problem.id)
@@ -995,9 +875,9 @@ function ProblemCreatorContent() {
       ]
     })
     setShowPageMapPreview(true)
-  }
+  }, [])
 
-  const handleManualSubmit = () => {
+  const handleManualSubmit = useCallback(() => {
     // selectedProblemsPreview의 문제들을 selectedProblems에 추가
     const newProblemIds = selectedProblemsPreview.map((problem) => problem.id)
 
@@ -1011,193 +891,58 @@ function ProblemCreatorContent() {
     setShowManualDialog(false)
     setSelectedProblemsPreview([])
     setShowPageMapPreview(false)
-  }
+  }, [selectedProblemsPreview])
 
-  const renderExamTab = () => {
-    // 생성된 시험지가 있으면 PaperPrintView4 표시
-    if (generatedPaper) {
+  // 시험지 탭 렌더링 함수 - 메모제이션
+  const renderExamTab = useMemo(() => {
+    if (!generatedPaper) {
       return (
         <ScrollArea className="h-[calc(100vh-430px)]">
           <div className="space-y-2 px-2">
-            <PaperPrintView4
-              title={generatedPaper.title}
-              lectureTitle={generatedPaper.lectureTitle ?? ""}
-              chapterFrom={generatedPaper.chapterFrom}
-              chapterTo={generatedPaper.chapterTo}
-              minMargin={generatedPaper.minMargin ?? 0}
-              columns={generatedPaper.columns ?? 2}
-              pages={generatedPaper.pages ?? []}
-              subjectName={generatedPaper.subjectName ?? ""}
-              teacherName={generatedPaper.teacherName ?? ""}
-              studentName={generatedPaper.studentName ?? ""}
-              academyName={generatedPaper.academyName ?? ""}
-              academyLogo={generatedPaper.academyLogo ?? ""}
-              edit={false}
-              addBlankPage={(generatedPaper.pages?.length ?? 0) % 2 === 1}
-              headerStyle={generatedPaper.headerStyle}
-              totalProblem={generatedPaper.pages?.reduce(
-                (acc, page) =>
-                  acc + (page.leftSet?.length || 0) + (page.rightSet?.length || 0),
-                0
-              ) ?? 0}
-            />
+            <div className="flex items-center justify-center h-96 text-gray-500">
+              <div className="text-center">
+                <BookOpenCheck className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <p>왼쪽에서 문제를 선택해주세요</p>
+              </div>
+            </div>
           </div>
         </ScrollArea>
       )
     }
 
-    const problemsData = getSelectedProblemsData()
-
-    if (problemsData.length === 0) {
-      return (
-        <div className="flex items-center justify-center h-96 text-gray-500">
-          <div className="text-center">
-            <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p>왼쪽에서 문제를 선택하거나 자동출제를 이용해주세요</p>
-          </div>
-        </div>
-      )
-    }
-
-    const getProblemsToShow = () => {
-      return problemsData.slice(0, questionsPerPage)
-    }
+    const totalProblem = generatedPaper.pages?.reduce(
+      (acc, page) => acc + (page.leftSet?.length || 0) + (page.rightSet?.length || 0),
+      0
+    ) ?? 0
 
     return (
       <ScrollArea className="h-[calc(100vh-430px)]">
-        <div className="space-y-6 p-4">
-          {/* 헤더 스타일 적용 */}
-        <div
-          className={`h-16 rounded-lg mb-4 flex items-center justify-center text-white font-bold ${headerStyles.find((s) => s.id === selectedHeaderStyle)?.color}`}
-        >
-          시험지 헤더 - {headerStyles.find((s) => s.id === selectedHeaderStyle)?.name}
-        </div>
-
-        {/* 문제 수 표시 */}
-        <div className="text-center mb-4">
-          <span className="text-lg font-bold text-gray-700">
-            {Math.min(questionsPerPage, problemsData.length)} 문항
-          </span>
-        </div>
-
-        {/* 문제 배치 - 가이드 라인 포함 영역 */}
-        <div className="relative">
-          {/* Vertical guide lines (only within problems area) */}
-          <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-px bg-gray-300/60" />
-          <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-px bg-gray-300/60" />
-          {(questionsPerPage === 2 || questionsPerPage === 4 || questionsPerPage === 6 || questionsPerPage === 8) && (
-            <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-px bg-gray-300/70" />
-          )}
-
-          {/* 문제 배치 - 기존 로직 유지 */}
-          {questionsPerPage === 2 && (
-            <div className="grid grid-cols-2 gap-4">
-            {getProblemsToShow().map((problem) => (
-              <div key={problem.id} className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6  border-gray-200">
-                <div className="px-6 p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-lg">{problem.id}</span>
-                      <Badge variant="outline" className="text-xs">
-                        {problem.title}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Badge className="bg-blue-100 text-blue-800 text-xs">쉬움</Badge>
-                      <Badge className="bg-gray-100 text-gray-800 text-xs">객관</Badge>
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                        <Edit3 className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="mb-3">
-                    <p className="text-sm text-gray-700 leading-relaxed">{problem.content}</p>
-                  </div>
-                  <div className="mb-3">
-                    <Input value={problem.equation} className="text-center font-mono text-sm" readOnly />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Button size="sm" variant="outline" className="text-xs bg-transparent">
-                      Challenge
-                    </Button>
-                    <Button size="sm" variant="outline" className="text-xs bg-transparent">
-                      해답지
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
-            </div>
-          )}
-
-        {/* 4, 6, 8 문항 레이아웃도 동일하게 적용 */}
-          {questionsPerPage === 4 && (
-            <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-4">
-              {getProblemsToShow()
-                .slice(0, 2)
-                .map((problem) => (
-                  <div key={problem.id} className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6  border-gray-200">
-                    <div className="px-6 p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-lg">{problem.id}</span>
-                          <Badge variant="outline" className="text-xs">
-                            {problem.title}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Badge className="bg-blue-100 text-blue-800 text-xs">쉬움</Badge>
-                          <Badge className="bg-gray-100 text-gray-800 text-xs">객관</Badge>
-                        </div>
-                      </div>
-                      <div className="mb-3">
-                        <p className="text-sm text-gray-700 leading-relaxed">{problem.content}</p>
-                      </div>
-                      <div className="mb-3">
-                        <Input value={problem.equation} className="text-center font-mono text-sm" readOnly />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-            </div>
-            <div className="space-y-4">
-              {getProblemsToShow()
-                .slice(2, 4)
-                .map((problem) => (
-                  <div key={problem.id} className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6  border-gray-200">
-                    <div className="px-6 p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-lg">{problem.id}</span>
-                          <Badge variant="outline" className="text-xs">
-                            {problem.title}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Badge className="bg-blue-100 text-blue-800 text-xs">쉬움</Badge>
-                          <Badge className="bg-gray-100 text-gray-800 text-xs">객관</Badge>
-                        </div>
-                      </div>
-                      <div className="mb-3">
-                        <p className="text-sm text-gray-700 leading-relaxed">{problem.content}</p>
-                      </div>
-                      <div className="mb-3">
-                        <Input value={problem.equation} className="text-center font-mono text-sm" readOnly />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        <div className="space-y-2 px-2">
+          <PaperPrintView4
+            title={generatedPaper.title}
+            lectureTitle={generatedPaper.lectureTitle ?? ""}
+            chapterFrom={generatedPaper.chapterFrom}
+            chapterTo={generatedPaper.chapterTo}
+            minMargin={generatedPaper.minMargin ?? 0}
+            columns={generatedPaper.columns ?? 2}
+            pages={generatedPaper.pages ?? []}
+            subjectName={generatedPaper.subjectName ?? ""}
+            teacherName={generatedPaper.teacherName ?? ""}
+            studentName={generatedPaper.studentName ?? ""}
+            academyName={generatedPaper.academyName ?? ""}
+            academyLogo={generatedPaper.academyLogo ?? ""}
+            edit={false}
+            addBlankPage={(generatedPaper.pages?.length ?? 0) % 2 === 1}
+            headerStyle={generatedPaper.headerStyle}
+            totalProblem={totalProblem}
+          />
         </div>
       </ScrollArea>
     )
-  }
+  }, [generatedPaper])
 
-  const renderQuickAnswerTab = () => {
+  // 빠른답안 탭 렌더링 함수 - 메모제이션
+  const renderQuickAnswerTab = useMemo(() => {
     return (
       <ScrollArea className="h-[calc(100vh-430px)]">
         <div className="space-y-6 p-4">
@@ -1211,10 +956,10 @@ function ProblemCreatorContent() {
         </div>
       </ScrollArea>
     )
-  }
+  }, [generatedPaper])
 
-  const renderDetailedSolutionTab = () => {
-
+  // 상세 정답지 탭 렌더링 함수 - 메모제이션
+  const renderDetailedSolutionTab = useMemo(() => {
     return (
       <ScrollArea className="h-[calc(100vh-430px)]">
         { generatedPaper ? <SolutionPagesPrint paper={generatedPaper} /> : 
@@ -1226,7 +971,7 @@ function ProblemCreatorContent() {
         </div>}
       </ScrollArea>
     )
-  }
+  }, [generatedPaper])
 
   return (
     <div className="container mx-auto px-2 py-8">
@@ -1257,6 +1002,8 @@ function ProblemCreatorContent() {
               <Input 
                 type="text" 
                 placeholder="제목을 입력하세요"
+                value={examTitle}
+                onChange={(e) => setExamTitle(e.target.value)}
                 className="w-64 px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -1544,15 +1291,15 @@ function ProblemCreatorContent() {
                   </TabsList>
 
                   <TabsContent value="simple" className="mt-4">
-                    {renderSimpleTab()}
+                    {renderSimpleTab}
                   </TabsContent>
 
                   <TabsContent value="intermediate" className="mt-4">
-                    {renderIntermediateTab()}
+                    {renderIntermediateTab}
                   </TabsContent>
 
                   <TabsContent value="detailed" className="mt-4">
-                    {renderDetailedTab()}
+                    {renderDetailedTab}
                   </TabsContent>
                 </Tabs>
 
@@ -1626,10 +1373,10 @@ function ProblemCreatorContent() {
             </div>
             <div className="px-2 flex-1 flex flex-col">
                 <div className="space-y-4 pb-6">
-                  {activeTab === "exam" && renderExamTab()}
-                  {activeTab === "quick" && renderQuickAnswerTab()}
-                  {activeTab === "detailed" && renderDetailedSolutionTab()}
-                  {activeTab === "style" && renderStyleTab()}
+                  {activeTab === "exam" && renderExamTab}
+                  {activeTab === "quick" && renderQuickAnswerTab}
+                  {activeTab === "detailed" && renderDetailedSolutionTab}
+                  {activeTab === "style" && renderStyleTab}
                 </div>
             </div>
           </div>
