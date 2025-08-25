@@ -156,14 +156,6 @@ export function FunctionProblemDialog({
     // 문제 영역 필터 - API에는 domain 필드가 없으므로 생략하거나 ltype으로 대체
     // if (domainFilter !== "전체" && problem.ltype !== domainFilter) return false
     
-    // 검색어 필터 - API 구조에 맞게 수정
-    if (searchTerm.trim()) {
-      const q = searchTerm.trim().toLowerCase()
-      const content = problem.content?.value || ""
-      const bookName = problem.bookName || ""
-      const inText = `${content} ${bookName}`.toLowerCase()
-      if (!inText.includes(q)) return false
-    }
     
     return true
   })
