@@ -27,6 +27,8 @@ import {
   useAddPapersFromSaveLecture,
   useAddProvidedPapers
 } from "@/hooks/use-materials"
+import { useMyLectures, useLectureDetail } from "@/hooks/use-lecture"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 // 타입 정의 (임시)
 interface SaveLectureVO {
@@ -81,6 +83,7 @@ export function AcademyMaterials() {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
   const [viewMode, setViewMode] = useState<'save' | 'provided'>('save')
   const [mode, setMode] = useState<'save' | 'provided' | 'teacher'>('save')
+  const [selectedLectureId, setSelectedLectureId] = useState<string>("")
   
   // 리사이즈 상태
   const [leftWidth, setLeftWidth] = useState<number>(560)
@@ -92,6 +95,9 @@ export function AcademyMaterials() {
   const [selectedPaperId, setSelectedPaperId] = useState<string | undefined>(undefined)
 
   // API 훅들
+  const { data: lectures, isLoading: lecturesLoading } = useMyLectures()
+  const { data: lectureDetail } = useLectureDetail(selectedLectureId || "")
+  
   const {
     data: page,
     refetch: refetchSaveLectureList,
@@ -130,6 +136,13 @@ export function AcademyMaterials() {
     refetch: refetchProvidedPapers,
     isLoading: isLoadingProvidedPapers,
   } = useProvidedFolderPapers(selectedFolderId || null)
+  
+  // 첫 번째 강좌를 기본값으로 설정
+  useEffect(() => {
+    if (lectures && lectures.length > 0 && !selectedLectureId) {
+      setSelectedLectureId(lectures[0].lectureId)
+    }
+  }, [lectures, selectedLectureId])
   
   const addPapersFromSaveMutation = useAddPapersFromSaveLecture()
   const addProvidedPapersMutation = useAddProvidedPapers()
@@ -186,16 +199,21 @@ export function AcademyMaterials() {
       return
     }
     
+    if (!selectedLectureId) {
+      toast.error("강좌를 선택해 주세요.")
+      return
+    }
+    
     try {
       if (viewMode === 'save') {
         await addPapersFromSaveMutation.mutateAsync({
-          lectureId: 'current-lecture-id', // TODO: 실제 강의 ID 연동 필요
+          lectureId: selectedLectureId,
           saveLectureId,
           paperIds
         })
       } else {
         await addProvidedPapersMutation.mutateAsync({
-          lectureId: 'current-lecture-id', // TODO: 실제 강의 ID 연동 필요
+          lectureId: selectedLectureId,
           paperIds
         })
       }
@@ -341,9 +359,30 @@ export function AcademyMaterials() {
   return (
     <main className="container mx-auto px-6 py-8">
       <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">학원 자료</h1>
-          <p className="text-gray-600 dark:text-gray-300">학원에서 사용하는 교재와 자료를 관리하세요</p>
+        <div className="flex items-center gap-6">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">학원 자료</h1>
+            <p className="text-gray-600 dark:text-gray-300">학원에서 사용하는 교재와 자료를 관리하세요</p>
+          </div>
+          {lecturesLoading ? (
+            <div className="h-10 bg-gray-200 rounded animate-pulse w-64" />
+          ) : (
+            <div className="flex items-center gap-2">
+              <Label className="text-sm font-medium text-gray-700">강좌</Label>
+              <Select value={selectedLectureId} onValueChange={setSelectedLectureId}>
+                <SelectTrigger className="w-64">
+                  <SelectValue placeholder="강좌를 선택하세요" />
+                </SelectTrigger>
+                <SelectContent>
+                  {lectures?.map((lecture) => (
+                    <SelectItem key={lecture.lectureId} value={lecture.lectureId}>
+                      {lecture.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
         <div className="flex gap-2">
           <Button 
