@@ -53,38 +53,31 @@ export function AcademyMaterials() {
   return (
     <main className="container mx-auto px-6 py-8">
       <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">학원 자료</h1>
-          <p className="text-gray-600 dark:text-gray-300">학원에서 사용하는 교재와 자료를 관리하세요</p>
+        {/* 강좌명 선택 */}
+        <div className="flex items-center gap-3">
+          <label className="text-sm font-medium text-gray-700 whitespace-nowrap">강좌명:</label>
+          {lecturesLoading ? (
+            <div className="h-10 bg-gray-200 rounded animate-pulse w-64" />
+          ) : (
+            <Select value={selectedLectureId} onValueChange={setSelectedLectureId}>
+              <SelectTrigger className="w-64">
+                <SelectValue placeholder="강좌를 선택하세요" />
+              </SelectTrigger>
+              <SelectContent>
+                {lectures?.map((lecture) => (
+                  <SelectItem key={lecture.lectureId} value={lecture.lectureId}>
+                    {lecture.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
         
-        {/* 강좌명 선택 */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3">
-            <label className="text-sm font-medium text-gray-700 whitespace-nowrap">강좌명:</label>
-            {lecturesLoading ? (
-              <div className="h-10 bg-gray-200 rounded animate-pulse w-64" />
-            ) : (
-              <Select value={selectedLectureId} onValueChange={setSelectedLectureId}>
-                <SelectTrigger className="w-64">
-                  <SelectValue placeholder="강좌를 선택하세요" />
-                </SelectTrigger>
-                <SelectContent>
-                  {lectures?.map((lecture) => (
-                    <SelectItem key={lecture.lectureId} value={lecture.lectureId}>
-                      {lecture.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-          
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-            <Plus className="w-4 h-4 mr-2" />
-            학원 자료 출제
-          </Button>
-        </div>
+        <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Plus className="w-4 h-4 mr-2" />
+          학원 자료 출제
+        </Button>
       </div>
 
       <div className="flex gap-6 h-[calc(100vh-200px)]">
