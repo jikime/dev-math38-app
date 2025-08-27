@@ -36,7 +36,13 @@ export function ManualProblemDialog({
   const { 
     skillChapters, 
     selectedSkill, 
-    selectSkill 
+    selectSkill,
+    manualPages,
+    manualProblems,
+    setManualPages,
+    addManualProblem,
+    removeManualProblem,
+    generateManualPaper
   } = useManualProblemStore()
   
   // 필터 상태
@@ -45,16 +51,18 @@ export function ManualProblemDialog({
   const [difficultyFilter, setDifficultyFilter] = useState("전체")
   const [domainFilter, setDomainFilter] = useState("전체")
 
-  // 페이지 레이아웃 상태 (A4 페이지 편집)
-  interface PageLayout {
-    id: number
-    columns: number
-    problemIds: string[]
-    laneOf?: Record<string, number>
-  }
-  const [pages, setPages] = useState<PageLayout[]>([
-    { id: 1, columns: 2, problemIds: [], laneOf: {} },
-  ])
+  // 페이지 레이아웃 상태 - store에서 안전하게 가져오기
+  const pages = Array.isArray(manualPages) ? manualPages : [{ id: 1, columns: 2, problemIds: [], laneOf: {} }]
+  
+  // 함수형 업데이트를 지원하는 setPages 래퍼
+  const setPages = useCallback((updater: ((prev: typeof pages) => typeof pages) | typeof pages) => {
+    if (typeof updater === 'function') {
+      const currentPages = Array.isArray(manualPages) ? manualPages : [{ id: 1, columns: 2, problemIds: [], laneOf: {} }]
+      setManualPages(updater(currentPages))
+    } else {
+      setManualPages(updater)
+    }
+  }, [manualPages, setManualPages])
 
   // React Query를 사용해 선택된 단일 스킬의 문제를 가져오기
   const { data: problemsData, isLoading, error } = useProblemsBySkill(selectedSkill || "")
@@ -155,7 +163,23 @@ export function ManualProblemDialog({
     [pages],
   )
 
+  // 문제가 추가/제거될 때마다 자동으로 시험지 업데이트
+  useEffect(() => {
+    if (manualProblems.length > 0) {
+      // 메타데이터 설정
+      const metadata = {
+        lectureTitle: "수동 선택 시험지",
+        teacherName: "선생님", 
+        chapterFrom: "선택 범위",
+        chapterTo: "선택 범위"
+      }
+      
+      generateManualPaper(`수동 선택 시험지`, metadata)
+    }
+  }, [manualProblems, generateManualPaper])
+
   const handleSubmit = () => {
+    // 시험지는 이미 실시간으로 생성되므로 다이얼로그만 닫기
     onOpenChange(false)
   }
 
@@ -232,11 +256,17 @@ export function ManualProblemDialog({
           destPage.problemIds.push(problemId)
         }
         destPage.laneOf[problemId] = destColumnIndex
+        
+        // store에서 문제 위치 업데이트
+        const problemInStore = manualProblems.find(p => p.problemId === problemId)
+        if (problemInStore) {
+          addManualProblem(problemInStore.problem, destPage.id, destColumnIndex)
+        }
       }
 
       return nextPages
     })
-  }, [getLaneItems])
+  }, [getLaneItems, addManualProblem, manualProblems, setPages])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -670,7 +700,7 @@ export function ManualProblemDialog({
                                       문제 번호: {problem.problemNumber || problem.problemId}
                                     </div>
                                     <ProblemView
-                                      problem={problem as any}
+                                      problem={problem as unknown}
                                       width={390}
                                       margin={20}
                                       level={Number(problem.difficulty)}
@@ -683,7 +713,7 @@ export function ManualProblemDialog({
                                     />
                                     <div className="mt-2 flex justify-center">
                                       {(() => {
-                                        // 모든 페이지에서 해당 문제가 이미 추가되었는지 확인
+                                        // store에서 문제가 이미 추가되었는지 확인
                                         const isAddedInAnyPage = pages.some(page => page.problemIds.includes(problem.problemId))
                                         
                                         return (
@@ -692,7 +722,8 @@ export function ManualProblemDialog({
                                             variant={isAddedInAnyPage ? "destructive" : "outline"}
                                             onClick={() => {
                                               if (isAddedInAnyPage) {
-                                                // 문제 제거 - 모든 페이지에서 해당 문제 제거
+                                                // 문제 제거 - store와 페이지에서 제거
+                                                removeManualProblem(problem.problemId)
                                                 setPages((prev) => {
                                                   return prev.map(page => ({
                                                     ...page,
@@ -715,9 +746,17 @@ export function ManualProblemDialog({
                                                   
                                                   // 빈 자리가 있는 페이지 찾기
                                                   let targetPageIndex = -1
+                                                  let targetColumn = 0
                                                   for (let i = 0; i < next.length; i++) {
                                                     if (next[i].problemIds.length < 4) {
                                                       targetPageIndex = i
+                                                      // 좌(0) 1,2 → 우(1) 3,4 순서로 배치
+                                                      const currentCount = next[i].problemIds.length
+                                                      if (currentCount <= 1) {
+                                                        targetColumn = 0 // 좌측 컬럼
+                                                      } else {
+                                                        targetColumn = 1 // 우측 컬럼
+                                                      }
                                                       break
                                                     }
                                                   }
@@ -732,19 +771,19 @@ export function ManualProblemDialog({
                                                       laneOf: { [problem.problemId]: 0 } 
                                                     }
                                                     next.push(newPage)
+                                                    // store에 문제 추가
+                                                    console.log('Adding problem to store:', problem.problemId)
+                                                    addManualProblem(problem, newPageId, 0)
                                                     // 새 페이지로 이동
                                                     setCurrentPage(next.length)
                                                   } else {
                                                     // 기존 페이지에 추가
                                                     const targetPage = next[targetPageIndex]
                                                     targetPage.problemIds.push(problem.problemId)
-                                                    // 좌(0) 1,2 → 우(1) 3,4 순서로 배치
-                                                    const currentCount = targetPage.problemIds.length
-                                                    if (currentCount <= 2) {
-                                                      targetPage.laneOf[problem.problemId] = 0 // 좌측 컬럼
-                                                    } else {
-                                                      targetPage.laneOf[problem.problemId] = 1 // 우측 컬럼
-                                                    }
+                                                    targetPage.laneOf[problem.problemId] = targetColumn
+                                                    // store에 문제 추가
+                                                    console.log('Adding problem to store:', problem.problemId, 'to page:', targetPage.id, 'column:', targetColumn)
+                                                    addManualProblem(problem, targetPage.id, targetColumn)
                                                   }
                                                   
                                                   return next

@@ -94,7 +94,13 @@ function ProblemCreatorContent() {
   const skillChaptersMutation = useSkillChapters()
   
   // zustand 스토어
-  const { setSkillChapters: setManualSkillChapters, setSelectedSkill: setManualSelectedSkill } = useManualProblemStore()
+  const { 
+    setSkillChapters: setManualSkillChapters, 
+    setSelectedSkill: setManualSelectedSkill,
+    manualPaper,
+    isManualMode,
+    clearManualPaper
+  } = useManualProblemStore()
   
   // 스킬별 문제 개수 조회
   const { data: skillCounts } = useSkillCounts(selectedLectureId)
@@ -473,6 +479,11 @@ function ProblemCreatorContent() {
   const handleAutoGenerate = async () => {
     try {
       setIsGeneratingPaper(true)
+      
+      // 기존 수동 시험지 초기화
+      if (isManualMode) {
+        clearManualPaper()
+      }
 
       // 선택된 과목 ID 추출
       const selectedSubjectId = selectedSubjectKeys[0] // 현재 단일 선택
@@ -890,7 +901,19 @@ function ProblemCreatorContent() {
 
   // 시험지 탭 렌더링 함수 - 메모제이션
   const renderExamTab = useMemo(() => {
-    if (!generatedPaper) {
+    // 수동 모드 또는 자동 모드에 따라 표시할 시험지 결정
+    const currentPaper = isManualMode ? manualPaper : generatedPaper
+    
+    console.log('renderExamTab called:', {
+      isManualMode,
+      hasManualPaper: !!manualPaper,
+      hasGeneratedPaper: !!generatedPaper,
+      currentPaper: !!currentPaper,
+      manualPaperPages: manualPaper?.pages?.length || 0,
+      generatedPaperPages: generatedPaper?.pages?.length || 0
+    })
+    
+    if (!currentPaper) {
       return (
         <ScrollArea className="h-[calc(100vh-1.5rem)]">
           <div className="space-y-2 px-2">
@@ -898,6 +921,7 @@ function ProblemCreatorContent() {
               <div className="text-center">
                 <BookOpenCheck className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                 <p>왼쪽에서 문제를 선택해주세요</p>
+                <p className="text-sm mt-2">자동출제 또는 수동출제를 사용해보세요</p>
               </div>
             </div>
           </div>
@@ -905,7 +929,7 @@ function ProblemCreatorContent() {
       )
     }
 
-    const totalProblem = generatedPaper.pages?.reduce(
+    const totalProblem = currentPaper.pages?.reduce(
       (acc, page) => acc + (page.leftSet?.length || 0) + (page.rightSet?.length || 0),
       0
     ) ?? 0
@@ -913,35 +937,61 @@ function ProblemCreatorContent() {
     return (
       <ScrollArea className="h-[calc(100vh-1.5rem)]">
         <div className="space-y-2 px-2">
+          {/* 모드 표시 배지 */}
+          {isManualMode && (
+            <div className="flex justify-between items-center mb-4 px-2">
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="bg-purple-100 text-purple-800">
+                  수동 선택 시험지
+                </Badge>
+                <span className="text-sm text-gray-500">
+                  수동출제로 생성된 시험지입니다
+                </span>
+              </div>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => {
+                  clearManualPaper()
+                  setGeneratedPaper(null)
+                }}
+                className="text-xs"
+              >
+                초기화
+              </Button>
+            </div>
+          )}
           <PaperPrintView4
-            title={generatedPaper.title}
-            lectureTitle={generatedPaper.lectureTitle ?? ""}
-            chapterFrom={generatedPaper.chapterFrom}
-            chapterTo={generatedPaper.chapterTo}
-            minMargin={generatedPaper.minMargin ?? 0}
-            columns={generatedPaper.columns ?? 2}
-            pages={generatedPaper.pages ?? []}
-            subjectName={generatedPaper.subjectName ?? ""}
-            teacherName={generatedPaper.teacherName ?? ""}
-            studentName={generatedPaper.studentName ?? ""}
-            academyName={generatedPaper.academyName ?? ""}
-            academyLogo={generatedPaper.academyLogo ?? ""}
+            title={currentPaper.title}
+            lectureTitle={currentPaper.lectureTitle ?? ""}
+            chapterFrom={currentPaper.chapterFrom}
+            chapterTo={currentPaper.chapterTo}
+            minMargin={currentPaper.minMargin ?? 0}
+            columns={currentPaper.columns ?? 2}
+            pages={currentPaper.pages ?? []}
+            subjectName={currentPaper.subjectName ?? ""}
+            teacherName={currentPaper.teacherName ?? ""}
+            studentName={currentPaper.studentName ?? ""}
+            academyName={currentPaper.academyName ?? ""}
+            academyLogo={currentPaper.academyLogo ?? ""}
             edit={false}
-            addBlankPage={(generatedPaper.pages?.length ?? 0) % 2 === 1}
-            headerStyle={generatedPaper.headerStyle}
+            addBlankPage={(currentPaper.pages?.length ?? 0) % 2 === 1}
+            headerStyle={currentPaper.headerStyle}
             totalProblem={totalProblem}
           />
         </div>
       </ScrollArea>
     )
-  }, [generatedPaper])
+  }, [isManualMode, manualPaper, generatedPaper, clearManualPaper, setGeneratedPaper])
 
   // 빠른답안 탭 렌더링 함수 - 메모제이션
   const renderQuickAnswerTab = useMemo(() => {
+    const currentPaper = isManualMode ? manualPaper : generatedPaper
+    
     return (
       <ScrollArea className="h-[calc(100vh-1.5rem)]">
         <div className="space-y-6 p-4">
-          { generatedPaper ? <AnswerSummaryPrint paper={generatedPaper} showBlankPage={true} /> :
+          { currentPaper ? <AnswerSummaryPrint paper={currentPaper} showBlankPage={true} /> :
           <div className="flex items-center justify-center h-96 text-gray-500">
             <div className="text-center">
               <BookOpenCheck className="w-12 h-12 mx-auto mb-4 text-gray-300" />
@@ -951,13 +1001,25 @@ function ProblemCreatorContent() {
         </div>
       </ScrollArea>
     )
-  }, [generatedPaper])
+  }, [isManualMode, manualPaper, generatedPaper])
+  
+  // 수동 시험지 상태 변경 감지
+  useEffect(() => {
+    console.log('Manual paper state changed:', {
+      isManualMode,
+      manualPaper: !!manualPaper,
+      manualPaperTitle: manualPaper?.title,
+      manualPaperProblemsCount: manualPaper?.countProblems || 0
+    })
+  }, [isManualMode, manualPaper])
 
   // 상세 정답지 탭 렌더링 함수 - 메모제이션
   const renderDetailedSolutionTab = useMemo(() => {
+    const currentPaper = isManualMode ? manualPaper : generatedPaper
+    
     return (
       <ScrollArea className="h-[calc(100vh-1.5rem)]">
-        { generatedPaper ? <SolutionPagesPrint paper={generatedPaper} /> : 
+        { currentPaper ? <SolutionPagesPrint paper={currentPaper} /> : 
         <div className="flex items-center justify-center h-96 text-gray-500">
           <div className="text-center">
             <BookOpenCheck className="w-12 h-12 mx-auto mb-4 text-gray-300" />
@@ -966,7 +1028,7 @@ function ProblemCreatorContent() {
         </div>}
       </ScrollArea>
     )
-  }, [generatedPaper])
+  }, [isManualMode, manualPaper, generatedPaper])
 
   return (
     <div className="container mx-auto px-2 py-8">
@@ -1313,6 +1375,11 @@ function ProblemCreatorContent() {
                   disabled={selectedTreeItems.length === 0 || selectedSkills.length > 0}
                   className={(selectedTreeItems.length === 0 || selectedSkills.length > 0) ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-transparent"}
                   onClick={() => {
+                    // 기존 자동 생성 시험지 초기화
+                    if (generatedPaper) {
+                      setGeneratedPaper(null)
+                    }
+                    
                     // zustand 스토어에 현재 skillChapters 설정
                     setManualSkillChapters(skillChapters)
                     // 선택된 스킬이 있으면 첫 번째 스킬을 선택

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { PaperPage } from "../typings";
 import BlankPaper from "../academy/BlankPaper";
 import PaperTemplate from './paper-template4';
@@ -44,27 +44,30 @@ const PaperPrintView4 = ({
   headerStyle = {}, // 기본값 설정
   totalProblem,
 }: PaperPrintViewProps) => {
-  const [startHeader, setStartHeader] = useState<React.ReactNode>();
-
-  useEffect(() => {
-    setHeader();
-  }, [headerStyle]);
-
-  const setHeader = () => {
-    setStartHeader(
-      <StartHeader
-        teacherName={teacherName}
-        title={title}
-        subjectName={subjectName}
-        studentName={studentName}
-        lectureTitle={lectureTitle}
-        chapterFrom={chapterFrom}
-        chapterTo={chapterTo}
-        style={headerStyle}
-        totalProblem={totalProblem}
-      />
-    );
-  };
+  // Memoize header to avoid re-rendering issues
+  const startHeader = useMemo(() => (
+    <StartHeader
+      teacherName={teacherName || ""}
+      title={title || ""}
+      subjectName={subjectName || ""}
+      studentName={studentName || ""}
+      lectureTitle={lectureTitle || ""}
+      chapterFrom={chapterFrom || ""}
+      chapterTo={chapterTo || ""}
+      style={headerStyle}
+      totalProblem={totalProblem || 0}
+    />
+  ), [
+    teacherName,
+    title,
+    subjectName,
+    studentName,
+    lectureTitle,
+    chapterFrom,
+    chapterTo,
+    headerStyle,
+    totalProblem
+  ]);
 
   return (
     <div className="paper w-full text-left flex flex-col">
