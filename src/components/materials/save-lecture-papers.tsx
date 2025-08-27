@@ -228,68 +228,63 @@ export function SaveLecturePapers({ lectureId, lectureName }: SaveLecturePapersP
       {/* 시험지 목록 */}
       <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
         {viewMode === 'card' ? (
-          // 카드 뷰
-          <div className="space-y-3">
+          // 카드 뷰 - 2열 그리드
+          <div className="grid grid-cols-2 gap-4">
             {papers.map((paper) => (
               <Card key={paper.lecturePaperId} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-4">
-                  <div className="space-y-3">
-                    {/* 제목 및 기본 정보 */}
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 truncate">
-                          {paper.paperIndex}. {paper.name}
+                  <div className="flex items-start gap-3">
+                    {/* 체크박스 */}
+                    <Checkbox
+                      checked={selectedItems.includes(paper.lecturePaperId)}
+                      onCheckedChange={() => handleSelectItem(paper.lecturePaperId)}
+                      className="mt-1"
+                    />
+                    
+                    {/* 메인 콘텐츠 영역 */}
+                    <div className="flex-1 space-y-3">
+                      {/* 범위와 제목 */}
+                      <div>
+                        {paper.range && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{paper.range}</p>
+                        )}
+                        <h4 className="font-medium text-base text-gray-900 dark:text-gray-200 break-words">
+                          {paper.name}
                         </h4>
-                        <p className="text-sm text-gray-600 mt-1">{paper.range}</p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {new Date(paper.created).toLocaleDateString('ko-KR')} 생성
-                        </p>
                       </div>
-                      <Badge variant="outline" className="ml-2">
-                        {paper.type}
-                      </Badge>
-                    </div>
 
-                    {/* 문항 정보 */}
-                    <div className="flex items-center gap-4 text-sm">
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-600">총 문항:</span>
-                        <Badge variant="secondary">{paper.counts.count}개</Badge>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-600">객관식:</span>
-                        <Badge variant="outline">{paper.counts.countChoice}개</Badge>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-600">주관식:</span>
-                        <Badge variant="outline">{paper.counts.countEssay}개</Badge>
-                      </div>
-                    </div>
-
-                    {/* 난이도 분포 */}
-                    <div className="space-y-2">
-                      <div className="text-sm font-medium text-gray-700">난이도 분포</div>
-                      <div className="space-y-2">
+                      {/* 난이도 분포 */}
+                      <div>
                         {renderDifficultyGraph(paper)}
                       </div>
-                    </div>
 
-                    {/* 성과 정보 (있는 경우) */}
-                    {(paper.paperCount > 0 || paper.finishedCount > 0 || paper.average > 0) && (
-                      <div className="pt-2 border-t border-gray-100">
-                        <div className="flex items-center gap-4 text-sm text-gray-600">
-                          {paper.paperCount > 0 && (
-                            <span>응시: {paper.paperCount}명</span>
-                          )}
-                          {paper.finishedCount > 0 && (
-                            <span>완료: {paper.finishedCount}명</span>
-                          )}
-                          {paper.average > 0 && (
-                            <span>평균: {paper.average.toFixed(1)}점</span>
-                          )}
-                        </div>
+                      {/* 문항 수 정보 */}
+                      <div className="text-sm text-center text-gray-600 dark:text-gray-400">
+                        총 {paper.counts.count}문항 (주관식 {paper.counts.countEssay} / 객관식 {paper.counts.countChoice})
                       </div>
-                    )}
+
+                      {/* 성과 정보 (있는 경우) */}
+                      {(paper.paperCount > 0 || paper.finishedCount > 0 || paper.average > 0) && (
+                        <div className="pt-3 border-t border-gray-100 dark:border-gray-800">
+                          <div className="flex items-center justify-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                            {paper.paperCount > 0 && (
+                              <span>응시: {paper.paperCount}명</span>
+                            )}
+                            {paper.finishedCount > 0 && (
+                              <span>완료: {paper.finishedCount}명</span>
+                            )}
+                            {paper.average > 0 && (
+                              <span>평균: {paper.average.toFixed(1)}점</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 출제(과목) 정보 */}
+                      <div className="pt-3 border-t border-gray-100 dark:border-gray-800 flex justify-start">
+                        {getSubject(paper.subjectId)}
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
