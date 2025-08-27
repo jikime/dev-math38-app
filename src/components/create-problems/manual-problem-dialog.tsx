@@ -622,7 +622,7 @@ export function ManualProblemDialog({
                         </div>
                       </div>
                     ) : (
-                    <div>
+                    <div className="h-full overflow-hidden">
                       {/* 문제 목록 영역 - 2 column layout with dotted line */}
                       <div className="mb-4 px-1">
                         <div className="flex items-center justify-between mb-3 pb-2 border-b px-4">

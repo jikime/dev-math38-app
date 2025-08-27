@@ -40,7 +40,6 @@ export function Header() {
     { name: "문제출제", href: "/create-problems", icon: PenTool, color: "orange" },
     { name: "학원 자료", href: "/materials", icon: FolderOpen, color: "teal" },
     { name: "출판교제 유사", href: "/textbooks", icon: Book, color: "pink" },
-    { name: "오답+유사", href: "/wrong-similar", icon: Target, color: "purple" },
     { name: "성적표", href: "/report-card", icon: BarChart3, color: "cyan" },
     { name: "수작 클라우드", href: "/cloud", icon: Cloud, color: "indigo" },
     { name: "유형/문제관리", href: "/problem-types", icon: Layers, color: "red" },

@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
 
 interface PeriodSelectorProps {
   selectedYear: number
@@ -48,7 +49,7 @@ export function PeriodSelector({
       
       <div className="flex gap-2 flex-wrap">
         {months.map((month, index) => (
-          <button
+          <Button
             key={index}
             onClick={() => onMonthChange(index + 1)}
             className={cn(
@@ -59,7 +60,7 @@ export function PeriodSelector({
             )}
           >
             {month}
-          </button>
+          </Button>
         ))}
       </div>
     </div>

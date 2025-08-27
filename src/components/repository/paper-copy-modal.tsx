@@ -181,7 +181,6 @@ const PaperCopyModal = ({
                   <div className="flex gap-4 items-center">
                     <div className="flex gap-2 flex-1">
                       <Button
-                        type="button"
                         className={cn(
                           "flex-1 py-3 px-4 border rounded-lg font-bold transition-all",
                           !similar 
@@ -196,7 +195,6 @@ const PaperCopyModal = ({
                         </div>
                       </Button>
                       <Button
-                        type="button"
                         className={cn(
                           "flex-1 py-3 px-4 border rounded-lg font-bold transition-all",
                           similar 

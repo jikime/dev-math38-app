@@ -142,7 +142,6 @@ const LoginForm = ({
         
         <div className="mt-8">
           <Button
-            type="button" 
             className="w-full bg-[#FEE500] text-[#191919] hover:bg-[#FEE500]/90 font-medium"
             onClick={onKakaoLogin}
             disabled={isLoading}

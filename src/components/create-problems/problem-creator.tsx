@@ -892,7 +892,7 @@ function ProblemCreatorContent() {
   const renderExamTab = useMemo(() => {
     if (!generatedPaper) {
       return (
-        <ScrollArea className="h-[calc(100vh-430px)]">
+        <ScrollArea className="h-[calc(100vh-1.5rem)]">
           <div className="space-y-2 px-2">
             <div className="flex items-center justify-center h-96 text-gray-500">
               <div className="text-center">
@@ -911,7 +911,7 @@ function ProblemCreatorContent() {
     ) ?? 0
 
     return (
-      <ScrollArea className="h-[calc(100vh-430px)]">
+      <ScrollArea className="h-[calc(100vh-1.5rem)]">
         <div className="space-y-2 px-2">
           <PaperPrintView4
             title={generatedPaper.title}
@@ -939,7 +939,7 @@ function ProblemCreatorContent() {
   // 빠른답안 탭 렌더링 함수 - 메모제이션
   const renderQuickAnswerTab = useMemo(() => {
     return (
-      <ScrollArea className="h-[calc(100vh-430px)]">
+      <ScrollArea className="h-[calc(100vh-1.5rem)]">
         <div className="space-y-6 p-4">
           { generatedPaper ? <AnswerSummaryPrint paper={generatedPaper} showBlankPage={true} /> :
           <div className="flex items-center justify-center h-96 text-gray-500">
@@ -956,7 +956,7 @@ function ProblemCreatorContent() {
   // 상세 정답지 탭 렌더링 함수 - 메모제이션
   const renderDetailedSolutionTab = useMemo(() => {
     return (
-      <ScrollArea className="h-[calc(100vh-430px)]">
+      <ScrollArea className="h-[calc(100vh-1.5rem)]">
         { generatedPaper ? <SolutionPagesPrint paper={generatedPaper} /> : 
         <div className="flex items-center justify-center h-96 text-gray-500">
           <div className="text-center">
@@ -1033,21 +1033,21 @@ function ProblemCreatorContent() {
             <div className="bg-white rounded-lg border p-4 h-20 flex flex-col justify-center">
               <h3 className="font-semibold text-sm mb-2">출제유형</h3>
               <div className="flex gap-1">
-                <button className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
+                <Button variant="outline" className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
                   전체
-                </button>
-                <button className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
+                </Button>
+                <Button variant="outline" className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
                   교과서 유형
-                </button>
-                <button className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
+                </Button>
+                <Button variant="outline" className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
                   문제집 유형
-                </button>
-                <button className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
+                </Button>
+                <Button variant="outline" className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
                   기출 유형
-                </button>
-                <button className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
+                </Button>
+                <Button variant="outline" className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
                   모의고사 유형
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -1056,290 +1056,289 @@ function ProblemCreatorContent() {
 
       <ResizablePanelGroup 
         direction="horizontal" 
-        className="h-[calc(100vh-200px)]"
       >
         {/* Left Sidebar - Settings */}
         <ResizablePanel defaultSize={28} minSize={28} maxSize={60}>
           <div className="h-full pr-3">
             <div className="space-y-6">
-                {/* 과목을 선택해 주세요 */}
-                <div className="bg-white rounded-lg border p-4">
-                  <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                    <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
-                      1
-                    </span>
-                    과목을 선택해 주세요
-                  </h3>
+              {/* 과목을 선택해 주세요 */}
+              <div className="bg-white rounded-lg border p-4">
+                <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                  <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
+                    1
+                  </span>
+                  과목을 선택해 주세요
+                </h3>
 
-                  {/* 과목 선택 UI */}
-                  <MultiSelect
-                    options={subjectOptions}
-                    selected={selectedSubjectKeys}
-                    onChange={setSelectedSubjectKeys}
-                    placeholder="과목을 선택하세요"
-                    disabled={subjectsLoading}
-                    className="w-full"
-                  />
-                  
-                  {subjectsLoading && (
-                    <div className="text-sm text-gray-500 mt-2">과목 목록 로딩중...</div>
-                  )}
-                  
-                  {!subjectsLoading && (!subjects || subjects.length === 0) && (
-                    <div className="text-sm text-red-500 mt-2">과목 목록을 불러올 수 없습니다</div>
-                  )}
+                {/* 과목 선택 UI */}
+                <MultiSelect
+                  options={subjectOptions}
+                  selected={selectedSubjectKeys}
+                  onChange={setSelectedSubjectKeys}
+                  placeholder="과목을 선택하세요"
+                  disabled={subjectsLoading} 
+                  className="w-full"
+                />
+                
+                {subjectsLoading && (
+                  <div className="text-sm text-gray-500 mt-2">과목 목록 로딩중...</div>
+                )}
+                
+                {!subjectsLoading && (!subjects || subjects.length === 0) && (
+                  <div className="text-sm text-red-500 mt-2">과목 목록을 불러올 수 없습니다</div>
+                )}
 
-                  {/* 선택된 과목의 트리 항목 표시 */}
-                  {selectedSubjectKeys.length > 0 && (
-                    <div className="mt-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-medium text-sm text-gray-700">상세 항목 선택</h4>
-                        {selectedTreeItems.length > 0 && (
-                          <span className="text-xs text-gray-500">
-                            {selectedTreeItems.length}개 선택됨
-                          </span>
-                        )}
-                      </div>
-
-                      {/* 선택된 트리 항목 Badge 표시 */}
+                {/* 선택된 과목의 트리 항목 표시 */}
+                {selectedSubjectKeys.length > 0 && (
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-medium text-sm text-gray-700">상세 항목 선택</h4>
                       {selectedTreeItems.length > 0 && (
-                        <div className="mb-3">
-                          <div className="flex flex-wrap gap-1">
-                            {selectedTreeItems.slice(0, 3).map((item) => (
-                              <Badge key={item} variant="outline" className="bg-green-100 text-green-800 text-xs">
-                                {item}
-                              </Badge>
-                            ))}
-                            {selectedTreeItems.length > 3 && (
-                              <Badge variant="outline" className="bg-green-100 text-green-800 text-xs">
-                                +{selectedTreeItems.length - 3}개 더
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
+                        <span className="text-xs text-gray-500">
+                          {selectedTreeItems.length}개 선택됨
+                        </span>
                       )}
-
-                      {/* 트리 구조 표시 */}
-                      <div className="border rounded-lg">
-                        <ScrollArea className="h-60">
-                          {subjectTopsLoading ? (
-                            <div className="flex items-center justify-center h-32">
-                              <div className="text-sm text-gray-500">항목 로딩중...</div>
-                            </div>
-                          ) : subjectTops && subjectTops.length > 0 ? (
-                            <SubjectTree
-                              data={subjectTops}
-                              selectedKeys={selectedTreeItems}
-                              onSelectionChange={setSelectedTreeItems}
-                              className="p-2"
-                            />
-                          ) : (
-                            <div className="flex items-center justify-center h-32 text-gray-500">
-                              <div className="text-center">
-                                <p className="text-sm">상세 항목이 없습니다</p>
-                              </div>
-                            </div>
-                          )}
-                        </ScrollArea>
-                      </div>
                     </div>
-                  )}
-                </div>
 
-                {/* 항목을 선택해 주세요 */}
-                <div className="bg-white rounded-lg border p-4">
-                  <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                    <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
-                      2
-                    </span>
-                    항목을 선택해 주세요
-                    {/* {selectedSkills.length > 0 && (
-                      <span className="bg-purple-100 text-purple-800 rounded-full px-2 py-1 text-xs font-medium">
-                        {selectedSkills.length}개 선택됨
-                      </span>
-                    )} */}
-                    <span className="text-sm text-gray-500 ml-auto">* 자동출제용</span>
-                  </h3>
-
-                  {/* 선택된 스킬 표시 */}
-                  {selectedSkills.length > 0 && (
-                    <div className="mb-4">
-                      <div className="text-sm text-gray-600 mb-2">선택된 항목: {selectedSkills.length}개</div>
-                      <div className="flex flex-wrap gap-1">
-                        {selectedSkills.slice(0, 3).map((skillId) => {
-                          // skillId로 실제 skill 정보 찾기
-                          const skill = skillChapters.flatMap(chapter => chapter.skillList)
-                            .find(skill => skill.skillId === skillId)
-                          return skill ? (
-                            <Badge key={skillId} variant="outline" className="bg-purple-100 text-purple-800 text-xs">
-                              {skill.skillName.substring(0, 20)}...
+                    {/* 선택된 트리 항목 Badge 표시 */}
+                    {selectedTreeItems.length > 0 && (
+                      <div className="mb-3">
+                        <div className="flex flex-wrap gap-1">
+                          {selectedTreeItems.slice(0, 3).map((item) => (
+                            <Badge key={item} variant="outline" className="bg-green-100 text-green-800 text-xs">
+                              {item}
                             </Badge>
-                          ) : null
-                        })}
-                        {selectedSkills.length > 3 && (
-                          <Badge variant="outline" className="bg-purple-100 text-purple-800 text-xs">
-                            +{selectedSkills.length - 3}개 더
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  <ScrollArea className="h-80">
-                    {skillChaptersMutation.isPending ? (
-                      <div className="flex items-center justify-center h-32">
-                        <div className="text-sm text-gray-500">문항 목록 로딩중...</div>
-                      </div>
-                    ) : selectedTreeItems.length === 0 ? (
-                      <div className="flex items-center justify-center h-32 text-gray-500">
-                        <div className="text-center">
-                          <p>먼저 상세 항목을 선택해주세요</p>
-                        </div>
-                      </div>
-                    ) : skillChapters.length > 0 ? (
-                      <div className="space-y-6">
-                        {skillChapters.map((chapter) => (
-                          <div key={chapter.chapterId} className="space-y-3">
-                            {/* 챕터 헤더 */}
-                            <div className="flex items-center justify-between pb-2 border-b">
-                              <h4 className="font-medium text-gray-800">{chapter.chapterIndex} {chapter.chapterName}</h4>
-                              <button
-                                onClick={() => toggleAllSkillsInChapter(chapter)}
-                                className={`text-xs px-2 py-1 rounded transition-colors ${
-                                  chapter.skillList.every(skill => selectedSkills.includes(skill.skillId))
-                                    ? "text-blue-600 bg-blue-50 hover:bg-blue-100"
-                                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                                }`}
-                              >
-                                {chapter.skillList.every(skill => selectedSkills.includes(skill.skillId))
-                                  ? "전체 해제"
-                                  : "전체 선택"
-                                }
-                              </button>
-                            </div>
-
-                            {/* 스킬 목록 */}
-                            <div className="space-y-2">
-                              {chapter.skillList.map((skill) => (
-                                <div
-                                  key={skill.skillId}
-                                  className={`p-4 rounded-lg border cursor-pointer transition-colors ${
-                                    selectedSkills.includes(skill.skillId)
-                                      ? "border-blue-500 bg-blue-50"
-                                      : "border-gray-200 hover:border-gray-300"
-                                  }`}
-                                  onClick={() => toggleSkill(skill.skillId)}
-                                >
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                      <Checkbox
-                                        checked={selectedSkills.includes(skill.skillId)}
-                                        onCheckedChange={() => {}}
-                                      />
-                                      <span className="text-sm font-medium">{skill.skillName}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      {/* API에서 가져온 문제 개수 */}
-                                      <Badge className="bg-green-100 text-green-800 text-xs px-2 py-1">
-                                        문제 {skillCounts?.[skill.skillId]?.length || 0}개
-                                      </Badge>
-                                      {/* 기존 스킬의 count */}
-                                      <Badge className="bg-blue-100 text-blue-800 text-xs px-2 py-1">
-                                        총 {skill.counts}개
-                                      </Badge>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center h-32 text-gray-500">
-                        <div className="text-center">
-                          <p>선택된 항목에 대한 문제가 없습니다</p>
+                          ))}
+                          {selectedTreeItems.length > 3 && (
+                            <Badge variant="outline" className="bg-green-100 text-green-800 text-xs">
+                              +{selectedTreeItems.length - 3}개 더
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     )}
-                  </ScrollArea>
-                </div>
 
-                {/* 문항수를 선택해 주세요 */}
-                <div className="bg-white rounded-lg border p-4 flex-1">
-                  <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                    <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
-                      3
-                    </span>
-                    문항수를 선택해 주세요
-                    <span className="text-sm text-gray-500 ml-auto">(최대 200문항)</span>
-                  </h3>
-                <div className="text-center mb-4">
-                  <div className="text-2xl font-bold mb-2">전체 문항: {totalProblems}</div>
-                </div>
-
-                <Tabs value={difficultyTab} onValueChange={setDifficultyTab} className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="simple">초간단</TabsTrigger>
-                    <TabsTrigger value="intermediate">간단</TabsTrigger>
-                    <TabsTrigger value="detailed">자세히</TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="simple" className="mt-4">
-                    {renderSimpleTab}
-                  </TabsContent>
-
-                  <TabsContent value="intermediate" className="mt-4">
-                    {renderIntermediateTab}
-                  </TabsContent>
-
-                  <TabsContent value="detailed" className="mt-4">
-                    {renderDetailedTab}
-                  </TabsContent>
-                </Tabs>
-
-                <div className="flex justify-center gap-2 mt-4">
-                  <Button 
-                    size="sm" 
-                    disabled={totalProblems === 0 || isGeneratingPaper}
-                    className={totalProblems === 0 || isGeneratingPaper ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-blue-100 text-blue-800 hover:bg-blue-200"}
-                    onClick={handleAutoGenerate}
-                  >
-                    <Edit3 className="w-4 h-4 mr-1" />
-                    {isGeneratingPaper ? "생성 중..." : "자동출제"}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={selectedTreeItems.length === 0 || selectedSkills.length > 0}
-                    className={(selectedTreeItems.length === 0 || selectedSkills.length > 0) ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-transparent"}
-                    onClick={() => {
-                      // zustand 스토어에 현재 skillChapters 설정
-                      setManualSkillChapters(skillChapters)
-                      // 선택된 스킬이 있으면 첫 번째 스킬을 선택
-                      if (selectedSkills.length > 0) {
-                        setManualSelectedSkill(selectedSkills[0])
-                      } else {
-                        setManualSelectedSkill(null)
-                      }
-                      setShowFunctionDialog(true)
-                    }}
-                  >
-                    <Edit3 className="w-4 h-4 mr-1" />
-                    수동출제
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    disabled={true}
-                    className="bg-gray-50 text-gray-400 cursor-not-allowed"
-                  >
-                    <Plus className="w-4 h-4 mr-1" />
-                    문제추가
-                  </Button>
-                </div>
-                </div>
+                    {/* 트리 구조 표시 */}
+                    <div className="border rounded-lg">
+                      <ScrollArea className="h-60">
+                        {subjectTopsLoading ? (
+                          <div className="flex items-center justify-center h-32">
+                            <div className="text-sm text-gray-500">항목 로딩중...</div>
+                          </div>
+                        ) : subjectTops && subjectTops.length > 0 ? (
+                          <SubjectTree
+                            data={subjectTops}
+                            selectedKeys={selectedTreeItems}
+                            onSelectionChange={setSelectedTreeItems}
+                            className="p-2"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center h-32 text-gray-500">
+                            <div className="text-center">
+                              <p className="text-sm">상세 항목이 없습니다</p>
+                            </div>
+                          </div>
+                        )}
+                      </ScrollArea>
+                    </div>
+                  </div>
+                )}
               </div>
+
+              {/* 항목을 선택해 주세요 */}
+              <div className="bg-white rounded-lg border p-4">
+                <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                  <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
+                    2
+                  </span>
+                  항목을 선택해 주세요
+                  {/* {selectedSkills.length > 0 && (
+                    <span className="bg-purple-100 text-purple-800 rounded-full px-2 py-1 text-xs font-medium">
+                      {selectedSkills.length}개 선택됨
+                    </span>
+                  )} */}
+                  <span className="text-sm text-gray-500 ml-auto">* 자동출제용</span>
+                </h3>
+
+                {/* 선택된 스킬 표시 */}
+                {selectedSkills.length > 0 && (
+                  <div className="mb-4">
+                    <div className="text-sm text-gray-600 mb-2">선택된 항목: {selectedSkills.length}개</div>
+                    <div className="flex flex-wrap gap-1">
+                      {selectedSkills.slice(0, 3).map((skillId) => {
+                        // skillId로 실제 skill 정보 찾기
+                        const skill = skillChapters.flatMap(chapter => chapter.skillList)
+                          .find(skill => skill.skillId === skillId)
+                        return skill ? (
+                          <Badge key={skillId} variant="outline" className="bg-purple-100 text-purple-800 text-xs">
+                            {skill.skillName.substring(0, 20)}...
+                          </Badge>
+                        ) : null
+                      })}
+                      {selectedSkills.length > 3 && (
+                        <Badge variant="outline" className="bg-purple-100 text-purple-800 text-xs">
+                          +{selectedSkills.length - 3}개 더
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <ScrollArea className="h-80">
+                  {skillChaptersMutation.isPending ? (
+                    <div className="flex items-center justify-center h-32">
+                      <div className="text-sm text-gray-500">문항 목록 로딩중...</div>
+                    </div>
+                  ) : selectedTreeItems.length === 0 ? (
+                    <div className="flex items-center justify-center h-32 text-gray-500">
+                      <div className="text-center">
+                        <p>먼저 상세 항목을 선택해주세요</p>
+                      </div>
+                    </div>
+                  ) : skillChapters.length > 0 ? (
+                    <div className="space-y-6">
+                      {skillChapters.map((chapter) => (
+                        <div key={chapter.chapterId} className="space-y-3">
+                          {/* 챕터 헤더 */}
+                          <div className="flex items-center justify-between pb-2 border-b">
+                            <h4 className="font-medium text-gray-800">{chapter.chapterIndex} {chapter.chapterName}</h4>
+                            <Button
+                              onClick={() => toggleAllSkillsInChapter(chapter)}
+                              className={`text-xs px-2 py-1 rounded transition-colors ${
+                                chapter.skillList.every(skill => selectedSkills.includes(skill.skillId))
+                                  ? "text-blue-600 bg-blue-50 hover:bg-blue-100"
+                                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                              }`}
+                            >
+                              {chapter.skillList.every(skill => selectedSkills.includes(skill.skillId))
+                                ? "전체 해제"
+                                : "전체 선택"
+                              }
+                            </Button>
+                          </div>
+
+                          {/* 스킬 목록 */}
+                          <div className="space-y-2">
+                            {chapter.skillList.map((skill) => (
+                              <div
+                                key={skill.skillId}
+                                className={`p-4 rounded-lg border cursor-pointer transition-colors ${
+                                  selectedSkills.includes(skill.skillId)
+                                    ? "border-blue-500 bg-blue-50"
+                                    : "border-gray-200 hover:border-gray-300"
+                                }`}
+                                onClick={() => toggleSkill(skill.skillId)}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <Checkbox
+                                      checked={selectedSkills.includes(skill.skillId)}
+                                      onCheckedChange={() => {}}
+                                    />
+                                    <span className="text-sm font-medium">{skill.skillName}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    {/* API에서 가져온 문제 개수 */}
+                                    <Badge className="bg-green-100 text-green-800 text-xs px-2 py-1">
+                                      문제 {skillCounts?.[skill.skillId]?.length || 0}개
+                                    </Badge>
+                                    {/* 기존 스킬의 count */}
+                                    <Badge className="bg-blue-100 text-blue-800 text-xs px-2 py-1">
+                                      총 {skill.counts}개
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-32 text-gray-500">
+                      <div className="text-center">
+                        <p>선택된 항목에 대한 문제가 없습니다</p>
+                      </div>
+                    </div>
+                  )}
+                </ScrollArea>
+              </div>
+
+              {/* 문항수를 선택해 주세요 */}
+              <div className="bg-white rounded-lg border p-4 flex-1">
+                <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                  <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
+                    3
+                  </span>
+                  문항수를 선택해 주세요
+                  <span className="text-sm text-gray-500 ml-auto">(최대 200문항)</span>
+                </h3>
+              <div className="text-center mb-4">
+                <div className="text-2xl font-bold mb-2">전체 문항: {totalProblems}</div>
+              </div>
+
+              <Tabs value={difficultyTab} onValueChange={setDifficultyTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="simple">초간단</TabsTrigger>
+                  <TabsTrigger value="intermediate">간단</TabsTrigger>
+                  <TabsTrigger value="detailed">자세히</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="simple" className="mt-4">
+                  {renderSimpleTab}
+                </TabsContent>
+
+                <TabsContent value="intermediate" className="mt-4">
+                  {renderIntermediateTab}
+                </TabsContent>
+
+                <TabsContent value="detailed" className="mt-4">
+                  {renderDetailedTab}
+                </TabsContent>
+              </Tabs>
+
+              <div className="flex justify-center gap-2 mt-4">
+                <Button 
+                  size="sm" 
+                  disabled={totalProblems === 0 || isGeneratingPaper}
+                  className={totalProblems === 0 || isGeneratingPaper ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-blue-100 text-blue-800 hover:bg-blue-200"}
+                  onClick={handleAutoGenerate}
+                >
+                  <Edit3 className="w-4 h-4 mr-1" />
+                  {isGeneratingPaper ? "생성 중..." : "자동출제"}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={selectedTreeItems.length === 0 || selectedSkills.length > 0}
+                  className={(selectedTreeItems.length === 0 || selectedSkills.length > 0) ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-transparent"}
+                  onClick={() => {
+                    // zustand 스토어에 현재 skillChapters 설정
+                    setManualSkillChapters(skillChapters)
+                    // 선택된 스킬이 있으면 첫 번째 스킬을 선택
+                    if (selectedSkills.length > 0) {
+                      setManualSelectedSkill(selectedSkills[0])
+                    } else {
+                      setManualSelectedSkill(null)
+                    }
+                    setShowFunctionDialog(true)
+                  }}
+                >
+                  <Edit3 className="w-4 h-4 mr-1" />
+                  수동출제
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  disabled={true}
+                  className="bg-gray-50 text-gray-400 cursor-not-allowed"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  문제추가
+                </Button>
+              </div>
+              </div>
+            </div>
           </div>
         </ResizablePanel>
 
@@ -1349,42 +1348,40 @@ function ProblemCreatorContent() {
         <ResizablePanel defaultSize={72} minSize={40}>
           <div className="h-full pl-3">
             <div className="bg-card text-card-foreground flex flex-col rounded-xl border h-full max-h-full overflow-hidden">
-            <div className="grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 p-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
-              {/* Tab Navigation */}
-              <div className="relative w-full">
-                <div className="absolute bottom-0 left-0 right-0 h-px bg-gray-200"></div>
-                <div className="flex items-end gap-2 pb-px">
-                  {tabs.map((tab) => {
-                    const IconComponent = tab.icon
-                    return (
-                      <Button
-                        key={tab.id}
-                        variant="ghost"
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`px-4 py-2 text-sm font-medium rounded-t-lg border border-b-0 transition-all duration-200 flex items-center gap-2 relative h-auto ${
-                          activeTab === tab.id
-                            ? "bg-white text-gray-900 border-gray-200 "
-                            : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
-                        }`}
-                      >
-                        <IconComponent className="w-4 h-4" />
-                        {tab.label}
-                        {activeTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-px bg-white"></div>}
-                      </Button>
-                    )
-                  })}
+              <div className="grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 p-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
+                {/* Tab Navigation */}
+                <div className="relative w-full">
+                  <div className="absolute bottom-0 left-0 right-0 h-px bg-gray-200"></div>
+                  <div className="flex items-end gap-2 pb-px">
+                    {tabs.map((tab) => {
+                      const IconComponent = tab.icon
+                      return (
+                        <Button
+                          key={tab.id}
+                          variant="ghost"
+                          onClick={() => setActiveTab(tab.id)}
+                          className={`px-4 py-2 text-sm font-medium rounded-t-lg border border-b-0 transition-all duration-200 flex items-center gap-2 relative h-auto ${
+                            activeTab === tab.id
+                              ? "bg-white text-gray-900 border-gray-200 "
+                              : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+                          }`}
+                        >
+                          <IconComponent className="w-4 h-4" />
+                          {tab.label}
+                          {activeTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-px bg-white"></div>}
+                        </Button>
+                      )
+                    })}
+                  </div>
                 </div>
               </div>
+              <div className="px-2 h-full space-y-4">
+                {activeTab === "exam" && renderExamTab}
+                {activeTab === "quick" && renderQuickAnswerTab}
+                {activeTab === "detailed" && renderDetailedSolutionTab}
+                {activeTab === "style" && renderStyleTab}
+              </div>
             </div>
-            <div className="px-2 flex-1 flex flex-col">
-                <div className="space-y-4 pb-6">
-                  {activeTab === "exam" && renderExamTab}
-                  {activeTab === "quick" && renderQuickAnswerTab}
-                  {activeTab === "detailed" && renderDetailedSolutionTab}
-                  {activeTab === "style" && renderStyleTab}
-                </div>
-            </div>
-          </div>
           </div>
         </ResizablePanel>
       </ResizablePanelGroup>

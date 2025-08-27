@@ -469,12 +469,12 @@ const PaperAnswerInputModal = ({
                             {answerSheet?.answerList.map((record) => (
                               <tr key={record.problemId} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
                                 <td className="w-24 text-center py-3">
-                                  <button
+                                  <Button
                                     className="font-bold hover:text-primary transition-colors text-gray-900 dark:text-gray-100"
                                     title="문제 미리보기는 추후 구현 예정"
                                   >
                                     {record.problemNumber}번
-                                  </button>
+                                  </Button>
                                 </td>
                                 <td className="text-center py-3">
                                   {record.value && record.value.answers ? (
