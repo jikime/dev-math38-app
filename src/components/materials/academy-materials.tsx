@@ -80,6 +80,7 @@ export function AcademyMaterials() {
   const [selectedFolderId, setSelectedFolderId] = useState<string>()
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
   const [viewMode, setViewMode] = useState<'save' | 'provided'>('save')
+  const [mode, setMode] = useState<'save' | 'provided' | 'teacher'>('save')
   
   // 리사이즈 상태
   const [leftWidth, setLeftWidth] = useState<number>(560)
@@ -360,125 +361,187 @@ export function AcademyMaterials() {
       </div>
 
       <div className="flex w-full h-full">
-        {/* 왼쪽 Save 강좌 리스트 패널 */}
+        {/* 왼쪽 패널 */}
         <div
-          className="flex h-full flex-col bg-white overflow-hidden rounded-md border shadow-lg"
+          className="flex h-full flex-col bg-white overflow-hidden border-r border-gray-300 shadow-sm"
           style={{ width: leftWidth }}
         >
-          <div className="w-full flex items-center space-x-3 px-4 py-2 bg-gray-50">
-            <div className="flex items-center gap-2">
-              <GradeSelectWithLabel
-                label="학년"
-                value={getGradeSelectValue()}
-                onChange={handleGradeChange}
-                width={120}
-              />
+          {/* 상단 탭 */}
+          <div className="border-b border-gray-200">
+            <div className="flex bg-white">
+              <button
+                onClick={() => {
+                  setMode('save')
+                  setViewMode('save')
+                  setSelectedFolderId(undefined)
+                }}
+                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  mode === 'save'
+                    ? 'border-blue-500 text-blue-600 bg-blue-50'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                재테스트
+              </button>
+              <button
+                onClick={() => {
+                  setMode('provided')
+                  setViewMode('provided')
+                  setSaveLectureId("")
+                }}
+                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  mode === 'provided'
+                    ? 'border-blue-500 text-blue-600 bg-blue-50'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                교재시TWI
+              </button>
+              <button
+                onClick={() => {
+                  setMode('teacher')
+                  setViewMode('provided')
+                  setSaveLectureId("")
+                }}
+                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  mode === 'teacher'
+                    ? 'border-blue-500 text-blue-600 bg-blue-50'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                교사용TWI
+              </button>
             </div>
-            <div className="flex-1 flex items-center gap-2">
-              <Label>검색</Label>
-              <div className="relative flex-1">
-                <Input
-                  autoComplete="off"
-                  placeholder="Save 강좌 검색"
-                  className="w-full pr-10"
-                  onChange={handleKeywordChange}
-                  value={debouncedKeyword}
+          </div>
+
+          {/* 필터 영역 */}
+          <div className="border-b border-gray-200 bg-gray-50">
+            <div className="p-3 space-y-3">
+              <div className="flex items-center gap-3">
+                <GradeSelectWithLabel
+                  label="학년"
+                  value={getGradeSelectValue()}
+                  onChange={handleGradeChange}
+                  width={120}
                 />
-                <div className="absolute right-0 top-0 h-full flex items-center px-3 bg-gray-100 rounded-r-md">
-                  <Search className="w-4 h-4" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* 제공된 폴더들 */}
-          <div className="border-b border-gray-200 p-3">
-            <div className="space-y-2">
-              {/* TODO: 실제 폴더 데이터로 교체 */}
-              {[
-                { id: "folder1", name: "레벨테스트", count: 2 },
-                { id: "folder2", name: "진단평가", count: 2 },
-                { id: "folder3", name: "교과서TWI", count: 10 },
-                { id: "folder4", name: "교사용TWI", count: 0 },
-              ].map((folder) => (
-                <div
-                  key={folder.id}
-                  className={`flex items-center justify-between p-2 hover:bg-gray-50 rounded cursor-pointer ${
-                    selectedFolderId === folder.id ? "bg-blue-50" : ""
-                  }`}
-                  onClick={() => handleFolderClick(folder.id)}
-                >
-                  <div className="flex items-center gap-2">
-                    <FolderOpen className="w-4 h-4 text-yellow-600" />
-                    <span className="text-sm">{folder.name}</span>
-                  </div>
-                  <Badge variant="outline" className="text-xs">
-                    {folder.count}개 항목
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <ul className="divide-y divide-gray-200 overflow-auto h-full">
-            {isLoadingSaveLectureList ? (
-              <div className="w-full h-full flex justify-center items-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              </div>
-            ) : (
-              page?.content?.map((lecture: SaveLectureVO) => {
-                const { title } = getGradeTitle(lecture.grade!)
-                const isSelected = lecture.lectureId === saveLectureId
-                return (
-                  <li
-                    key={lecture.lectureId}
-                    className={`py-3 sm:py-2 px-3 cursor-pointer transition-colors duration-200 ${
-                      isSelected ? "bg-blue-50" : "hover:bg-blue-50"
-                    }`}
-                    onClick={() => showSaveLecture(lecture.lectureId)}
-                  >
-                    <div className="flex items-center space-x-4 py-1">
-                      <p className="text-sm text-gray-600 px-2">{title}</p>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[15px] font-bold text-gray-900 truncate">{lecture.name}</p>
-                      </div>
-                      <div className="inline-flex items-center font-semibold text-blue-600 text-sm">
-                        {lecture.paperCount}
-                      </div>
-                    </div>
-                  </li>
-                )
-              })
-            )}
-          </ul>
-          
-          {/* 페이지네이션 */}
-          <div className="border-t border-gray-200 py-4 px-4">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-600">
-                {page ? `총 ${page.totalElements}개` : '0개'}
               </div>
               <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  disabled={pagination.current === 1}
-                  onClick={() => paginationChange(pagination.current - 1, pagination.pageSize)}
-                >
-                  이전
-                </Button>
-                <span className="text-sm px-2">{pagination.current}</span>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  disabled={!page || pagination.current >= Math.ceil(page.totalElements / pagination.pageSize)}
-                  onClick={() => paginationChange(pagination.current + 1, pagination.pageSize)}
-                >
-                  다음
-                </Button>
+                <Label className="text-sm text-gray-700">검색</Label>
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    autoComplete="off"
+                    placeholder="Save 강좌 검색"
+                    className="pl-10 text-sm border-gray-300 focus:border-blue-500"
+                    onChange={handleKeywordChange}
+                    value={debouncedKeyword}
+                  />
+                </div>
               </div>
             </div>
           </div>
+
+          {/* 제공된 폴더들 - 좌우 정렬 */}
+          {mode === 'provided' && (
+            <div className="border-b border-gray-200 p-3 bg-gray-50">
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { id: "folder1", name: "레벨테스트", count: 2 },
+                  { id: "folder2", name: "진단평가", count: 2 },
+                  { id: "folder3", name: "교과서TWI", count: 10 },
+                  { id: "folder4", name: "교사용TWI", count: 0 },
+                ].map((folder) => (
+                  <div
+                    key={folder.id}
+                    className={`flex items-center gap-1 px-3 py-2 rounded-md border cursor-pointer transition-all ${
+                      selectedFolderId === folder.id 
+                        ? "bg-blue-100 border-blue-300 text-blue-700" 
+                        : "bg-white border-gray-200 hover:bg-gray-50 text-gray-700"
+                    }`}
+                    onClick={() => handleFolderClick(folder.id)}
+                  >
+                    <FolderOpen className="w-4 h-4 text-yellow-600" />
+                    <span className="text-sm font-medium">{folder.name}</span>
+                    <Badge variant={selectedFolderId === folder.id ? "default" : "secondary"} className="text-xs ml-1">
+                      {folder.count}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 강좌 리스트 */}
+          <div className="flex-1 overflow-hidden">
+            {mode === 'save' ? (
+              <ul className="divide-y divide-gray-200 overflow-auto h-full">
+                {isLoadingSaveLectureList ? (
+                  <div className="w-full h-full flex justify-center items-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  </div>
+                ) : (
+                  page?.content?.map((vo: SaveLectureVO) => {
+                    const { title } = getGradeTitle(vo.grade!);
+                    const isSelected = vo.lectureId === saveLectureId;
+                    return (
+                      <li
+                        key={vo.lectureId}
+                        className={`py-3 sm:py-2 px-3 cursor-pointer transition-colors duration-200 ${
+                          isSelected ? "bg-blue-50 border-l-4 border-blue-500" : "hover:bg-blue-50"
+                        }`}
+                        onClick={() => showSaveLecture(vo.lectureId)}
+                      >
+                        <div className="flex items-center space-x-4 py-1">
+                          <p className="text-sm text-gray-600 px-2 font-medium min-w-0 flex-shrink-0">{title}</p>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[15px] font-bold text-gray-900 truncate">{vo.name}</p>
+                          </div>
+                          <div className="inline-flex items-center font-semibold text-blue-600 text-sm bg-blue-50 px-2 py-1 rounded-full">
+                            {vo.paperCount}
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })
+                )}
+              </ul>
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                폴더를 선택하세요
+              </div>
+            )}
+          </div>
+          
+          {/* 페이지네이션 - Save 모드일 때만 표시 */}
+          {mode === 'save' && (
+            <div className="border-t border-gray-200 bg-white">
+              <div className="flex items-center justify-center p-3">
+                <div className="flex items-center gap-1 text-sm">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={pagination.current === 1}
+                    onClick={() => paginationChange(Math.max(1, pagination.current - 1), pagination.pageSize)}
+                    className="h-8 w-8 p-0"
+                  >
+                    ‹
+                  </Button>
+                  <span className="mx-2 text-sm text-gray-600">
+                    {pagination.current}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={!page || pagination.current >= Math.ceil(page.totalElements / pagination.pageSize)}
+                    onClick={() => paginationChange(pagination.current + 1, pagination.pageSize)}
+                    className="h-8 w-8 p-0"
+                  >
+                    ›
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
         
         {/* 수직 드래그 바 */}
