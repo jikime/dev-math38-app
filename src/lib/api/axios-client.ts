@@ -1,8 +1,8 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 
-// API 베이스 URL 설정 - Next.js rewrites를 사용하므로 빈 문자열 사용
-const API_BASE_URL = '';
-console.log('Using Next.js rewrites for API proxy');
+// API 베이스 URL 설정 (환경변수 또는 기본값)
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+console.log('API_BASE_URL', API_BASE_URL);
 
 // Axios 인스턴스 생성
 const axiosClient: AxiosInstance = axios.create({
@@ -67,7 +67,7 @@ axiosClient.interceptors.response.use(
         // 리프레시 토큰으로 액세스 토큰 갱신
         const refreshToken = localStorage.getItem('refreshToken');
         if (refreshToken) {
-          const response = await axios.post('/m38api/auth/refresh', {
+          const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
             refreshToken,
           });
 
