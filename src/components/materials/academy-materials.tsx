@@ -25,7 +25,9 @@ import {
   useSaveLecturePapers,
   useProvidedFolderPapers,
   useAddPapersFromSaveLecture,
-  useAddProvidedPapers
+  useAddProvidedPapers,
+  useProvidedFolderGroups,
+  type ProvidedFolderGroup
 } from "@/hooks/use-materials"
 import { useMyLectures, useLectureDetail } from "@/hooks/use-lecture"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -84,6 +86,8 @@ export function AcademyMaterials() {
   const [viewMode, setViewMode] = useState<'save' | 'provided'>('save')
   const [mode, setMode] = useState<'save' | 'provided' | 'teacher'>('save')
   const [selectedLectureId, setSelectedLectureId] = useState<string>("")
+  const [selectedFolderGroup, setSelectedFolderGroup] = useState<ProvidedFolderGroup | null>(null)
+  const [showFolders, setShowFolders] = useState(false)
   
   // 리사이즈 상태
   const [leftWidth, setLeftWidth] = useState<number>(560)
@@ -97,6 +101,9 @@ export function AcademyMaterials() {
   // API 훅들
   const { data: lectures, isLoading: lecturesLoading } = useMyLectures()
   const { data: lectureDetail } = useLectureDetail(selectedLectureId || "")
+  
+  // 제공된 폴더 그룹 조회 (GradeSelect의 값을 그대로 사용)
+  const { data: folderGroups, isLoading: isLoadingFolderGroups } = useProvidedFolderGroups(getGradeSelectValue())
   
   const {
     data: page,
@@ -172,6 +179,19 @@ export function AcademyMaterials() {
     setSelectedRows(new Set())
   }
   
+  // 폴더 그룹 클릭 핸들러
+  const handleFolderGroupClick = (group: ProvidedFolderGroup) => {
+    setSelectedFolderGroup(group)
+    setShowFolders(true)
+  }
+
+  // 뒤로 가기 핸들러
+  const handleBackToGroups = () => {
+    setShowFolders(false)
+    setSelectedFolderGroup(null)
+    setSelectedFolderId(undefined)
+  }
+
   const handleFolderClick = (folderId: string) => {
     setSelectedFolderId(folderId)
     setViewMode('provided')
@@ -413,6 +433,8 @@ export function AcademyMaterials() {
                   setMode('save')
                   setViewMode('save')
                   setSelectedFolderId(undefined)
+                  setShowFolders(false)
+                  setSelectedFolderGroup(null)
                 }}
                 className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                   mode === 'save'
@@ -427,6 +449,9 @@ export function AcademyMaterials() {
                   setMode('provided')
                   setViewMode('provided')
                   setSaveLectureId("")
+                  setShowFolders(false)
+                  setSelectedFolderGroup(null)
+                  setSelectedFolderId(undefined)
                 }}
                 className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                   mode === 'provided'
@@ -441,6 +466,9 @@ export function AcademyMaterials() {
                   setMode('teacher')
                   setViewMode('provided')
                   setSaveLectureId("")
+                  setShowFolders(false)
+                  setSelectedFolderGroup(null)
+                  setSelectedFolderId(undefined)
                 }}
                 className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                   mode === 'teacher'
@@ -480,33 +508,83 @@ export function AcademyMaterials() {
             </div>
           </div>
 
-          {/* 제공된 폴더들 - 좌우 정렬 */}
-          {mode === 'provided' && (
-            <div className="border-b border-gray-200 p-3 bg-gray-50">
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { id: "folder1", name: "레벨테스트", count: 2 },
-                  { id: "folder2", name: "진단평가", count: 2 },
-                  { id: "folder3", name: "교과서TWI", count: 10 },
-                  { id: "folder4", name: "교사용TWI", count: 0 },
-                ].map((folder) => (
-                  <div
-                    key={folder.id}
-                    className={`flex items-center gap-1 px-3 py-2 rounded-md border cursor-pointer transition-all ${
-                      selectedFolderId === folder.id 
-                        ? "bg-blue-100 border-blue-300 text-blue-700" 
-                        : "bg-white border-gray-200 hover:bg-gray-50 text-gray-700"
-                    }`}
-                    onClick={() => handleFolderClick(folder.id)}
-                  >
-                    <FolderOpen className="w-4 h-4 text-yellow-600" />
-                    <span className="text-sm font-medium">{folder.name}</span>
-                    <Badge variant={selectedFolderId === folder.id ? "default" : "secondary"} className="text-xs ml-1">
-                      {folder.count}
-                    </Badge>
+          {/* 제공된 폴더 그룹들/폴더들 */}
+          {(mode === 'provided' || mode === 'teacher') && (
+            <div className="p-4 bg-white border-b border-gray-200">
+              {!showFolders ? (
+                // 폴더 그룹 목록
+                <>
+                  {isLoadingFolderGroups ? (
+                    <div className="grid grid-cols-2 gap-3">
+                      {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="h-24 bg-gray-200 rounded-lg animate-pulse" />
+                      ))}
+                    </div>
+                  ) : folderGroups && folderGroups.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-3">
+                      {folderGroups.map((group) => (
+                        <div
+                          key={group.groupId}
+                          className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all cursor-pointer"
+                          onClick={() => handleFolderGroupClick(group)}
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <FolderOpen className="w-5 h-5 text-yellow-500" />
+                            <span className="text-sm font-medium text-gray-900 truncate">
+                              {group.groupName}
+                            </span>
+                          </div>
+                          <div className="flex items-center text-xs text-gray-500">
+                            <span>{group.folderCount}개 폴더</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center text-gray-500 py-8">
+                      {getGradeSelectValue() === 0 ? "학년을 선택해주세요" : "폴더가 없습니다"}
+                    </div>
+                  )}
+                </>
+              ) : (
+                // 개별 폴더 목록
+                <div>
+                  <div className="flex items-center mb-4">
+                    <button
+                      onClick={handleBackToGroups}
+                      className="flex items-center text-sm text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      <span className="mr-1">←</span>
+                      <span>뒤로</span>
+                    </button>
+                    <h3 className="text-sm font-medium text-gray-700 ml-4">
+                      {selectedFolderGroup?.groupName}
+                    </h3>
                   </div>
-                ))}
-              </div>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedFolderGroup?.folders.map((folder) => (
+                      <div
+                        key={folder.folderId}
+                        className={`flex items-center gap-1 px-3 py-2 rounded-md border cursor-pointer transition-all ${
+                          selectedFolderId === folder.folderId
+                            ? "bg-blue-100 border-blue-300 text-blue-700"
+                            : "bg-white border-gray-200 hover:bg-gray-50 text-gray-700"
+                        }`}
+                        onClick={() => handleFolderClick(folder.folderId)}
+                      >
+                        <FolderOpen className="w-4 h-4 text-yellow-600" />
+                        <span className="text-sm font-medium">{folder.folderName}</span>
+                        <Badge
+                          variant={selectedFolderId === folder.folderId ? "default" : "secondary"}
+                          className="text-xs ml-1"
+                        >
+                          {folder.paperCount}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
