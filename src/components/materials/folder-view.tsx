@@ -67,22 +67,21 @@ export function FolderView({ grade, onFolderClick, selectedFolderId }: FolderVie
     <div className="w-full">
       {view === 'groups' ? (
         // 그룹 목록 뷰
-        <div className="space-y-2">
-          <h4 className="text-sm font-medium text-gray-700 mb-3">폴더 그룹</h4>
-          <div className="h-48 overflow-y-auto space-y-2">
+        <div className="h-24 overflow-y-auto">
+          <div className="grid grid-cols-2 gap-2">
             {folderGroups.map((group) => (
             <div
               key={group.groupId}
               onClick={() => handleGroupClick(group)}
-              className="flex items-center justify-between p-3 hover:bg-gray-50 rounded cursor-pointer border border-gray-200 bg-white transition-colors"
+              className="flex items-center justify-between p-2.5 hover:bg-gray-50 rounded cursor-pointer border border-gray-200 bg-white transition-colors"
             >
-              <div className="flex items-center gap-2">
-                <Folder className="w-4 h-4 text-yellow-600" />
-                <span className="text-sm font-medium">{group.groupName}</span>
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <Folder className="w-4 h-4 text-yellow-600 flex-shrink-0" />
+                <span className="text-xs font-medium truncate">{group.groupName}</span>
               </div>
-              <Badge variant="outline" className="text-xs">
-                {group.folderCount}개 폴더
-              </Badge>
+              <span className="text-xs font-medium text-blue-600 ml-2 flex-shrink-0">
+                {group.folderCount}
+              </span>
             </div>
             ))}
           </div>

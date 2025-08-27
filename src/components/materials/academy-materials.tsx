@@ -83,60 +83,63 @@ export function AcademyMaterials() {
       <div className="flex gap-6 h-[calc(100vh-200px)]">
         {/* 왼쪽 사이드바 */}
         <div className="w-80 flex flex-col space-y-4">
-          {/* 학년 선택 */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">학년:</label>
-            <Select
-              value={selectedGrade?.toString()}
-              onValueChange={(val) => {
-                const num = val === "0" ? 0 : Number(val);
-                setSelectedGrade(num);
-              }}
-            >
-              <SelectTrigger 
-                className="bg-white font-pretendard font-bold"
-                style={{ width: "100%" }}
+          {/* 학년과 검색을 좌우 정렬 */}
+          <div className="flex items-end justify-between gap-4">
+            {/* 학년 선택 */}
+            <div className="flex-1 space-y-2">
+              <label className="text-sm font-medium text-gray-700">학년:</label>
+              <Select
+                value={selectedGrade?.toString()}
+                onValueChange={(val) => {
+                  const num = val === "0" ? 0 : Number(val);
+                  setSelectedGrade(num);
+                }}
               >
-                <SelectValue placeholder="학년 선택" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0">전체</SelectItem>
-                <SelectGroup>
-                  <SelectLabel>고등학교</SelectLabel>
-                  <SelectItem value="12">고 3학년</SelectItem>
-                  <SelectItem value="11">고 2학년</SelectItem>
-                  <SelectItem value="10">고 1학년</SelectItem>
-                </SelectGroup>
-                <SelectGroup>
-                  <SelectLabel>중학교</SelectLabel>
-                  <SelectItem value="9">중 3학년</SelectItem>
-                  <SelectItem value="8">중 2학년</SelectItem>
-                  <SelectItem value="7">중 1학년</SelectItem>
-                </SelectGroup>
-                <SelectGroup>
-                  <SelectLabel>초등학교</SelectLabel>
-                  <SelectItem value="6">초 6학년</SelectItem>
-                  <SelectItem value="5">초 5학년</SelectItem>
-                  <SelectItem value="4">초 4학년</SelectItem>
-                  <SelectItem value="3">초 3학년</SelectItem>
-                  <SelectItem value="2">초 2학년</SelectItem>
-                  <SelectItem value="1">초 1학년</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
+                <SelectTrigger 
+                  className="bg-white font-pretendard font-bold"
+                  style={{ width: "100%" }}
+                >
+                  <SelectValue placeholder="학년 선택" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">전체</SelectItem>
+                  <SelectGroup>
+                    <SelectLabel>고등학교</SelectLabel>
+                    <SelectItem value="12">고 3학년</SelectItem>
+                    <SelectItem value="11">고 2학년</SelectItem>
+                    <SelectItem value="10">고 1학년</SelectItem>
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel>중학교</SelectLabel>
+                    <SelectItem value="9">중 3학년</SelectItem>
+                    <SelectItem value="8">중 2학년</SelectItem>
+                    <SelectItem value="7">중 1학년</SelectItem>
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel>초등학교</SelectLabel>
+                    <SelectItem value="6">초 6학년</SelectItem>
+                    <SelectItem value="5">초 5학년</SelectItem>
+                    <SelectItem value="4">초 4학년</SelectItem>
+                    <SelectItem value="3">초 3학년</SelectItem>
+                    <SelectItem value="2">초 2학년</SelectItem>
+                    <SelectItem value="1">초 1학년</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
 
-          {/* 검색 */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">검색:</label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                placeholder="Save 간접 검색"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+            {/* 검색 */}
+            <div className="flex-1 space-y-2">
+              <label className="text-sm font-medium text-gray-700">검색:</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Save 간접 검색"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </div>
           </div>
 
@@ -152,9 +155,6 @@ export function AcademyMaterials() {
             </div>
 
             {/* Save 강좌 목록 */}
-            <div className="px-6 py-4 border-b">
-              <h4 className="text-sm font-medium text-gray-700 mb-4">Save 강좌 목록</h4>
-            </div>
             <div className="px-6 py-4 flex-1 min-h-0">
               <SaveLectureList
                 grade={selectedGrade}
