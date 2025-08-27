@@ -124,6 +124,8 @@ export const useManualProblemStore = create<ManualProblemState>((set, get) => ({
     })
     
     // 수동 선택된 문제들을 PaperPage 형식으로 변환
+    let problemNumberCounter = 1 // 문제번호 카운터
+    
     const pages: PaperPage[] = manualPages.map(pageLayout => {
       const leftProblems: PaperProblem[] = []
       const rightProblems: PaperProblem[] = []
@@ -132,18 +134,36 @@ export const useManualProblemStore = create<ManualProblemState>((set, get) => ({
       const pageProblems = manualProblems.filter(p => p.pageId === pageLayout.id)
       
       pageProblems.forEach(manualProblem => {
+        // 문제 데이터 구조 확인을 위한 디버깅
+        console.log('Problem data structure:', {
+          problemId: manualProblem.problemId,
+          difficulty: (manualProblem.problem as any)?.difficulty,
+          level: (manualProblem.problem as any)?.level,
+          problemKeys: Object.keys(manualProblem.problem || {}),
+          problemData: manualProblem.problem
+        })
+        
+        const level = parseInt((manualProblem.problem as any)?.difficulty) || 
+                      parseInt((manualProblem.problem as any)?.level) || 
+                      parseInt((manualProblem.problem as any)?.difficultyLevel) || 
+                      parseInt((manualProblem.problem as any)?.grade) || 3
+        
+        console.log('Converted level for problem:', manualProblem.problemId, 'from difficulty:', (manualProblem.problem as any)?.difficulty, 'to level:', level)
+        
         const paperProblem: PaperProblem = {
-          problemNumber: manualProblem.problemId,
+          problemNumber: problemNumberCounter.toString(), // 순서대로 문제번호 할당
           margin: 20,
           height: 0,
           problemId: manualProblem.problemId,
           problem: manualProblem.problem,
-          level: (manualProblem.problem as { difficulty?: number }).difficulty || 3,
+          level,
           ltype: (manualProblem.problem as { ltype?: string }).ltype || "계산",
           answerType: (manualProblem.problem as { content?: { answerType?: string } }).content?.answerType || "choice",
           skillId: (manualProblem.problem as { tags?: { type: string; skillId?: string }[] })?.tags?.find(tag => tag.type === "skill")?.skillId,
           skillName: (manualProblem.problem as { skillName?: string }).skillName
         }
+        
+        problemNumberCounter++ // 문제번호 카운터 증가
         
         if (manualProblem.column === 0) {
           leftProblems.push(paperProblem)

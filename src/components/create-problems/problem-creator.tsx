@@ -944,6 +944,9 @@ function ProblemCreatorContent() {
                 <Badge variant="outline" className="bg-purple-100 text-purple-800">
                   수동 선택 시험지
                 </Badge>
+                <Badge variant="outline" className="bg-blue-100 text-blue-800">
+                  총 {totalProblem}문항
+                </Badge>
                 <span className="text-sm text-gray-500">
                   수동출제로 생성된 시험지입니다
                 </span>
@@ -976,6 +979,7 @@ function ProblemCreatorContent() {
             academyLogo={currentPaper.academyLogo ?? ""}
             edit={false}
             addBlankPage={(currentPaper.pages?.length ?? 0) % 2 === 1}
+            showTags={true}
             headerStyle={currentPaper.headerStyle}
             totalProblem={totalProblem}
           />
@@ -1265,6 +1269,7 @@ function ProblemCreatorContent() {
                           <div className="flex items-center justify-between pb-2 border-b">
                             <h4 className="font-medium text-gray-800">{chapter.chapterIndex} {chapter.chapterName}</h4>
                             <Button
+                              variant="outline"
                               onClick={() => toggleAllSkillsInChapter(chapter)}
                               className={`text-xs px-2 py-1 rounded transition-colors ${
                                 chapter.skillList.every(skill => selectedSkills.includes(skill.skillId))

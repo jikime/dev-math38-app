@@ -772,7 +772,7 @@ export function ManualProblemDialog({
                                                     }
                                                     next.push(newPage)
                                                     // store에 문제 추가
-                                                    console.log('Adding problem to store:', problem.problemId)
+                                                    console.log('Adding problem to store:', problem.problemId, 'with difficulty:', problem.difficulty)
                                                     addManualProblem(problem, newPageId, 0)
                                                     // 새 페이지로 이동
                                                     setCurrentPage(next.length)
@@ -782,7 +782,7 @@ export function ManualProblemDialog({
                                                     targetPage.problemIds.push(problem.problemId)
                                                     targetPage.laneOf[problem.problemId] = targetColumn
                                                     // store에 문제 추가
-                                                    console.log('Adding problem to store:', problem.problemId, 'to page:', targetPage.id, 'column:', targetColumn)
+                                                    console.log('Adding problem to store:', problem.problemId, 'to page:', targetPage.id, 'column:', targetColumn, 'with difficulty:', problem.difficulty)
                                                     addManualProblem(problem, targetPage.id, targetColumn)
                                                   }
                                                   
