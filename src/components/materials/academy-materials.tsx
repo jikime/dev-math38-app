@@ -98,6 +98,14 @@ export function AcademyMaterials() {
   const [paperViewVisible, setPaperViewVisible] = useState(false)
   const [selectedPaperId, setSelectedPaperId] = useState<string | undefined>(undefined)
 
+  // 현재 grade(1-6)를 GradeSelect용 값(7-12)으로 변환
+  const getGradeSelectValue = () => {
+    const reverseMapping: { [key: number]: number } = {
+      1: 7, 2: 8, 3: 9, 4: 10, 5: 11, 6: 12
+    };
+    return reverseMapping[grade] || 9; // 기본값 중3
+  }
+
   // API 훅들
   const { data: lectures, isLoading: lecturesLoading } = useMyLectures()
   const { data: lectureDetail } = useLectureDetail(selectedLectureId || "")
@@ -271,14 +279,6 @@ export function AcademyMaterials() {
     
     setGrade(mappedGrade);
     refetchSaveLectureList();
-  }
-
-  // 현재 grade(1-6)를 GradeSelect용 값(7-12)으로 변환
-  const getGradeSelectValue = () => {
-    const reverseMapping: { [key: number]: number } = {
-      1: 7, 2: 8, 3: 9, 4: 10, 5: 11, 6: 12
-    };
-    return reverseMapping[grade] || 9; // 기본값 중3
   }
   
   // 테이블 행 선택 처리
