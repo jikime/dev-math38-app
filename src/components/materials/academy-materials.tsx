@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import {
   Select,
   SelectContent,
@@ -163,15 +162,8 @@ export function AcademyMaterials() {
                 onLectureSelect={handleSaveLectureSelect}
               />
             </div>
-          )}
+          </div>
         </div>
-        
-        {/* 수직 드래그 바 */}
-        <div
-          className="h-full cursor-ew-resize hover:bg-gray-400 hover:shadow-md transition-all duration-200 z-10"
-          style={{ width: "8px", backgroundColor: "#e5e7eb" }}
-          onMouseDown={handleMouseDown}
-        ></div>
 
         {/* 메인 콘텐츠 - Save Lecture Papers */}
         <div className="flex-1">
@@ -182,19 +174,6 @@ export function AcademyMaterials() {
             />
           </div>
         </div>
-
-        {/* 시험지 미리보기 모달 - TODO: 실제 모달 컴포넌트로 교체 */}
-        {paperViewVisible && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4">시험지 미리보기</h3>
-              <p>Paper ID: {selectedPaperId}</p>
-              <div className="mt-4">
-                <Button onClick={deselectPaper}>닫기</Button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </main>
   )
