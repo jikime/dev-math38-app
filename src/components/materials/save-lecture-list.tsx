@@ -71,6 +71,14 @@ export function SaveLectureList({
     )
   }
 
+  // 학년 표시 함수
+  const getGradeLabel = (grade: number) => {
+    if (grade >= 10) return `고 ${grade - 9}`
+    if (grade >= 7) return `중 ${grade - 6}`
+    if (grade >= 1) return `초 ${grade}`
+    return `${grade}학년`
+  }
+
   return (
     <div className="flex flex-col h-full">
       {/* 검색 */}
@@ -115,38 +123,35 @@ export function SaveLectureList({
               <div
                 key={lecture.lectureId}
                 onClick={() => handleLectureClick(lecture)}
-                className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                className={`p-2 border-b cursor-pointer transition-all hover:bg-gray-50 ${
                   selectedLectureId === lecture.lectureId
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                    ? "bg-blue-50 border-l-4 border-l-blue-500"
+                    : "border-gray-200"
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <BookOpen className={`w-4 h-4 flex-shrink-0 ${
-                      selectedLectureId === lecture.lectureId ? "text-blue-600" : "text-gray-400"
-                    }`} />
-                    <div className="flex-1 min-w-0">
-                      <p className={`font-medium truncate ${
-                        selectedLectureId === lecture.lectureId ? "text-blue-800" : "text-gray-900"
-                      }`}>
-                        {lecture.name}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {new Date(lecture.created).toLocaleDateString('ko-KR')}
-                      </p>
-                    </div>
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <span className={`text-xs px-1.5 py-0.5 rounded ${
+                      selectedLectureId === lecture.lectureId ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600"
+                    }`}>
+                      {getGradeLabel(lecture.grade)}
+                    </span>
+                    <p className={`font-medium truncate ${
+                      selectedLectureId === lecture.lectureId ? "text-blue-800" : "text-gray-900"
+                    }`}>
+                      {lecture.name}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <Badge 
                       variant="outline" 
                       className={`text-xs ${
                         selectedLectureId === lecture.lectureId 
-                          ? "border-blue-300 text-blue-700" 
-                          : ""
+                          ? "border-blue-300 text-blue-700 bg-blue-50" 
+                          : "border-gray-300 text-gray-600"
                       }`}
                     >
-                      {lecture.paperCount}개 시험지
+                      {lecture.paperCount}
                     </Badge>
                   </div>
                 </div>

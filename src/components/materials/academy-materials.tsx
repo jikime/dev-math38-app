@@ -147,21 +147,20 @@ export function AcademyMaterials() {
             </div>
           </div>
 
-          {/* 폴더 구조 */}
-          <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
-            <div className="px-6 p-4">
+          {/* 폴더 및 Save 강좌 목록 */}
+          <div className="bg-card text-card-foreground flex flex-col rounded-xl border shadow-sm flex-1 min-h-0">
+            {/* 폴더 구조 */}
+            <div className="px-6 py-4 border-b">
               <FolderView
                 grade={selectedGrade}
                 onFolderClick={handleFolderClick}
                 selectedFolderId={selectedFolderId}
               />
             </div>
-          </div>
 
-          {/* Save Lecture 목록 */}
-          <div className="bg-card text-card-foreground flex flex-col rounded-xl border shadow-sm flex-1 min-h-0">
+            {/* Save 강좌 목록 */}
             <div className="px-6 py-4 border-b">
-              <h4 className="text-sm font-medium text-gray-700">Save 강좌 목록</h4>
+              <h4 className="text-sm font-medium text-gray-700 mb-4">Save 강좌 목록</h4>
             </div>
             <div className="px-6 py-4 flex-1 min-h-0">
               <SaveLectureList

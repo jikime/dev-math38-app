@@ -69,7 +69,7 @@ export function FolderView({ grade, onFolderClick, selectedFolderId }: FolderVie
         // 그룹 목록 뷰
         <div className="space-y-2">
           <h4 className="text-sm font-medium text-gray-700 mb-3">폴더 그룹</h4>
-          <div className="h-80 overflow-y-auto space-y-2">
+          <div className="h-48 overflow-y-auto space-y-2">
             {folderGroups.map((group) => (
             <div
               key={group.groupId}
