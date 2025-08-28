@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -37,17 +37,52 @@ export function AcademyMaterials() {
     }
   }, [lectures, selectedLectureId])
 
-  // 폴더 클릭 핸들러
-  const handleFolderClick = (folderId: string) => {
+  // 폴더 클릭 핸들러 - 메모이제이션
+  const handleFolderClick = useCallback((folderId: string) => {
     setSelectedFolderId(folderId)
     console.log('Selected folder:', folderId)
-  }
+  }, [])
 
-  // Save Lecture 선택 핸들러
-  const handleSaveLectureSelect = (lecture: SaveLecture) => {
+  // Save Lecture 선택 핸들러 - 메모이제이션
+  const handleSaveLectureSelect = useCallback((lecture: SaveLecture) => {
     setSelectedSaveLecture(lecture)
     console.log('Selected save lecture:', lecture)
-  }
+  }, [])
+
+  // 학년 변경 핸들러 - 메모이제이션
+  const handleGradeChange = useCallback((val: string) => {
+    const num = val === "0" ? 0 : Number(val);
+    setSelectedGrade(num);
+  }, [])
+
+  // 검색어 변경 핸들러 - 메모이제이션
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  }, [])
+
+  // Save Lecture 키워드 변경 핸들러 - 메모이제이션
+  const handleSaveLectureKeywordChange = useCallback((keyword: string) => {
+    setSaveLectureKeyword(keyword);
+  }, [])
+
+  // 메모이제이션된 컴포넌트 props
+  const folderViewProps = useMemo(() => ({
+    grade: selectedGrade,
+    onFolderClick: handleFolderClick,
+    selectedFolderId: selectedFolderId
+  }), [selectedGrade, handleFolderClick, selectedFolderId])
+
+  const saveLectureListProps = useMemo(() => ({
+    grade: selectedGrade,
+    keyword: saveLectureKeyword,
+    onKeywordChange: handleSaveLectureKeywordChange,
+    onLectureSelect: handleSaveLectureSelect
+  }), [selectedGrade, saveLectureKeyword, handleSaveLectureKeywordChange, handleSaveLectureSelect])
+
+  const saveLecturePapersProps = useMemo(() => ({
+    lectureId: selectedSaveLecture?.lectureId,
+    lectureName: selectedSaveLecture?.name
+  }), [selectedSaveLecture?.lectureId, selectedSaveLecture?.name])
 
   return (
     <main className="container mx-auto px-6 py-8">
@@ -89,10 +124,7 @@ export function AcademyMaterials() {
               <label className="text-sm font-medium text-gray-700">학년:</label>
               <Select
                 value={selectedGrade?.toString()}
-                onValueChange={(val) => {
-                  const num = val === "0" ? 0 : Number(val);
-                  setSelectedGrade(num);
-                }}
+                onValueChange={handleGradeChange}
               >
                 <SelectTrigger 
                   className="bg-white font-pretendard font-bold"
@@ -135,7 +167,7 @@ export function AcademyMaterials() {
                 <Input
                   placeholder="자료 검색"
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={handleSearchChange}
                   className="pl-10"
                 />
               </div>
@@ -146,21 +178,12 @@ export function AcademyMaterials() {
           <div className="bg-card text-card-foreground flex flex-col rounded-xl border flex-1 min-h-0">
             {/* 폴더 구조 */}
             <div className="px-6 py-4 border-b">
-              <FolderView
-                grade={selectedGrade}
-                onFolderClick={handleFolderClick}
-                selectedFolderId={selectedFolderId}
-              />
+              <FolderView {...folderViewProps} />
             </div>
 
             {/* Save 강좌 목록 */}
             <div className="px-6 py-4 flex-1 min-h-0">
-              <SaveLectureList
-                grade={selectedGrade}
-                keyword={saveLectureKeyword}
-                onKeywordChange={setSaveLectureKeyword}
-                onLectureSelect={handleSaveLectureSelect}
-              />
+              <SaveLectureList {...saveLectureListProps} />
             </div>
           </div>
         </div>
@@ -168,10 +191,7 @@ export function AcademyMaterials() {
         {/* 메인 콘텐츠 - Save Lecture Papers */}
         <div className="flex-1 min-w-0">
           <div className="bg-card text-card-foreground h-full rounded-xl border overflow-hidden">
-            <SaveLecturePapers
-              lectureId={selectedSaveLecture?.lectureId}
-              lectureName={selectedSaveLecture?.name}
-            />
+            <SaveLecturePapers {...saveLecturePapersProps} />
           </div>
         </div>
       </div>
