@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useMemo, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -77,36 +77,47 @@ export function TextbookSimilar() {
     }
   }, [selectedLectureId, lectures, subjects])
 
-  // 과정 데이터를 MultiSelect 옵션으로 변환
-  const subjectOptions: Option[] = subjects?.map(subject => ({
-    label: subject.title,
-    value: subject.key.toString()
-  })) || []
+  // 과정 데이터를 MultiSelect 옵션으로 변환 - 메모이제이션
+  const subjectOptions: Option[] = useMemo(() => 
+    subjects?.map(subject => ({
+      label: subject.title,
+      value: subject.key.toString()
+    })) || [], [subjects]
+  )
 
-  const semesterOptions = ["전체", "1학기", "2학기"]
+  const semesterOptions = useMemo(() => ["전체", "1학기", "2학기"], [])
 
-
-  const filteredTextbooks = workBooks?.filter((t) =>
-    textbookQuery.trim() === "" ? true : t.bookName.toLowerCase().includes(textbookQuery.toLowerCase()),
-  ) || []
+  // 필터링된 데이터 - 메모이제이션
+  const filteredTextbooks = useMemo(() => 
+    workBooks?.filter((t) =>
+      textbookQuery.trim() === "" ? true : t.bookName.toLowerCase().includes(textbookQuery.toLowerCase())
+    ) || [], [workBooks, textbookQuery]
+  )
   
-  const filteredUnits = workBookPapers?.filter((u) =>
-    unitQuery.trim() === "" ? true : u.title.toLowerCase().includes(unitQuery.toLowerCase()),
-  ) || []
+  const filteredUnits = useMemo(() => 
+    workBookPapers?.filter((u) =>
+      unitQuery.trim() === "" ? true : u.title.toLowerCase().includes(unitQuery.toLowerCase())
+    ) || [], [workBookPapers, unitQuery]
+  )
 
   // 문제 목록 관련 상태 및 로직
   const [selectedPageRange, setSelectedPageRange] = useState<number[]>([])
   
-  // 페이지 범위 생성
-  const allPages = workBookProblems ? [...new Set(workBookProblems.map(p => p.page))].sort((a, b) => a - b) : []
+  // 페이지 범위 생성 - 메모이제이션
+  const allPages = useMemo(() => 
+    workBookProblems ? [...new Set(workBookProblems.map(p => p.page))].sort((a, b) => a - b) : [], 
+    [workBookProblems]
+  )
   
-  // 선택된 페이지의 문제들
-  const filteredProblems = workBookProblems?.filter(p => 
-    selectedPageRange.length === 0 || selectedPageRange.includes(p.page)
-  ) || []
+  // 선택된 페이지의 문제들 - 메모이제이션
+  const filteredProblems = useMemo(() => 
+    workBookProblems?.filter(p => 
+      selectedPageRange.length === 0 || selectedPageRange.includes(p.page)
+    ) || [], [workBookProblems, selectedPageRange]
+  )
   
-  // 페이지 선택 토글
-  const togglePageSelection = (page: number) => {
+  // 페이지 선택 토글 - 메모이제이션
+  const togglePageSelection = useCallback((page: number) => {
     setSelectedPageRange(prev => 
       prev.includes(page) 
         ? prev.filter(p => p !== page)
@@ -114,28 +125,55 @@ export function TextbookSimilar() {
     )
     // 페이지 선택이 바뀌면 선택된 문제도 초기화
     setSelectedProblems([])
-  }
+  }, [])
   
-  // 문제 선택 토글
-  const toggleProblemSelection = (problemId: string) => {
+  // 문제 선택 토글 - 메모이제이션
+  const toggleProblemSelection = useCallback((problemId: string) => {
     setSelectedProblems(prev => 
       prev.includes(problemId) 
         ? prev.filter(p => p !== problemId)
         : [...prev, problemId]
     )
-  }
+  }, [])
   
-  // 전체 문제 선택/해제
-  const toggleAllProblems = (checked: boolean) => {
+  // 전체 문제 선택/해제 - 메모이제이션
+  const toggleAllProblems = useCallback((checked: boolean) => {
     if (checked) {
       setSelectedProblems(filteredProblems.map(p => p.problemId))
     } else {
       setSelectedProblems([])
     }
-  }
+  }, [filteredProblems])
   
-  const selectedProblemIds = selectedProblems
-  const allFilteredSelected = filteredProblems.length > 0 && filteredProblems.every(p => selectedProblemIds.includes(p.problemId))
+  // 선택된 문제 ID와 전체 선택 상태 - 메모이제이션
+  const selectedProblemIds = useMemo(() => selectedProblems, [selectedProblems])
+  const allFilteredSelected = useMemo(() => 
+    filteredProblems.length > 0 && filteredProblems.every(p => selectedProblemIds.includes(p.problemId)),
+    [filteredProblems, selectedProblemIds]
+  )
+
+  // 교재 선택 핸들러 - 메모이제이션
+  const handleTextbookSelect = useCallback((textbookId: string) => {
+    setSelectedTextbook(textbookId)
+    setSelectedUnit(null)
+    setSelectedProblems([])
+    setSelectedPageRange([])
+  }, [])
+
+  // 단원 선택 핸들러 - 메모이제이션  
+  const handleUnitSelect = useCallback((unitId: string) => {
+    setSelectedUnit(unitId)
+    setSelectedProblems([])
+    setSelectedPageRange([])
+  }, [])
+
+  // 뒤로가기 핸들러 - 메모이제이션
+  const handleBackToTextbooks = useCallback(() => {
+    setSelectedTextbook(null)
+    setSelectedUnit(null)
+    setSelectedProblems([])
+    setUnitQuery("")
+  }, [])
 
   return (
     <main className="container mx-auto px-6 py-4 h-screen flex flex-col">
@@ -221,12 +259,7 @@ export function TextbookSimilar() {
                     variant="ghost"
                     size="sm"
                     className="h-7 px-2"
-                    onClick={() => {
-                      setSelectedTextbook(null)
-                      setSelectedUnit(null)
-                      setSelectedProblems([])
-                      setUnitQuery("")
-                    }}
+                    onClick={handleBackToTextbooks}
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </Button>
@@ -271,12 +304,7 @@ export function TextbookSimilar() {
                             <div
                               key={textbook.workBookId}
                               className="grid grid-cols-3 gap-1 px-2 py-2 text-xs cursor-pointer group"
-                              onClick={() => {
-                                setSelectedTextbook(textbook.workBookId)
-                                setSelectedUnit(null)
-                                setSelectedProblems([])
-                                setSelectedPageRange([]) // 페이지 선택 상태 초기화
-                              }}
+                              onClick={() => handleTextbookSelect(textbook.workBookId)}
                             >
                               <div
                                 className={`col-span-2 truncate flex items-center gap-2 ${
@@ -336,11 +364,7 @@ export function TextbookSimilar() {
                             <div
                               key={unit.workBookPaperId}
                               className="grid grid-cols-4 gap-1 px-2 py-2 text-xs cursor-pointer group"
-                              onClick={() => {
-                                setSelectedUnit(unit.workBookPaperId)
-                                setSelectedProblems([])
-                                setSelectedPageRange([]) // 페이지 선택 상태 초기화
-                              }}
+                              onClick={() => handleUnitSelect(unit.workBookPaperId)}
                             >
                               <div className="text-center">
                                 <Badge variant="outline" className="text-xs px-1 py-0">{unit.orderIndex + 1}</Badge>
