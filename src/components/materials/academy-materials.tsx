@@ -75,11 +75,11 @@ export function AcademyMaterials() {
         
         <Button className="bg-blue-600 hover:bg-blue-700 text-white">
           <Plus className="w-4 h-4 mr-2" />
-          학원 자료 출제
+          강좌에 추가
         </Button>
       </div>
 
-      <div className="flex gap-6 h-[calc(100vh-200px)]">
+      <div className="flex gap-6 h-[calc(100vh-9.3rem)]">
         {/* 왼쪽 사이드바 */}
         <div className="w-80 flex flex-col space-y-4">
           {/* 학년과 검색을 좌우 정렬 */}
@@ -133,7 +133,7 @@ export function AcademyMaterials() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
-                  placeholder="Save 간접 검색"
+                  placeholder="자료 검색"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -143,7 +143,7 @@ export function AcademyMaterials() {
           </div>
 
           {/* 폴더 및 Save 강좌 목록 */}
-          <div className="bg-card text-card-foreground flex flex-col rounded-xl border shadow-sm flex-1 min-h-0">
+          <div className="bg-card text-card-foreground flex flex-col rounded-xl border flex-1 min-h-0">
             {/* 폴더 구조 */}
             <div className="px-6 py-4 border-b">
               <FolderView
@@ -167,7 +167,7 @@ export function AcademyMaterials() {
 
         {/* 메인 콘텐츠 - Save Lecture Papers */}
         <div className="flex-1">
-          <div className="bg-card text-card-foreground flex flex-col rounded-xl border shadow-sm h-[calc(100vh-200px)]">
+          <div className="bg-card text-card-foreground flex flex-col rounded-xl border">
             <SaveLecturePapers
               lectureId={selectedSaveLecture?.lectureId}
               lectureName={selectedSaveLecture?.name}

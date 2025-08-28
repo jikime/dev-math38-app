@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useCallback } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { FileText, BookOpen, Grid3X3, List } from "lucide-react"
 import { SaveLecturePaper, useSaveLecturePapers } from "@/hooks/use-folders"
 import { getSubjectTitle } from "@/lib/tag-utils"
+import PaperModal from "@/components/math-paper/paper-modal"
 
 interface SaveLecturePapersProps {
   lectureId: string | undefined
@@ -16,9 +17,12 @@ interface SaveLecturePapersProps {
 }
 
 export function SaveLecturePapers({ lectureId, lectureName }: SaveLecturePapersProps) {
-  const [viewMode, setViewMode] = useState<'card' | 'table'>('card')
+  const [viewMode, setViewMode] = useState<'card' | 'table'>('table')
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [selectAll, setSelectAll] = useState(false)
+  const [showPaperModal, setShowPaperModal] = useState(false)
+  const [selectedPaperId, setSelectedPaperId] = useState<string | undefined>(undefined)
+  
   const { data: papers, isLoading, error } = useSaveLecturePapers(lectureId)
 
   // 체크박스 관련 함수들
@@ -45,6 +49,20 @@ export function SaveLecturePapers({ lectureId, lectureName }: SaveLecturePapersP
       return newSelected
     })
   }
+
+  // 제목 클릭 핸들러 - paperRefId 사용
+  const handleTitleClick = useCallback((paperRefId: string | undefined) => {
+    if (paperRefId) {
+      setSelectedPaperId(paperRefId)
+      setShowPaperModal(true)
+    }
+  }, [])
+
+  // 모달 닫기 핸들러
+  const handleCloseModal = useCallback(() => {
+    setShowPaperModal(false)
+    setSelectedPaperId(undefined)
+  }, [])
 
   // 과목 정보 가져오기
   const getSubject = (subjectId: number) => {
@@ -206,20 +224,18 @@ export function SaveLecturePapers({ lectureId, lectureName }: SaveLecturePapersP
           {/* 뷰 전환 버튼 */}
           <div className="flex items-center gap-2">
             <Button
-              variant={viewMode === 'card' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('card')}
-            >
-              <Grid3X3 className="w-4 h-4 mr-2" />
-              카드
-            </Button>
-            <Button
               variant={viewMode === 'table' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setViewMode('table')}
             >
-              <List className="w-4 h-4 mr-2" />
-              테이블
+              <List className="w-4 h-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'card' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('card')}
+            >
+              <Grid3X3 className="w-4 h-4" />
             </Button>
           </div>
         </div>
@@ -248,7 +264,10 @@ export function SaveLecturePapers({ lectureId, lectureName }: SaveLecturePapersP
                         {paper.range && (
                           <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{paper.range}</p>
                         )}
-                        <h4 className="font-medium text-base text-gray-900 dark:text-gray-200 break-words">
+                        <h4 
+                          className={`font-medium text-base break-words ${paper.paperRefId ? "text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 cursor-pointer hover:underline" : "text-gray-900 dark:text-gray-200"}`}
+                          onClick={() => handleTitleClick(paper.paperRefId)}
+                        >
                           {paper.name}
                         </h4>
                       </div>
@@ -340,7 +359,10 @@ export function SaveLecturePapers({ lectureId, lectureName }: SaveLecturePapersP
                     <TableCell>
                       <div className="space-y-1">
                         {paper.range && <div className="text-sm text-gray-600 dark:text-gray-400 break-words whitespace-normal">{paper.range}</div>}
-                        <div className="font-medium text-lg text-gray-800 dark:text-gray-200 break-words whitespace-normal">
+                        <div 
+                          className={`font-medium text-lg break-words whitespace-normal ${paper.paperRefId ? "text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 cursor-pointer hover:underline" : "text-gray-800 dark:text-gray-200"}`}
+                          onClick={() => handleTitleClick(paper.paperRefId)}
+                        >
                           {paper.name}
                         </div>
                       </div>
@@ -360,6 +382,16 @@ export function SaveLecturePapers({ lectureId, lectureName }: SaveLecturePapersP
           </div>
         )}
       </div>
+
+      {/* PaperModal */}
+      {showPaperModal && selectedPaperId && (
+        <PaperModal
+          isOpen={showPaperModal}
+          paperId={selectedPaperId}
+          onClose={handleCloseModal}
+          lectureId={lectureId}
+        />
+      )}
     </div>
   )
 }

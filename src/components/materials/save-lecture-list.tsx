@@ -85,7 +85,7 @@ export function SaveLectureList({
       <div className="flex items-center gap-2 mb-4">
         <div className="relative flex-1">
           <Input
-            placeholder="Save 강좌 검색"
+            placeholder="강좌 검색"
             value={keyword}
             onChange={(e) => onKeywordChange(e.target.value)}
             onKeyPress={(e) => {
@@ -131,12 +131,12 @@ export function SaveLectureList({
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <span className={`text-xs px-1.5 py-0.5 rounded ${
+                    <span className={`text-xs px-1.5 py-0.5 w-12 text-center rounded ${
                       selectedLectureId === lecture.lectureId ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600"
                     }`}>
                       {getGradeLabel(lecture.grade)}
                     </span>
-                    <p className={`font-medium truncate ${
+                    <p className={`text-xs font-medium truncate ${
                       selectedLectureId === lecture.lectureId ? "text-blue-800" : "text-gray-900"
                     }`}>
                       {lecture.name}
