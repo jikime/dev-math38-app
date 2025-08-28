@@ -79,7 +79,7 @@ export function AcademyMaterials() {
         </Button>
       </div>
 
-      <div className="flex gap-6 h-[calc(100vh-9.3rem)]">
+      <div className="flex gap-6 h-[calc(100vh-12rem)]">
         {/* 왼쪽 사이드바 */}
         <div className="w-80 flex flex-col space-y-4">
           {/* 학년과 검색을 좌우 정렬 */}
@@ -166,8 +166,8 @@ export function AcademyMaterials() {
         </div>
 
         {/* 메인 콘텐츠 - Save Lecture Papers */}
-        <div className="flex-1">
-          <div className="bg-card text-card-foreground flex flex-col rounded-xl border">
+        <div className="flex-1 min-w-0">
+          <div className="bg-card text-card-foreground h-full rounded-xl border overflow-hidden">
             <SaveLecturePapers
               lectureId={selectedSaveLecture?.lectureId}
               lectureName={selectedSaveLecture?.name}

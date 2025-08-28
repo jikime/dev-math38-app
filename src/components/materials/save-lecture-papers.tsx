@@ -164,7 +164,7 @@ export function SaveLecturePapers({ lectureId, lectureName }: SaveLecturePapersP
   // 로딩 상태
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="h-full flex items-center justify-center">
         <div className="text-gray-500">시험지 목록을 불러오는 중...</div>
       </div>
     )
@@ -173,7 +173,7 @@ export function SaveLecturePapers({ lectureId, lectureName }: SaveLecturePapersP
   // 에러 상태
   if (error) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="h-full flex items-center justify-center">
         <div className="text-red-500">시험지 목록을 불러오는 중 오류가 발생했습니다.</div>
       </div>
     )
@@ -182,7 +182,7 @@ export function SaveLecturePapers({ lectureId, lectureName }: SaveLecturePapersP
   // 선택된 강의가 없는 경우
   if (!lectureId) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="h-full flex items-center justify-center">
         <div className="text-center">
           <BookOpen className="w-12 h-12 mx-auto mb-4 text-gray-300" />
           <p className="text-gray-500">왼쪽에서 강의를 선택해주세요</p>
@@ -194,7 +194,7 @@ export function SaveLecturePapers({ lectureId, lectureName }: SaveLecturePapersP
   // 시험지가 없는 경우
   if (!papers || papers.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="h-full flex items-center justify-center">
         <div className="text-center">
           <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
           <p className="text-gray-500">해당 강의에 시험지가 없습니다.</p>
@@ -207,9 +207,9 @@ export function SaveLecturePapers({ lectureId, lectureName }: SaveLecturePapersP
   }
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="h-full flex flex-col p-4">
       {/* 헤더 */}
-      <div className="border-b pb-4">
+      <div className="flex-shrink-0 border-b pb-4 mb-4">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">시험지 목록</h3>
@@ -242,7 +242,7 @@ export function SaveLecturePapers({ lectureId, lectureName }: SaveLecturePapersP
       </div>
 
       {/* 시험지 목록 */}
-      <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
+      <div className="flex-1 overflow-y-auto">
         {viewMode === 'card' ? (
           // 카드 뷰 - 2열 그리드
           <div className="grid grid-cols-2 gap-4">
