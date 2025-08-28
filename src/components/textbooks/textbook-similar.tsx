@@ -1,22 +1,18 @@
 "use client"
 
-import React, { useState, useEffect, useMemo } from "react"
+import React, { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useMyLectures, useLectureDetail } from "@/hooks/use-lecture"
 import { useSubjects } from "@/hooks/use-subjects"
 import { useWorkBooks, useWorkBookPapers, useWorkBookPaperProblems } from "@/hooks/use-textbooks"
-import type { WorkBook, WorkBookPaper, WorkBookProblem } from "@/hooks/use-textbooks"
 import { MultiSelect } from "@/components/ui/multi-select"
 import type { Option } from "@/components/ui/multi-select"
-import { ChevronDown, BookOpen, FileText, Plus, ChevronLeft, ChevronRight, Search } from "lucide-react"
+import { BookOpen, FileText, ChevronLeft, Search } from "lucide-react"
 
 export function TextbookSimilar() {
   // 강좌 관련 상태
@@ -30,10 +26,7 @@ export function TextbookSimilar() {
   const [instantDistribution, setInstantDistribution] = useState(true)
   const [selectedTextbook, setSelectedTextbook] = useState<string | null>(null)
   const [selectedUnit, setSelectedUnit] = useState<string | null>(null)
-  const [selectedPages, setSelectedPages] = useState<number[]>([7, 8, 9, 10])
   const [selectedProblems, setSelectedProblems] = useState<string[]>([])
-  const [pageRangeStart, setPageRangeStart] = useState("7")
-  const [pageRangeEnd, setPageRangeEnd] = useState("10")
   // 페이지 네비게이션 단순화를 위해 그룹 이동 상태 제거
   const [textbookQuery, setTextbookQuery] = useState("")
   const [unitQuery, setUnitQuery] = useState("")
@@ -90,184 +83,8 @@ export function TextbookSimilar() {
     value: subject.key.toString()
   })) || []
 
-  const processOptions = ["전체", "공통수학1", "공통수학2", "수학1", "수학2", "미적분", "확률과통계", "기하"]
   const semesterOptions = ["전체", "1학기", "2학기"]
 
-  // 페이지 번호 데이터 (7-49)
-  const pageNumbers = Array.from({ length: 43 }, (_, i) => i + 7)
-
-  // 문제 데이터
-  const problemData = [
-    {
-      id: 1,
-      order: 1,
-      page: 7,
-      problem: 1,
-      type: "A01. 유한소수, 무한소수 구별하기",
-      difficulty: "하",
-      cognitiveArea: "인지영역",
-    },
-    {
-      id: 2,
-      order: 2,
-      page: 7,
-      problem: 2,
-      type: "A02. 순환소수의 표현",
-      difficulty: "중",
-      cognitiveArea: "인지영역",
-    },
-    {
-      id: 3,
-      order: 3,
-      page: 7,
-      problem: 3,
-      type: "A02. 순환소수의 표현",
-      difficulty: "중",
-      cognitiveArea: "인지영역",
-    },
-    {
-      id: 4,
-      order: 4,
-      page: 7,
-      problem: 4,
-      type: "A12. 분수를 유한소수로 나타내기 - 분모를 10의 거듭제곱의 꼴로 나타내기",
-      difficulty: "상",
-      cognitiveArea: "인지영역",
-    },
-    {
-      id: 5,
-      order: 5,
-      page: 7,
-      problem: 5,
-      type: "A11. 유한소수로 나타낼 수 있는 분수",
-      difficulty: "하",
-      cognitiveArea: "인지영역",
-    },
-    {
-      id: 6,
-      order: 6,
-      page: 7,
-      problem: 6,
-      type: "A04. 순환소수의 표현 - 분수",
-      difficulty: "중",
-      cognitiveArea: "인지영역",
-    },
-    {
-      id: 7,
-      order: 7,
-      page: 7,
-      problem: 7,
-      type: "A04. 순환소수의 표현 - 분수",
-      difficulty: "중",
-      cognitiveArea: "인지영역",
-    },
-    {
-      id: 8,
-      order: 8,
-      page: 7,
-      problem: 8,
-      type: "A36. 유리수와 소수의 관계 - 옳은 것 또는 옳지 않은 것 찾기",
-      difficulty: "상",
-      cognitiveArea: "인지영역",
-    },
-    {
-      id: 9,
-      order: 9,
-      page: 8,
-      problem: 9,
-      type: "A01. 유한소수, 무한소수 구별하기",
-      difficulty: "하",
-      cognitiveArea: "인지영역",
-    },
-    {
-      id: 10,
-      order: 10,
-      page: 8,
-      problem: 10,
-      type: "A01. 유한소수, 무한소수 구별하기",
-      difficulty: "하",
-      cognitiveArea: "인지영역",
-    },
-    {
-      id: 11,
-      order: 11,
-      page: 8,
-      problem: 11,
-      type: "A01. 유한소수, 무한소수 구별하기",
-      difficulty: "하",
-      cognitiveArea: "인지영역",
-    },
-    {
-      id: 12,
-      order: 12,
-      page: 8,
-      problem: 12,
-      type: "A14. 분수를 유한소수로 나타내기 - 계산과정",
-      difficulty: "중",
-      cognitiveArea: "인지영역",
-    },
-    {
-      id: 13,
-      order: 13,
-      page: 8,
-      problem: 13,
-      type: "A12. 분수를 유한소수로 나타내기 - 분모를 10의 거듭제곱의 꼴로 나타내기",
-      difficulty: "상",
-      cognitiveArea: "인지영역",
-    },
-    {
-      id: 14,
-      order: 14,
-      page: 8,
-      problem: 14,
-      type: "A14. 분수를 유한소수로 나타내기 - 계산과정",
-      difficulty: "중",
-      cognitiveArea: "인지영역",
-    },
-  ]
-
-  const togglePage = (pageNumber: number) => {
-    setSelectedPages((prev) =>
-      prev.includes(pageNumber) ? prev.filter((p) => p !== pageNumber) : [...prev, pageNumber],
-    )
-  }
-
-  const toggleProblem = (problemId: number) => {
-    setSelectedProblems((prev) =>
-      prev.includes(problemId) ? prev.filter((p) => p !== problemId) : [...prev, problemId],
-    )
-  }
-
-  const selectAllPages = () => {
-    setSelectedPages(pageNumbers)
-  }
-
-  const clearAllPages = () => {
-    setSelectedPages([])
-  }
-
-  const selectPageRange = () => {
-    const start = Number.parseInt(pageRangeStart)
-    const end = Number.parseInt(pageRangeEnd)
-    if (start && end && start <= end) {
-      const range = Array.from({ length: end - start + 1 }, (_, i) => start + i)
-      const validRange = range.filter((page) => pageNumbers.includes(page))
-      setSelectedPages((prev) => [...new Set([...prev, ...validRange])])
-    }
-  }
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case "상":
-        return "bg-red-100 text-red-800"
-      case "중":
-        return "bg-blue-100 text-blue-800"
-      case "하":
-        return "bg-green-100 text-green-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
 
   const filteredTextbooks = workBooks?.filter((t) =>
     textbookQuery.trim() === "" ? true : t.bookName.toLowerCase().includes(textbookQuery.toLowerCase()),
@@ -321,9 +138,9 @@ export function TextbookSimilar() {
   const allFilteredSelected = filteredProblems.length > 0 && filteredProblems.every(p => selectedProblemIds.includes(p.problemId))
 
   return (
-    <main className="container mx-auto px-6 py-8">
+    <main className="container mx-auto px-6 py-4 h-screen flex flex-col">
       {/* Header - 한줄 레이아웃 */}
-      <div className="mb-6">
+      <div className="mb-4 flex-shrink-0">
         <div className="flex items-center gap-4">
           {/* 강좌 선택 */}
           <div className="flex items-center gap-2">
@@ -393,10 +210,10 @@ export function TextbookSimilar() {
       </div>
 
 
-      <div className="grid grid-cols-12 gap-6 lg:grid-cols-12">
+      <div className="grid grid-cols-12 gap-6 lg:grid-cols-12 flex-1 min-h-0">
         {/* 1단계/2단계 - 좌측 패널에서 단계 전환 (Flat) */}
         <div className="col-span-12 lg:col-span-3">
-          <div className="flex flex-col h-[600px]">
+          <div className="flex flex-col h-full">
             <div className="px-2 pb-2">
               {selectedTextbook ? (
                 <div className="flex items-center gap-2">
@@ -407,7 +224,6 @@ export function TextbookSimilar() {
                     onClick={() => {
                       setSelectedTextbook(null)
                       setSelectedUnit(null)
-                      setSelectedPages([])
                       setSelectedProblems([])
                       setUnitQuery("")
                     }}
@@ -429,7 +245,7 @@ export function TextbookSimilar() {
                 <>
                   <div className="grid grid-cols-3 gap-1 px-2 py-2 text-xs font-medium text-muted-foreground sticky top-0 bg-background z-10 rounded-lg">
                     <div className="col-span-2">교재명</div>
-                    <div className="text-center">페이퍼수</div>
+                    <div className="text-center">단원수</div>
                   </div>
                   <div className="px-2 pb-2">
                     <div className="relative">
@@ -442,7 +258,7 @@ export function TextbookSimilar() {
                       <Search className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
                     </div>
                   </div>
-                  <ScrollArea className="h-[520px]">
+                  <ScrollArea className="h-[calc(100vh-280px)]">
                     <div>
                       {workBooksLoading ? (
                         <div className="flex items-center justify-center h-32">
@@ -458,8 +274,8 @@ export function TextbookSimilar() {
                               onClick={() => {
                                 setSelectedTextbook(textbook.workBookId)
                                 setSelectedUnit(null)
-                                setSelectedPages([])
                                 setSelectedProblems([])
+                                setSelectedPageRange([]) // 페이지 선택 상태 초기화
                               }}
                             >
                               <div
@@ -507,7 +323,7 @@ export function TextbookSimilar() {
                       <Search className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
                     </div>
                   </div>
-                  <ScrollArea className="h-[520px]">
+                  <ScrollArea className="h-[calc(100vh-280px)]">
                     <div>
                       {workBookPapersLoading ? (
                         <div className="flex items-center justify-center h-32">
@@ -522,8 +338,8 @@ export function TextbookSimilar() {
                               className="grid grid-cols-4 gap-1 px-2 py-2 text-xs cursor-pointer group"
                               onClick={() => {
                                 setSelectedUnit(unit.workBookPaperId)
-                                setSelectedPages([])
                                 setSelectedProblems([])
+                                setSelectedPageRange([]) // 페이지 선택 상태 초기화
                               }}
                             >
                               <div className="text-center">
@@ -562,7 +378,7 @@ export function TextbookSimilar() {
 
         {/* 3단계 - 문제 목록 */}
         <div className="col-span-12 lg:col-span-9">
-          <div className="h-[600px] flex flex-col gap-4">
+          <div className="h-full flex flex-col gap-4">
             {selectedUnit ? (
               <>
                 {/* 헤더 */}
@@ -585,8 +401,8 @@ export function TextbookSimilar() {
                   </div>
                 </div>
                 
-                {/* 페이지 필터링 */}
-                <div className="flex flex-col gap-2 px-1">
+                {/* 페이지 필터링 - 컴팩트 */}
+                <div className="flex flex-col gap-2 px-1 flex-shrink-0">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">페이지:</span>
                     <div className="flex items-center gap-1">
@@ -610,13 +426,24 @@ export function TextbookSimilar() {
                   </div>
                   
                   {/* 페이지 선택 버튼들 */}
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
+                    <Button
+                      variant={selectedPageRange.length === 0 ? "default" : "outline"}
+                      size="sm"
+                      className="h-6 px-2 text-xs flex-shrink-0"
+                      onClick={() => {
+                        setSelectedPageRange([])
+                        setSelectedProblems([])
+                      }}
+                    >
+                      전체
+                    </Button>
                     {allPages.map(page => (
                       <Button
                         key={page}
                         variant={selectedPageRange.includes(page) ? "default" : "outline"}
                         size="sm"
-                        className="h-6 px-2 text-xs"
+                        className="h-6 px-2 text-xs flex-shrink-0"
                         onClick={() => togglePageSelection(page)}
                       >
                         {page}
@@ -626,16 +453,16 @@ export function TextbookSimilar() {
                 </div>
                 
                 {/* 문제 목록 테이블 */}
-                <div className="flex-1 border rounded-lg overflow-hidden">
+                <div className="flex-1 flex flex-col border rounded-lg overflow-hidden min-h-0">
                   {workBookProblemsLoading ? (
                     <div className="flex items-center justify-center h-32">
                       <div className="text-sm text-gray-500">문제 목록 로딩중...</div>
                     </div>
                   ) : (
-                    <div className="h-full flex flex-col">
-                      {/* 테이블 헤더 */}
-                      <div className="bg-muted/50 p-3 border-b">
-                        <div className="grid grid-cols-12 gap-2 items-center text-sm font-medium">
+                    <>
+                      {/* 테이블 헤더 - 고정 */}
+                      <div className="bg-muted/50 p-3 border-b flex-shrink-0">
+                        <div className="grid grid-cols-11 gap-2 items-center text-sm font-medium">
                           <div className="col-span-1 text-center">
                             <Checkbox
                               checked={allFilteredSelected}
@@ -645,59 +472,72 @@ export function TextbookSimilar() {
                           <div className="col-span-1 text-center">순번</div>
                           <div className="col-span-1 text-center">페이지</div>
                           <div className="col-span-1 text-center">문제</div>
-                          <div className="col-span-4 text-center">유형명</div>
+                          <div className="col-span-5 text-center">유형명</div>
                           <div className="col-span-1 text-center">난이도</div>
-                          <div className="col-span-2 text-center">인지영역</div>
-                          <div className="col-span-1 text-center">상태</div>
+                          <div className="col-span-1 text-center">인지영역</div>
                         </div>
                       </div>
                       
-                      {/* 테이블 바디 */}
-                      <ScrollArea className="flex-1">
-                        <div className="divide-y">
-                          {filteredProblems.map((problem, index) => (
-                            <div 
-                              key={problem.problemId}
-                              className="grid grid-cols-12 gap-2 items-center p-3 text-sm hover:bg-muted/25"
-                            >
-                              <div className="col-span-1 text-center">
-                                <Checkbox
-                                  checked={selectedProblemIds.includes(problem.problemId)}
-                                  onCheckedChange={() => toggleProblemSelection(problem.problemId)}
-                                />
+                      {/* 테이블 바디 - 스크롤 가능 */}
+                      <div className="flex-1 overflow-hidden">
+                        <ScrollArea className="h-[calc(100vh-280px)]">
+                          <div className="divide-y">
+                            {filteredProblems.map((problem, index) => (
+                              <div 
+                                key={problem.problemId}
+                                className="grid grid-cols-11 gap-2 items-center p-3 text-sm hover:bg-muted/25"
+                              >
+                                <div className="col-span-1 text-center">
+                                  <Checkbox
+                                    checked={selectedProblemIds.includes(problem.problemId)}
+                                    onCheckedChange={() => toggleProblemSelection(problem.problemId)}
+                                  />
+                                </div>
+                                <div className="col-span-1 text-center">{problem.orderIndex}</div>
+                                <div className="col-span-1 text-center">{problem.page}</div>
+                                <div className="col-span-1 text-center">{problem.problemNumber}</div>
+                                <div className="col-span-5 truncate" title={problem.skillName}>
+                                  {problem.skillName}
+                                </div>
+                                <div className="col-span-1 text-center">
+                                  <Badge variant="outline" className="text-xs">
+                                    {problem.level === 1 ? '하' : problem.level === 2 ? '중' : problem.level === 3 ? '상' : '미정'}
+                                  </Badge>
+                                </div>
+                                <div className="col-span-1 text-center">
+                                  <Badge variant="secondary" className="text-xs">
+                                    {problem.ltype === 'unds' ? '이해' : 
+                                     problem.ltype === 'appl' ? '적용' : 
+                                     problem.ltype === 'anal' ? '분석' : 
+                                     problem.ltype === 'eval' ? '평가' : 
+                                     problem.ltype === 'crea' ? '창조' : 
+                                     problem.ltype === 'calcs' ? '계산' : 
+                                     problem.ltype || '기타'}
+                                  </Badge>
+                                </div>
                               </div>
-                              <div className="col-span-1 text-center">{problem.orderIndex}</div>
-                              <div className="col-span-1 text-center">{problem.page}</div>
-                              <div className="col-span-1 text-center">{problem.problemNumber}</div>
-                              <div className="col-span-4 truncate" title={problem.skillName}>
-                                {problem.skillName}
+                            ))}
+                            
+                            {filteredProblems.length === 0 && !workBookProblemsLoading && (
+                              <div className="flex items-center justify-center h-32 text-gray-500">
+                                <div className="text-center">
+                                  {workBookProblems && workBookProblems.length > 0 ? (
+                                    <>
+                                      <p className="text-sm">선택한 페이지에 문제가 없습니다</p>
+                                      <p className="text-xs text-muted-foreground mt-1">
+                                        다른 페이지를 선택하거나 "전체" 버튼을 클릭하세요
+                                      </p>
+                                    </>
+                                  ) : (
+                                    <p className="text-sm">이 단원에는 문제가 없습니다</p>
+                                  )}
+                                </div>
                               </div>
-                              <div className="col-span-1 text-center">
-                                <Badge variant="outline" className="text-xs">
-                                  {problem.level === 1 ? '하' : problem.level === 2 ? '중' : '상'}
-                                </Badge>
-                              </div>
-                              <div className="col-span-2 text-center">
-                                <Badge variant="secondary" className="text-xs">
-                                  {problem.ltype === 'unds' ? '이해' : problem.ltype === 'appl' ? '적용' : '분석'}
-                                </Badge>
-                              </div>
-                              <div className="col-span-1 text-center">
-                                <Badge variant="outline" className="text-xs">정상</Badge>
-                              </div>
-                            </div>
-                          ))}
-                          
-                          {filteredProblems.length === 0 && !workBookProblemsLoading && (
-                            <div className="flex items-center justify-center h-32 text-gray-500">
-                              <div className="text-center">
-                                <p className="text-sm">표시할 문제가 없습니다</p>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </ScrollArea>
-                    </div>
+                            )}
+                          </div>
+                        </ScrollArea>
+                      </div>
+                    </>
                   )}
                 </div>
               </>
