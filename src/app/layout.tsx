@@ -9,6 +9,7 @@ import "@/styles/main.scss";
 
 import { ThemeProvider } from "@/components/common/theme-provider"
 import { QueryProvider } from "@/providers/query-provider"
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -46,7 +47,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko" suppressHydrationWarning>
-      <body className={`${pretendard.variable} ${inter.className}`}>
+      {/* <body className={`${pretendard.variable} ${inter.className}`}> */}
+      <body>
         <QueryProvider>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
             {children}

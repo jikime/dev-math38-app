@@ -176,7 +176,7 @@ export function TextbookSimilar() {
   }, [])
 
   return (
-    <main className="container mx-auto px-6 py-4 h-screen flex flex-col">
+    <main className="container mx-auto px-6 py-4 h-[calc(100vh-8rem)] flex flex-col">
       {/* Header - 한줄 레이아웃 */}
       <div className="mb-4 flex-shrink-0">
         <div className="flex items-center gap-4">
@@ -251,8 +251,8 @@ export function TextbookSimilar() {
       <div className="grid grid-cols-12 gap-6 lg:grid-cols-12 flex-1 min-h-0">
         {/* 1단계/2단계 - 좌측 패널에서 단계 전환 (Flat) */}
         <div className="col-span-12 lg:col-span-3">
-          <div className="flex flex-col h-full">
-            <div className="px-2 pb-2">
+          <div className="bg-card text-card-foreground flex flex-col rounded-xl border h-full overflow-hidden">
+            <div className="px-6 py-4 border-b">
               {selectedTextbook ? (
                 <div className="flex items-center gap-2">
                   <Button
@@ -273,27 +273,34 @@ export function TextbookSimilar() {
                 </h3>
               )}
             </div>
-            <div className="px-1">
+            <div className="px-6 py-4 flex-1 min-h-0">
               {!selectedTextbook ? (
                 <>
-                  <div className="grid grid-cols-3 gap-1 px-2 py-2 text-xs font-medium text-muted-foreground sticky top-0 bg-background z-10 rounded-lg">
-                    <div className="col-span-2">교재명</div>
-                    <div className="text-center">단원수</div>
-                  </div>
-                  <div className="px-2 pb-2">
-                    <div className="relative">
-                      <Input
-                        value={textbookQuery}
-                        onChange={(e) => setTextbookQuery(e.target.value)}
-                        placeholder="교재 검색"
-                        className="h-8 pl-8"
-                      />
-                      <Search className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <div className="space-y-4">
+                    {/* 검색 */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700">검색:</label>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <Input
+                          placeholder="교재 검색"
+                          value={textbookQuery}
+                          onChange={(e) => setTextbookQuery(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* 테이블 헤더 */}
+                    <div className="grid grid-cols-3 gap-1 px-2 py-2 text-xs font-medium text-muted-foreground bg-muted/30 rounded-lg">
+                      <div className="col-span-2">교재명</div>
+                      <div className="text-center">단원수</div>
                     </div>
                   </div>
-                  <ScrollArea className="h-[calc(100vh-280px)]">
-                    <div>
-                      {workBooksLoading ? (
+                  <div className="flex-1 min-h-0 mt-4">
+                    <ScrollArea className="h-full">
+                      <div className="space-y-1">
+                        {workBooksLoading ? (
                         <div className="flex items-center justify-center h-32">
                           <div className="text-sm text-gray-500">교재 목록 로딩중...</div>
                         </div>
@@ -303,7 +310,11 @@ export function TextbookSimilar() {
                           return (
                             <div
                               key={textbook.workBookId}
-                              className="grid grid-cols-3 gap-1 px-2 py-2 text-xs cursor-pointer group"
+                              className={`grid grid-cols-3 gap-1 px-3 py-3 text-xs cursor-pointer rounded-lg transition-colors ${
+                                isActive 
+                                  ? "bg-blue-50 border border-blue-200" 
+                                  : "hover:bg-muted/50 border border-transparent"
+                              }`}
                               onClick={() => handleTextbookSelect(textbook.workBookId)}
                             >
                               <div
@@ -329,31 +340,39 @@ export function TextbookSimilar() {
                           </div>
                         </div>
                       )}
-                    </div>
-                  </ScrollArea>
+                      </div>
+                    </ScrollArea>
+                  </div>
                 </>
               ) : (
                 <>
-                  <div className="grid grid-cols-4 gap-1 px-2 py-2 text-xs font-medium text-muted-foreground sticky top-0 bg-background z-10 rounded-lg">
-                    <div className="text-center">회차</div>
-                    <div className="col-span-2">단원명</div>
-                    <div className="text-center">문항수</div>
-                  </div>
-                  <div className="px-2 pb-2">
-                    <div className="relative">
-                      <Input
-                        value={unitQuery}
-                        onChange={(e) => setUnitQuery(e.target.value)}
-                        placeholder="단원 검색"
-                        className="h-8 pl-8"
-                        disabled={!selectedTextbook}
-                      />
-                      <Search className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <div className="space-y-4">
+                    {/* 검색 */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700">검색:</label>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <Input
+                          placeholder="단원 검색"
+                          value={unitQuery}
+                          onChange={(e) => setUnitQuery(e.target.value)}
+                          className="pl-10"
+                          disabled={!selectedTextbook}
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* 테이블 헤더 */}
+                    <div className="grid grid-cols-4 gap-1 px-2 py-2 text-xs font-medium text-muted-foreground bg-muted/30 rounded-lg">
+                      <div className="text-center">회차</div>
+                      <div className="col-span-2">단원명</div>
+                      <div className="text-center">문항수</div>
                     </div>
                   </div>
-                  <ScrollArea className="h-[calc(100vh-280px)]">
-                    <div>
-                      {workBookPapersLoading ? (
+                  <div className="flex-1 min-h-0 mt-4">
+                    <ScrollArea className="h-full">
+                      <div className="space-y-1">
+                        {workBookPapersLoading ? (
                         <div className="flex items-center justify-center h-32">
                           <div className="text-sm text-gray-500">단원 목록 로딩중...</div>
                         </div>
@@ -363,7 +382,11 @@ export function TextbookSimilar() {
                           return (
                             <div
                               key={unit.workBookPaperId}
-                              className="grid grid-cols-4 gap-1 px-2 py-2 text-xs cursor-pointer group"
+                              className={`grid grid-cols-4 gap-1 px-3 py-3 text-xs cursor-pointer rounded-lg transition-colors ${
+                                isActive 
+                                  ? "bg-green-50 border border-green-200" 
+                                  : "hover:bg-muted/50 border border-transparent"
+                              }`}
                               onClick={() => handleUnitSelect(unit.workBookPaperId)}
                             >
                               <div className="text-center">
@@ -390,8 +413,9 @@ export function TextbookSimilar() {
                           </div>
                         </div>
                       )}
-                    </div>
-                  </ScrollArea>
+                      </div>
+                    </ScrollArea>
+                  </div>
                 </>
               )}
             </div>
@@ -402,82 +426,86 @@ export function TextbookSimilar() {
 
         {/* 3단계 - 문제 목록 */}
         <div className="col-span-12 lg:col-span-9">
-          <div className="h-full flex flex-col gap-4">
+          <div className="bg-card text-card-foreground h-full rounded-xl border overflow-hidden flex flex-col">
             {selectedUnit ? (
               <>
                 {/* 헤더 */}
-                <div className="flex items-center justify-between px-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-lg">문제 목록</h3>
-                    {workBookPapers && (
-                      <span className="text-sm text-muted-foreground">
-                        {workBookPapers.find(p => p.workBookPaperId === selectedUnit)?.title}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-sm">
-                      전체 {workBookProblems?.length || 0}개
-                    </Badge>
-                    <Badge variant="outline" className="text-sm">
-                      선택 {selectedProblems.length}개
-                    </Badge>
+                <div className="px-6 py-4 border-b flex-shrink-0">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-lg">문제 목록</h3>
+                      {workBookPapers && (
+                        <span className="text-sm text-muted-foreground">
+                          {workBookPapers.find(p => p.workBookPaperId === selectedUnit)?.title}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-sm">
+                        전체 {workBookProblems?.length || 0}개
+                      </Badge>
+                      <Badge variant="outline" className="text-sm">
+                        선택 {selectedProblems.length}개
+                      </Badge>
+                    </div>
                   </div>
                 </div>
                 
                 {/* 페이지 필터링 - 컴팩트 */}
-                <div className="flex flex-col gap-2 px-1 flex-shrink-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">페이지:</span>
-                    <div className="flex items-center gap-1">
-                      {selectedPageRange.length === 0 ? (
-                        <Badge variant="secondary" className="text-xs">전체</Badge>
-                      ) : (
-                        <>
-                          {selectedPageRange.map(page => (
-                            <Badge 
-                              key={page} 
-                              variant="default" 
-                              className="text-xs cursor-pointer"
-                              onClick={() => togglePageSelection(page)}
-                            >
-                              {page} ×
-                            </Badge>
-                          ))}
-                        </>
-                      )}
+                <div className="px-6 py-4 border-b flex-shrink-0">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">페이지:</span>
+                      <div className="flex items-center gap-1">
+                        {selectedPageRange.length === 0 ? (
+                          <Badge variant="secondary" className="text-xs">전체</Badge>
+                        ) : (
+                          <>
+                            {selectedPageRange.map(page => (
+                              <Badge 
+                                key={page} 
+                                variant="default" 
+                                className="text-xs cursor-pointer"
+                                onClick={() => togglePageSelection(page)}
+                              >
+                                {page} ×
+                              </Badge>
+                            ))}
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  
-                  {/* 페이지 선택 버튼들 */}
-                  <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
-                    <Button
-                      variant={selectedPageRange.length === 0 ? "default" : "outline"}
-                      size="sm"
-                      className="h-6 px-2 text-xs flex-shrink-0"
-                      onClick={() => {
-                        setSelectedPageRange([])
-                        setSelectedProblems([])
-                      }}
-                    >
-                      전체
-                    </Button>
-                    {allPages.map(page => (
-                      <Button
-                        key={page}
-                        variant={selectedPageRange.includes(page) ? "default" : "outline"}
-                        size="sm"
-                        className="h-6 px-2 text-xs flex-shrink-0"
-                        onClick={() => togglePageSelection(page)}
-                      >
-                        {page}
-                      </Button>
-                    ))}
-                  </div>
+                    
+                    {/* 페이지 선택 버튼들 */}
+                      <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
+                        <Button
+                          variant={selectedPageRange.length === 0 ? "default" : "outline"}
+                          size="sm"
+                          className="h-6 px-2 text-xs flex-shrink-0"
+                          onClick={() => {
+                            setSelectedPageRange([])
+                            setSelectedProblems([])
+                          }}
+                        >
+                          전체
+                        </Button>
+                        {allPages.map(page => (
+                          <Button
+                            key={page}
+                            variant={selectedPageRange.includes(page) ? "default" : "outline"}
+                            size="sm"
+                            className="h-6 px-2 text-xs flex-shrink-0"
+                            onClick={() => togglePageSelection(page)}
+                          >
+                            {page}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
                 </div>
                 
                 {/* 문제 목록 테이블 */}
-                <div className="flex-1 flex flex-col border rounded-lg overflow-hidden min-h-0">
+                <div className="flex-1 mx-6 m-6 border rounded-lg overflow-hidden min-h-0 flex flex-col">
                   {workBookProblemsLoading ? (
                     <div className="flex items-center justify-center h-32">
                       <div className="text-sm text-gray-500">문제 목록 로딩중...</div>
@@ -485,8 +513,8 @@ export function TextbookSimilar() {
                   ) : (
                     <>
                       {/* 테이블 헤더 - 고정 */}
-                      <div className="bg-muted/50 p-3 border-b flex-shrink-0">
-                        <div className="grid grid-cols-11 gap-2 items-center text-sm font-medium">
+                      <div className="bg-muted/50 p-3 border-b flex-shrink-0 overflow-hidden">
+                        <div className="grid grid-cols-11 gap-2 items-center text-sm font-medium min-w-[800px]">
                           <div className="col-span-1 text-center">
                             <Checkbox
                               checked={allFilteredSelected}
@@ -503,13 +531,13 @@ export function TextbookSimilar() {
                       </div>
                       
                       {/* 테이블 바디 - 스크롤 가능 */}
-                      <div className="flex-1 overflow-hidden">
-                        <ScrollArea className="h-[calc(100vh-280px)]">
-                          <div className="divide-y">
+                      <div className="border-t">
+                        <ScrollArea className="h-[calc(100vh-30rem)]" type="always">
+                          <div className="divide-y min-w-[800px]">
                             {filteredProblems.map((problem, index) => (
                               <div 
                                 key={problem.problemId}
-                                className="grid grid-cols-11 gap-2 items-center p-3 text-sm hover:bg-muted/25"
+                                className="grid grid-cols-11 gap-2 items-center p-3 text-sm hover:bg-muted/25 min-w-full"
                               >
                                 <div className="col-span-1 text-center">
                                   <Checkbox
@@ -566,8 +594,12 @@ export function TextbookSimilar() {
                 </div>
               </>
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-500">
-                <div className="text-center">
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center text-muted-foreground">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                    <FileText className="w-8 h-8" />
+                  </div>
+                  <h3 className="font-medium mb-2">문제를 선택해주세요</h3>
                   <p className="text-sm">단원을 선택하면 문제 목록이 표시됩니다</p>
                 </div>
               </div>
