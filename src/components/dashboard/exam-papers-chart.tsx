@@ -23,12 +23,12 @@ export function ExamPapersChart({ data }: ExamPapersChartProps) {
     <Card>
       <CardHeader>
         <CardTitle className="text-base font-medium">시험지 출제 수</CardTitle>
-        <p className="text-sm text-gray-600 dark:text-gray-400">TOTAL</p>
+        <p className="text-sm text-muted-foreground">TOTAL</p>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={250}>
           <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-800" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.5} />
             <XAxis
               dataKey="date"
               className="text-xs"
@@ -50,14 +50,14 @@ export function ExamPapersChart({ data }: ExamPapersChartProps) {
             />
             <Bar
               dataKey="count"
-              fill="#10b981"
+              fill="var(--chart-2)"
               radius={[4, 4, 0, 0]}
             />
           </BarChart>
         </ResponsiveContainer>
         <div className="mt-4 text-center">
-          <p className="text-xs text-gray-500">날짜: 2025-07-07</p>
-          <p className="text-xs text-gray-500">일별 연역 사용 현황: 19건</p>
+          <p className="text-xs text-muted-foreground">날짜: 2025-07-07</p>
+          <p className="text-xs text-muted-foreground">일별 연역 사용 현황: 19건</p>
         </div>
       </CardContent>
     </Card>

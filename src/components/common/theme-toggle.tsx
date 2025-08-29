@@ -26,12 +26,12 @@ export function ThemeToggle() {
       variant="ghost"
       size="icon"
       onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-      className="w-9 h-9 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+      className="w-9 h-9 hover:bg-accent transition-colors"
     >
       {theme === "light" ? (
-        <Moon className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+        <Moon className="h-4 w-4 text-muted-foreground" />
       ) : (
-        <Sun className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+        <Sun className="h-4 w-4 text-muted-foreground" />
       )}
       <span className="sr-only">테마 전환</span>
     </Button>

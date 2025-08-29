@@ -26,12 +26,12 @@ export function ProblemUsageChart({ data }: ProblemUsageChartProps) {
     <Card>
       <CardHeader>
         <CardTitle className="text-base font-medium">사용 문제 수</CardTitle>
-        <p className="text-sm text-gray-600 dark:text-gray-400">TOTAL</p>
+        <p className="text-sm text-muted-foreground">TOTAL</p>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={250}>
           <AreaChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-800" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.5} />
             <XAxis
               dataKey="date"
               className="text-xs"
@@ -56,8 +56,8 @@ export function ProblemUsageChart({ data }: ProblemUsageChartProps) {
             <Area
               type="monotone"
               dataKey="count"
-              stroke="#8b5cf6"
-              fill="#8b5cf6"
+              stroke="var(--chart-1)"
+              fill="var(--chart-1)"
               fillOpacity={0.2}
               strokeWidth={2}
             />
@@ -65,8 +65,8 @@ export function ProblemUsageChart({ data }: ProblemUsageChartProps) {
               <Area
                 type="monotone"
                 dataKey="secondary"
-                stroke="#10b981"
-                fill="#10b981"
+                stroke="var(--chart-2)"
+                fill="var(--chart-2)"
                 fillOpacity={0.1}
                 strokeWidth={1}
               />

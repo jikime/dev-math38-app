@@ -111,10 +111,10 @@ export default function Dashboard() {
   return (
     <main className="container mx-auto px-6 py-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
+        <h1 className="text-2xl font-semibold mb-2">
           학원 관리 대시보드
         </h1>
-        <p className="text-gray-600 dark:text-gray-300">
+        <p className="text-muted-foreground">
           학원 운영 현황을 한눈에 확인하세요
         </p>
       </div>

@@ -51,12 +51,11 @@ export function PeriodSelector({
         {months.map((month, index) => (
           <Button
             key={index}
+            variant={selectedMonth === index + 1 ? "default" : "outline"}
             onClick={() => onMonthChange(index + 1)}
             className={cn(
-              "px-4 py-2 text-sm rounded-md transition-colors",
-              selectedMonth === index + 1
-                ? "bg-blue-500 text-white"
-                : "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
+              "px-4 py-2 text-sm",
+              selectedMonth === index + 1 && "bg-primary text-primary-foreground hover:bg-primary/90"
             )}
           >
             {month}

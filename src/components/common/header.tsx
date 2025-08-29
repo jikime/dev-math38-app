@@ -47,7 +47,7 @@ export function Header() {
   ]
 
   const getMenuColor = (color: string, isActive: boolean) => {
-    if (!isActive) return "text-gray-600 dark:text-gray-300"
+    if (!isActive) return "text-muted-foreground"
 
     const colorMap = {
       blue: "bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg",
@@ -68,7 +68,7 @@ export function Header() {
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 border-b border-gray-200 dark:border-gray-700 p-1">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-background to-muted/20 border-b border-border p-1">
       <div className="container mx-auto px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo and Title */}
@@ -85,7 +85,7 @@ export function Header() {
                 <Button
                   key={item.name}
                   variant="ghost"
-                  className={`flex flex-col items-center gap-1 h-auto py-3 px-4 rounded-xl transition-colors duration-200 ${getMenuColor(item.color, isActive)} ${!isActive ? "dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-700" : ""}`}
+                  className={`flex flex-col items-center gap-1 h-auto py-3 px-4 rounded-xl transition-colors duration-200 ${getMenuColor(item.color, isActive)} ${!isActive ? "hover:bg-accent hover:text-accent-foreground" : ""}`}
                   asChild
                 >
                   <a href={item.href}>
@@ -100,15 +100,15 @@ export function Header() {
           {/* Right Side - Avatar and Settings */}
           <div className="flex items-center gap-3">
             <ThemeToggle />
-            <Button variant="ghost" size="icon" className="relative hover:bg-gray-100 dark:hover:bg-gray-800">
-              <Bell className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+            <Button variant="ghost" size="icon" className="relative hover:bg-accent">
+              <Bell className="w-5 h-5 text-muted-foreground" />
               <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center bg-red-500 text-white text-xs">
                 3
               </Badge>
             </Button>
 
-            <Button variant="ghost" size="icon" className="hover:bg-gray-100 dark:hover:bg-gray-800">
-              <Mail className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+            <Button variant="ghost" size="icon" className="hover:bg-accent">
+              <Mail className="w-5 h-5 text-muted-foreground" />
             </Button>
 
             <DropdownMenu>

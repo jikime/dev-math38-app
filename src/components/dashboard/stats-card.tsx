@@ -24,11 +24,11 @@ export function StatsCard({
     <Card className={cn("p-6", className)}>
       <div className="space-y-2">
         <div className="flex items-baseline justify-between">
-          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">
+          <h3 className="text-sm font-medium text-muted-foreground">
             {title}
           </h3>
           {maxValue && (
-            <span className="text-xs text-gray-500 dark:text-gray-500">
+            <span className="text-xs text-muted-foreground">
               MAX {maxValue}명
             </span>
           )}
