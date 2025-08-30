@@ -47,10 +47,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko" suppressHydrationWarning>
-      <body className={`${pretendard.variable} ${inter.className} min-h-screen bg-background antialiased`}>
+      <body className={`${pretendard.variable} ${inter.className} min-h-screen bg-background antialiased overflow-hidden`}>
         <QueryProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-            {children}
+            <ScrollArea className="h-[calc(100vh-0.1rem)] pb-4">{children}</ScrollArea>
           </ThemeProvider>
         </QueryProvider>
       </body>

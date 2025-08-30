@@ -176,7 +176,7 @@ export function TextbookSimilar() {
   }, [])
 
   return (
-    <main className="container mx-auto px-6 py-4 h-[calc(100vh-8rem)] flex flex-col">
+    <main className="container mx-auto px-6 py-4">
       {/* Header - 한줄 레이아웃 */}
       <div className="mb-4 flex-shrink-0">
         <div className="flex items-center gap-4">
