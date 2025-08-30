@@ -8,12 +8,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { FlexibleSelect } from "@/components/ui/flexible-select"
 import type { SelectOption } from "@/components/ui/flexible-select"
 import { useSubjects } from "@/hooks/use-subjects"
-import { useBookGroups, useBookGroupDetail, useResourceProblems } from "@/hooks/use-cloud"
-import type { CloudBookGroup, CloudResourceProblem } from "@/types/cloud"
+import { useBookGroups, useBookGroupDetail, useResourceProblems, useBookGroupStats, useSkillChapters } from "@/hooks/use-cloud"
+import type { CloudBookGroup, CloudResourceProblem, BookGroupStats, SkillChapter } from "@/types/cloud"
 import { FolderTreeNode } from "./folder-tree"
 import {
   FileText,
@@ -33,6 +34,10 @@ import {
   FolderOpen,
   Archive,
   X,
+  Printer,
+  ChevronDown,
+  ChevronRight,
+  FileSpreadsheet,
 } from "lucide-react"
 
 // 파일 타입을 파일 확장자에서 추출하는 함수
@@ -84,6 +89,10 @@ export function CloudStorage() {
   
   // 드롭다운 메뉴 상태
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  
+  // 통계 모달 상태
+  const [isStatsOpen, setIsStatsOpen] = useState(false)
+  const [expandedChapters, setExpandedChapters] = useState<Set<number>>(new Set())
 
   // API 훅을 통해 과목 데이터 조회
   const { data: subjects, isLoading: subjectsLoading } = useSubjects()
@@ -172,6 +181,14 @@ export function CloudStorage() {
   const selectedBookGroupId = selectedFolder ? selectedFolder.toString() : ""
   const { data: bookGroupDetail, isLoading: bookGroupDetailLoading } = useBookGroupDetail(selectedBookGroupId)
   const { data: resourceProblems, isLoading: resourceProblemsLoading } = useResourceProblems(selectedBookGroupId)
+  
+  // 통계 데이터 조회
+  const { data: bookGroupStats, isLoading: bookGroupStatsLoading } = useBookGroupStats(
+    isStatsOpen ? selectedBookGroupId : ""
+  )
+  const { data: skillChapters, isLoading: skillChaptersLoading } = useSkillChapters(
+    isStatsOpen && bookGroupStats?.subjectId ? bookGroupStats.subjectId.toString() : ""
+  )
 
   // 첫 번째 폴더를 기본 선택하고 루트 폴더들을 자동 확장
   useEffect(() => {
@@ -220,6 +237,118 @@ export function CloudStorage() {
   
   // 리소스 문제 목록 (현재는 필터링 없음)
   const filteredProblems = resourceProblems || []
+
+  // 통계 데이터 계산 (계층 구조)
+  const calculateStats = () => {
+    if (!bookGroupStats || !skillChapters) return null
+
+    // 각 스킬별 통계 계산
+    const skillStats = new Map()
+    bookGroupStats.problems.forEach(problem => {
+      const skillId = problem.skillId
+      const difficulty = parseInt(problem.difficulty)
+      
+      if (!skillStats.has(skillId)) {
+        skillStats.set(skillId, {
+          skillId,
+          total: 0,
+          최하: 0,
+          하: 0,
+          중: 0,
+          상: 0,
+          최상: 0
+        })
+      }
+
+      const stats = skillStats.get(skillId)
+      stats.total++
+      
+      switch(difficulty) {
+        case 1:
+          stats.최하++
+          break
+        case 2:
+          stats.하++
+          break
+        case 3:
+          stats.중++
+          break
+        case 4:
+          stats.중++
+          break
+        case 5:
+          stats.최상++
+          break
+      }
+    })
+
+    // 챕터별로 그룹화하여 계층 구조 생성
+    return skillChapters.map(chapter => {
+      const chapterStats = {
+        chapterId: chapter.chapterId,
+        title: chapter.title,
+        isChapter: true,
+        total: 0,
+        최하: 0,
+        하: 0,
+        중: 0,
+        상: 0,
+        최상: 0,
+        skills: [] as any[]
+      }
+
+      // 각 챕터의 스킬들 처리 (모든 스킬 포함)
+      chapter.skills.forEach(skill => {
+        const stats = skillStats.get(skill.skillId)
+        if (stats) {
+          // 챕터 합계에 추가
+          chapterStats.total += stats.total
+          chapterStats.최하 += stats.최하
+          chapterStats.하 += stats.하
+          chapterStats.중 += stats.중
+          chapterStats.상 += stats.상
+          chapterStats.최상 += stats.최상
+
+          // 스킬 정보 추가
+          chapterStats.skills.push({
+            ...stats,
+            title: skill.title,
+            isSkill: true
+          })
+        } else {
+          // 문제가 없는 스킬도 0으로 표시
+          chapterStats.skills.push({
+            skillId: skill.skillId,
+            title: skill.title,
+            isSkill: true,
+            total: 0,
+            최하: 0,
+            하: 0,
+            중: 0,
+            상: 0,
+            최상: 0
+          })
+        }
+      })
+
+      return chapterStats
+    }) // 모든 챕터 표시 (필터링 제거)
+  }
+
+  const statsData = calculateStats()
+
+  // 챕터 확장/축소 핸들러
+  const toggleChapter = (chapterId: number) => {
+    setExpandedChapters(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(chapterId)) {
+        newSet.delete(chapterId)
+      } else {
+        newSet.add(chapterId)
+      }
+      return newSet
+    })
+  }
 
   const getFileIcon = (type: string) => {
     switch (type) {
@@ -392,8 +521,16 @@ export function CloudStorage() {
             <div className="grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6 pb-3">
               <div className="flex items-center justify-between">
                 <h3 className="leading-none font-semibold text-lg flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5" />
                   {bookGroupDetailLoading ? "로딩중..." : bookGroupDetail?.title || "파일 목록"}
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-6 w-6 p-0 ml-2"
+                    onClick={() => setIsStatsOpen(true)}
+                    disabled={!selectedFolder}
+                  >
+                    <BarChart3 className="w-4 h-4" />
+                  </Button>
                 </h3>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1 border rounded-md p-1">
@@ -685,6 +822,177 @@ export function CloudStorage() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 통계 모달 */}
+      <Dialog open={isStatsOpen} onOpenChange={setIsStatsOpen}>
+        <DialogContent className="!max-w-7xl !max-h-[95vh] !w-full dark:bg-gray-900 dark:text-white">
+          <DialogHeader className="sr-only">
+            <DialogTitle>통계 정보</DialogTitle>
+          </DialogHeader>
+          <div className="bg-slate-700 dark:bg-slate-800 text-white p-6 -mx-6 -mt-6 mb-4 rounded-t-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold">
+                  {bookGroupStats?.title || "통계"}
+                </h2>
+                <p className="text-slate-300 dark:text-slate-400 mt-1">
+                  {bookGroupStats?.subjectName || ""}
+                </p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="text-center">
+                  <div className="text-sm text-slate-300 dark:text-slate-400">전체 문항</div>
+                  <div className="text-3xl font-bold">
+                    {bookGroupStats?.problems.length || 0}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm text-slate-300 dark:text-slate-400">객관식/주관식</div>
+                  <div className="text-3xl font-bold">
+                    {bookGroupStats?.problems.filter(p => p.choiceType === 'choice').length || 0}/
+                    {bookGroupStats?.problems.filter(p => p.choiceType !== 'choice').length || 0}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="ghost" size="sm" className="text-white hover:bg-slate-600 dark:hover:bg-slate-700">
+                    <Printer className="w-4 h-4 mr-2" />
+                    인쇄
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsStatsOpen(false)}
+                    className="text-white hover:bg-slate-600 dark:hover:bg-slate-700"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <Tabs defaultValue="stats" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 dark:bg-gray-800">
+              <TabsTrigger value="stats" className="dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:text-white">
+                단원 및 유형별 문항 수
+              </TabsTrigger>
+              <TabsTrigger value="chart" className="dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:text-white">
+                통계 데이터 뷰
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="stats" className="mt-6">
+              <ScrollArea className="h-[60vh]">
+                <div className="space-y-2">
+                  <div className="grid grid-cols-12 gap-2 p-3 bg-gray-100 dark:bg-gray-800 rounded text-sm font-medium dark:text-gray-200">
+                    <div className="col-span-5">단원 및 유형</div>
+                    <div className="col-span-1 text-center">총 문항 수</div>
+                    <div className="col-span-1 text-center">최하</div>
+                    <div className="col-span-1 text-center">하</div>
+                    <div className="col-span-1 text-center">중</div>
+                    <div className="col-span-1 text-center">상</div>
+                    <div className="col-span-2 text-center">최상</div>
+                  </div>
+
+                  {bookGroupStatsLoading || skillChaptersLoading ? (
+                    <div className="text-center py-8 text-muted-foreground dark:text-gray-400">
+                      통계 로딩중...
+                    </div>
+                  ) : statsData && statsData.length > 0 ? (
+                    statsData.map((chapter) => (
+                      <div key={chapter.chapterId}>
+                        {/* 챕터 헤더 */}
+                        <div
+                          className="grid grid-cols-12 gap-2 p-3 bg-gray-50 dark:bg-gray-700 border dark:border-gray-600 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
+                          onClick={() => toggleChapter(chapter.chapterId)}
+                        >
+                          <div className="col-span-5 flex items-center gap-2">
+                            {expandedChapters.has(chapter.chapterId) ? (
+                              <ChevronDown className="w-4 h-4 dark:text-gray-300" />
+                            ) : (
+                              <ChevronRight className="w-4 h-4 dark:text-gray-300" />
+                            )}
+                            <span className="text-sm font-bold text-gray-800 dark:text-gray-200">
+                              {chapter.title}
+                            </span>
+                          </div>
+                          <div className="col-span-1 text-center font-bold dark:text-gray-200">
+                            {chapter.total}
+                          </div>
+                          <div className="col-span-1 text-center font-bold dark:text-gray-200">
+                            {chapter.최하}
+                          </div>
+                          <div className="col-span-1 text-center font-bold dark:text-gray-200">
+                            {chapter.하}
+                          </div>
+                          <div className="col-span-1 text-center font-bold dark:text-gray-200">
+                            {chapter.중}
+                          </div>
+                          <div className="col-span-1 text-center font-bold dark:text-gray-200">
+                            {chapter.상}
+                          </div>
+                          <div className="col-span-2 text-center font-bold dark:text-gray-200">
+                            {chapter.최상}
+                          </div>
+                        </div>
+
+                        {/* 스킬 목록 (확장된 경우만 표시) */}
+                        {expandedChapters.has(chapter.chapterId) && chapter.skills.map((skill) => (
+                          <div
+                            key={skill.skillId}
+                            className="grid grid-cols-12 gap-2 p-3 border-l-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 ml-4"
+                          >
+                            <div className="col-span-5 flex items-center pl-6">
+                              <span className={`text-sm ${
+                                skill.total > 0 
+                                  ? "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-1 rounded border border-green-200 dark:border-green-700 font-medium" 
+                                  : "text-blue-600 dark:text-blue-400"
+                              }`}>
+                                {skill.title}
+                              </span>
+                            </div>
+                            <div className="col-span-1 text-center dark:text-gray-200">
+                              {skill.total}
+                            </div>
+                            <div className="col-span-1 text-center dark:text-gray-200">
+                              {skill.최하}
+                            </div>
+                            <div className="col-span-1 text-center dark:text-gray-200">
+                              {skill.하}
+                            </div>
+                            <div className="col-span-1 text-center dark:text-gray-200">
+                              {skill.중}
+                            </div>
+                            <div className="col-span-1 text-center dark:text-gray-200">
+                              {skill.상}
+                            </div>
+                            <div className="col-span-2 text-center dark:text-gray-200">
+                              {skill.최상}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground dark:text-gray-400">
+                      통계 데이터가 없습니다
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </TabsContent>
+
+            <TabsContent value="chart" className="mt-6">
+              <div className="flex items-center justify-center h-[60vh] text-muted-foreground dark:text-gray-400">
+                <div className="text-center">
+                  <BarChart3 className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                  <p>통계 데이터 뷰는 추후 구현 예정입니다.</p>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
     </div>

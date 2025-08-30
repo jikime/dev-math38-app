@@ -56,3 +56,34 @@ export interface CloudResourceProblem {
   created: string;
   problemList: any | null;
 }
+
+// 북그룹 통계 타입
+export interface BookGroupStats {
+  title: string;
+  bookGroupId: number;
+  fileId: string;
+  subjectId: number;
+  subjectName: string;
+  problems: BookGroupProblem[];
+}
+
+export interface BookGroupProblem {
+  problemId: string;
+  skillId: string;
+  difficulty: string;
+  ltype: string;
+  choiceType: string;
+}
+
+// 스킬 정보 타입
+export interface SkillChapter {
+  chapterId: number;
+  title: string;
+  skills: Skill[];
+}
+
+export interface Skill {
+  skillId: string;
+  title: string;
+  problemCount: number;
+}
