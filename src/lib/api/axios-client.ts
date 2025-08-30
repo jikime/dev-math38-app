@@ -93,7 +93,7 @@ axiosClient.interceptors.response.use(
 
     // 에러 로깅
     if (process.env.NODE_ENV === 'development') {
-      console.error('❌ Response Error:', {
+      console.info('❌ Response Error:', {
         status: error.response?.status,
         message: error.message,
         data: error.response?.data,

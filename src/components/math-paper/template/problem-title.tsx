@@ -16,9 +16,9 @@ import {
   RefreshCw,
   AlertTriangle,
 } from "lucide-react";
-import { SpProblem } from "../typings";
 import { PaperEditContext } from "./paper-edit-context";
 import { cn } from "@/lib/utils";
+import { ApiProblem } from "@/types/api-problem";
 
 interface ProblemTitleProps {
   problemNumber?: string;
@@ -26,7 +26,7 @@ interface ProblemTitleProps {
   skillName?: string;
   level?: number;
   edit?: boolean;
-  problem: SpProblem;
+  problem: ApiProblem;
   showTags?: boolean;
   reportError?: () => void;
 }

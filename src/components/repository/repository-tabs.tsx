@@ -24,7 +24,7 @@ export function RepositoryTabs() {
           {/* Tab Navigation - API Documentation Style */}
           <div className="relative w-full">
             {/* Long horizontal line */}
-            <div className="absolute bottom-0 left-0 right-0 h-px bg-gray-200 dark:bg-gray-700"></div>
+            <div className="absolute bottom-0 left-0 right-0 h-px bg-border"></div>
 
             {/* Tab buttons positioned on the line */}
             <div className="flex items-end gap-2 pb-px">
@@ -37,8 +37,8 @@ export function RepositoryTabs() {
                     px-4 py-2 text-sm font-medium rounded-t-lg border border-b-0 transition-all duration-200 flex items-center gap-2 relative
                     ${
                       activeTab === tab.id
-                        ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-white border-gray-200 dark:border-gray-700"
-                        : "bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        ? "bg-background text-foreground border-border"
+                        : "bg-muted/50 text-muted-foreground border-border hover:bg-muted hover:text-foreground"
                     }
                   `}
                 >
@@ -47,7 +47,7 @@ export function RepositoryTabs() {
 
                   {/* Bottom border to hide the line for active tab */}
                   {activeTab === tab.id && (
-                    <div className="absolute bottom-0 left-0 right-0 h-px bg-white dark:bg-gray-900"></div>
+                    <div className="absolute bottom-0 left-0 right-0 h-px bg-background"></div>
                   )}
                 </Button>
               ))}

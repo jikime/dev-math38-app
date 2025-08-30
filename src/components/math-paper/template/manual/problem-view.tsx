@@ -6,11 +6,12 @@ import ProblemTitle from '@/components/math-paper/template/problem-title';
 import { Badge } from "@/components/ui/badge";
 import ErrorReportModal from '@/components/math-paper/template/error-report-modal';
 import Image from "next/image";
+import { ApiProblem } from "@/types/api-problem";
 
 const printImage = false;
 
 type ProblemViewProps = {
-  problem: SpProblem;
+  problem: ApiProblem;
   width: number;
   problemNumber?: string;
   solution?: boolean;

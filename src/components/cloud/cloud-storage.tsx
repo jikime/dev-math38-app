@@ -1,15 +1,18 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { FlexibleSelect } from "@/components/ui/flexible-select"
+import type { SelectOption } from "@/components/ui/flexible-select"
+import { useSubjects } from "@/hooks/use-subjects"
+import { useBookGroups, useBookGroupDetail, useResourceProblems } from "@/hooks/use-cloud"
+import type { CloudBookGroup, CloudResourceProblem } from "@/types/cloud"
+import { FolderTreeNode } from "./folder-tree"
 import {
   FileText,
   MoreVertical,
-  Search,
   Download,
   Edit,
   Copy,
@@ -17,165 +20,127 @@ import {
   Eye,
   Upload,
   FolderPlus,
-  ChevronDown,
-  ChevronRight,
-  FolderOpen,
   File,
   ImageIcon,
   BarChart3,
   Type,
   Archive,
-  Cloud,
   HardDrive,
-  Users,
   FileSpreadsheet,
 } from "lucide-react"
 
-interface CloudFile {
-  id: string
-  name: string
-  type: "hwp" | "pdf" | "doc" | "xlsx" | "image"
-  size: string
-  problems?: number
-  date: string
-  folder: string
+// 파일 타입을 파일 확장자에서 추출하는 함수
+const getFileTypeFromPath = (path: string): string => {
+  const extension = path.split('.').pop()?.toLowerCase() || ''
+  switch (extension) {
+    case 'hwp':
+      return 'hwp'
+    case 'pdf':
+      return 'pdf'
+    case 'doc':
+    case 'docx':
+      return 'doc'
+    case 'xls':
+    case 'xlsx':
+      return 'xlsx'
+    case 'png':
+    case 'jpg':
+    case 'jpeg':
+    case 'gif':
+    case 'svg':
+      return 'image'
+    default:
+      return 'file'
+  }
 }
 
-interface CloudFolder {
-  id: string
-  name: string
-  subject: string
-  expanded: boolean
-  files: CloudFile[]
-}
+
 
 export function CloudStorage() {
-  const [selectedFolder, setSelectedFolder] = useState("2025-1-final")
-  const [searchTerm, setSearchTerm] = useState("")
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list")
+  const [selectedFolder, setSelectedFolder] = useState("")
+  const [selectedSubject, setSelectedSubject] = useState<string>("")
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
 
-  const [folders, setFolders] = useState<CloudFolder[]>([
-    {
-      id: "2024-1-final",
-      name: "2024 1학기 기말",
-      subject: "미적분학",
-      expanded: false,
-      files: [],
-    },
-    {
-      id: "2025-1-mid",
-      name: "2025 1학기 중간",
-      subject: "미적분학",
-      expanded: false,
-      files: [],
-    },
-    {
-      id: "2025-1-final",
-      name: "2025 1학기 기말",
-      subject: "미적분학",
-      expanded: true,
-      files: [
-        {
-          id: "1",
-          name: "25년 1학기 기말 대금고 미적분.hwp",
-          type: "hwp",
-          size: "2.3MB",
-          problems: 19,
-          date: "2025-01-15",
-          folder: "2025-1-final",
-        },
-        {
-          id: "2",
-          name: "25년 중앙고 미적분 1학기 기말.pdf",
-          type: "pdf",
-          size: "1.8MB",
-          problems: 20,
-          date: "2025-01-16",
-          folder: "2025-1-final",
-        },
-        {
-          id: "3",
-          name: "2025년_1기말_서울고3_미적분.hwp",
-          type: "hwp",
-          size: "2.1MB",
-          problems: 22,
-          date: "2025-01-17",
-          folder: "2025-1-final",
-        },
-        {
-          id: "4",
-          name: "2025 1학기 기말 대명고(미적분).pdf",
-          type: "pdf",
-          size: "1.9MB",
-          problems: 20,
-          date: "2025-01-18",
-          folder: "2025-1-final",
-        },
-        {
-          id: "5",
-          name: "2025 1학기 기말 천성고(미적분).pdf",
-          type: "pdf",
-          size: "2.0MB",
-          problems: 20,
-          date: "2025-01-19",
-          folder: "2025-1-final",
-        },
-        {
-          id: "6",
-          name: "2025 1학기 기말 수성고(미적분).pdf",
-          type: "pdf",
-          size: "1.7MB",
-          problems: 21,
-          date: "2025-01-20",
-          folder: "2025-1-final",
-        },
-        {
-          id: "7",
-          name: "2025년_1기말_서문여고3_미적분.hwp",
-          type: "hwp",
-          size: "2.4MB",
-          problems: 22,
-          date: "2025-01-21",
-          folder: "2025-1-final",
-        },
-        {
-          id: "8",
-          name: "2025 1학기 기말 영생고(미적분).pdf",
-          type: "pdf",
-          size: "1.6MB",
-          problems: 23,
-          date: "2025-01-22",
-          folder: "2025-1-final",
-        },
-        {
-          id: "9",
-          name: "2025 1학기 기말 울전고(미적분).pdf",
-          type: "pdf",
-          size: "1.8MB",
-          problems: 20,
-          date: "2025-01-23",
-          folder: "2025-1-final",
-        },
-        {
-          id: "10",
-          name: "2025 1학기 기말 숙지고(미적분).pdf",
-          type: "pdf",
-          size: "1.9MB",
-          problems: 20,
-          date: "2025-01-24",
-          folder: "2025-1-final",
-        },
-      ],
-    },
-  ])
+  // API 훅을 통해 과목 데이터 조회
+  const { data: subjects, isLoading: subjectsLoading } = useSubjects()
 
-  const toggleFolder = (folderId: string) => {
-    setFolders(folders.map((folder) => (folder.id === folderId ? { ...folder, expanded: !folder.expanded } : folder)))
+  // 과목 데이터를 FlexibleSelect 옵션으로 변환
+  const subjectOptions: SelectOption[] = subjects?.map(subject => ({
+    label: subject.title,
+    value: subject.key.toString()
+  })) || []
+
+  // 첫 번째 과목을 기본 선택
+  useEffect(() => {
+    if (subjects && subjects.length > 0 && !selectedSubject) {
+      setSelectedSubject(subjects[0].key.toString())
+    }
+  }, [subjects, selectedSubject])
+
+  // 선택된 과목의 폴더 목록 조회
+  const { data: bookGroups, isLoading: bookGroupsLoading } = useBookGroups(selectedSubject || "")
+
+  // 과목 선택 변경 처리
+  const handleSubjectChange = (value: string | string[]) => {
+    const newSubject = Array.isArray(value) ? value[0] : value
+    setSelectedSubject(newSubject)
+    // 과목 변경시 폴더 선택 초기화
+    setSelectedFolder("")
+    setExpandedFolders(new Set())
   }
 
-  const selectedFolderData = folders.find((f) => f.id === selectedFolder)
-  const filteredFiles =
-    selectedFolderData?.files.filter((file) => file.name.toLowerCase().includes(searchTerm.toLowerCase())) || []
+  // 선택된 폴더의 상세 정보와 리소스 문제 목록 조회
+  const selectedBookGroupId = selectedFolder ? selectedFolder.toString() : ""
+  const { data: bookGroupDetail, isLoading: bookGroupDetailLoading } = useBookGroupDetail(selectedBookGroupId)
+  const { data: resourceProblems, isLoading: resourceProblemsLoading } = useResourceProblems(selectedBookGroupId)
+
+  // 첫 번째 폴더를 기본 선택하고 루트 폴더들을 자동 확장
+  useEffect(() => {
+    if (bookGroups && bookGroups.length > 0 && !selectedFolder) {
+      // 첫 번째 폴더 선택
+      setSelectedFolder(bookGroups[0].key)
+      
+      // 루트 레벨 폴더들을 자동으로 확장
+      const rootFolderKeys = bookGroups.map(folder => folder.key)
+      setExpandedFolders(new Set(rootFolderKeys))
+    }
+  }, [bookGroups, selectedFolder])
+
+  // 폴더 확장/축소 처리 함수
+  const handleToggleExpand = (folderId: string) => {
+    setExpandedFolders(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(folderId)) {
+        newSet.delete(folderId)
+      } else {
+        newSet.add(folderId)
+      }
+      return newSet
+    })
+  }
+
+  // 폴더 선택 처리 함수
+  const handleSelectFolder = (folderId: string) => {
+    setSelectedFolder(folderId)
+  }
+
+  // 선택된 폴더 데이터를 재귀적으로 찾기
+  const findFolderById = (folders: CloudBookGroup[], targetKey: string): CloudBookGroup | null => {
+    for (const folder of folders) {
+      if (folder.key === targetKey) {
+        return folder
+      }
+      if (folder.children) {
+        const found = findFolderById(folder.children, targetKey)
+        if (found) return found
+      }
+    }
+    return null
+  }
+
+  
+  // 리소스 문제 목록 (현재는 필터링 없음)
+  const filteredProblems = resourceProblems || []
 
   const getFileIcon = (type: string) => {
     switch (type) {
@@ -207,8 +172,15 @@ export function CloudStorage() {
       case "image":
         return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300"
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
+        return "bg-muted text-muted-foreground"
     }
+  }
+
+  // 파일 크기를 추정하는 함수 (실제 크기는 API에서 제공되지 않음)
+  const getEstimatedFileSize = (pageCount: number, problemCount: number) => {
+    // 대략적인 추정치
+    const estimatedSizeMB = Math.max(0.5, (pageCount * 0.3) + (problemCount * 0.1))
+    return `${estimatedSizeMB.toFixed(1)}MB`
   }
 
   return (
@@ -234,62 +206,6 @@ export function CloudStorage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
-          <div className="px-6 p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                <Cloud className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">총 파일</p>
-                <p className="text-xl font-bold">247</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
-          <div className="px-6 p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-                <FolderOpen className="w-5 h-5 text-green-600 dark:text-green-400" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">폴더</p>
-                <p className="text-xl font-bold">12</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
-          <div className="px-6 p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">공유됨</p>
-                <p className="text-xl font-bold">18</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
-          <div className="px-6 p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-orange-100 dark:bg-orange-900 rounded-lg">
-                <HardDrive className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">저장공간</p>
-                <p className="text-xl font-bold">23%</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div className="grid grid-cols-12 gap-6 h-[calc(100vh-300px)]">
         {/* Left Sidebar - Folder Structure */}
         <div className="col-span-3">
@@ -298,46 +214,47 @@ export function CloudStorage() {
               <div className="flex items-center justify-between">
                 <h3 className="leading-none font-semibold text-lg">폴더 구조</h3>
               </div>
-              <Select defaultValue="미적분학">
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="미적분학">미적분학</SelectItem>
-                  <SelectItem value="확률과통계">확률과통계</SelectItem>
-                  <SelectItem value="기하">기하</SelectItem>
-                </SelectContent>
-              </Select>
+              <FlexibleSelect
+                options={subjectOptions}
+                value={selectedSubject}
+                onValueChange={handleSubjectChange}
+                placeholder="과목을 선택하세요"
+                disabled={subjectsLoading}
+                className="w-full"
+                multiple={false}
+              />
+              
+              {subjectsLoading && (
+                <div className="text-sm text-muted-foreground mt-2">과목 목록 로딩중...</div>
+              )}
+              
+              {!subjectsLoading && (!subjects || subjects.length === 0) && (
+                <div className="text-sm text-red-500 mt-2">과목 목록을 불러올 수 없습니다</div>
+              )}
             </div>
             <div className="px-6 pt-0">
-              <div className="space-y-2">
-                {folders.map((folder) => (
-                  <div key={folder.id}>
-                    <Button
-                      variant="ghost"
-                      className={`w-full justify-start p-2 h-auto ${
-                        selectedFolder === folder.id
-                          ? "bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
-                          : "hover:bg-gray-50 dark:hover:bg-gray-800"
-                      }`}
-                      onClick={() => {
-                        setSelectedFolder(folder.id)
-                        toggleFolder(folder.id)
-                      }}
-                    >
-                      {folder.expanded ? (
-                        <ChevronDown className="w-4 h-4 mr-2" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4 mr-2" />
-                      )}
-                      <FolderOpen className="w-4 h-4 mr-2" />
-                      <span className="text-sm">{folder.name}</span>
-                      <Badge variant="secondary" className="ml-auto">
-                        {folder.files.length}
-                      </Badge>
-                    </Button>
+              <div className="space-y-1">
+                {bookGroupsLoading ? (
+                  <div className="text-sm text-muted-foreground text-center py-4">
+                    폴더 목록 로딩중...
                   </div>
-                ))}
+                ) : bookGroups && bookGroups.length > 0 ? (
+                  bookGroups.map((folder) => (
+                    <FolderTreeNode
+                      key={folder.key}
+                      folder={folder}
+                      level={0}
+                      expandedFolders={expandedFolders}
+                      selectedFolder={selectedFolder}
+                      onToggleExpand={handleToggleExpand}
+                      onSelectFolder={handleSelectFolder}
+                    />
+                  ))
+                ) : (
+                  <div className="text-sm text-muted-foreground text-center py-4">
+                    폴더가 없습니다
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -350,7 +267,7 @@ export function CloudStorage() {
               <div className="flex items-center justify-between">
                 <h3 className="leading-none font-semibold text-lg flex items-center gap-2">
                   <BarChart3 className="w-5 h-5" />
-                  {selectedFolderData?.name || "파일 목록"}
+                  {bookGroupDetailLoading ? "로딩중..." : bookGroupDetail?.title || "파일 목록"}
                 </h3>
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-2">
@@ -362,83 +279,87 @@ export function CloudStorage() {
                   </div>
                 </div>
               </div>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  placeholder="파일 검색..."
-                  className="pl-10"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
+
             </div>
             <div className="px-6 flex-1 overflow-auto pt-0">
               <div className="space-y-2">
                 <div className="grid grid-cols-12 gap-4 p-3 text-sm font-medium text-gray-500 border-b">
                   <div className="col-span-1">#</div>
-                  <div className="col-span-6">파일명</div>
+                  <div className="col-span-8">파일명</div>
                   <div className="col-span-2">문제수</div>
-                  <div className="col-span-2">작업</div>
                   <div className="col-span-1"></div>
                 </div>
-                {filteredFiles.map((file, index) => (
-                  <div
-                    key={file.id}
-                    className="grid grid-cols-12 gap-4 p-3 rounded-lg border hover:border-gray-300 hover:bg-gray-50 dark:hover:border-gray-600 dark:hover:bg-gray-800 transition-all duration-200"
-                  >
-                    <div className="col-span-1 flex items-center">
-                      <span className="text-sm font-medium text-gray-500">{index + 1}</span>
-                    </div>
-                    <div className="col-span-6 flex items-center gap-3">
-                      {getFileIcon(file.type)}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 dark:text-white text-sm truncate">{file.name}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge className={getFileTypeColor(file.type)}>{file.type.toUpperCase()}</Badge>
-                          <span className="text-xs text-gray-500">{file.size}</span>
-                          <span className="text-xs text-gray-500">{file.date}</span>
+                {resourceProblemsLoading ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    파일 목록 로딩중...
+                  </div>
+                ) : filteredProblems.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    {selectedFolder ? "파일이 없습니다" : "폴더를 선택해주세요"}
+                  </div>
+                ) : (
+                  filteredProblems.map((problem, index) => {
+                    const fileType = getFileTypeFromPath(problem.title)
+                    const createdDate = new Date(problem.created).toLocaleDateString('ko-KR')
+                    const fileSize = getEstimatedFileSize(problem.pageCount, problem.problemCount)
+                    
+                    return (
+                      <div
+                        key={problem.fileId}
+                        className="grid grid-cols-12 gap-4 p-3 rounded-lg border hover:border-muted hover:bg-muted/50 transition-all duration-200"
+                      >
+                        <div className="col-span-1 flex items-center">
+                          <span className="text-sm font-medium text-muted-foreground">{index + 1}</span>
+                        </div>
+                        <div className="col-span-8 flex items-center gap-3">
+                          {getFileIcon(fileType)}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-foreground text-sm truncate">{problem.title}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Badge className={getFileTypeColor(fileType)}>{fileType.toUpperCase()}</Badge>
+                              <span className="text-xs text-muted-foreground">{fileSize}</span>
+                              <span className="text-xs text-muted-foreground">{createdDate}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="col-span-2 flex items-center">
+                          <span className="text-sm font-medium">{problem.problemCount}</span>
+                        </div>
+                        <div className="col-span-1 flex items-center justify-end">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>
+                                <Eye className="w-4 h-4 mr-2" />
+                                미리보기
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <Download className="w-4 h-4 mr-2" />
+                                다운로드
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <Edit className="w-4 h-4 mr-2" />
+                                이름 변경
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <Copy className="w-4 h-4 mr-2" />
+                                복사
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-destructive">
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                삭제
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </div>
-                    </div>
-                    <div className="col-span-2 flex items-center">
-                      <span className="text-sm font-medium">{file.problems}</span>
-                    </div>
-                    <div className="col-span-2 flex items-center">
-                      <span className="text-sm text-gray-500">작업</span>
-                    </div>
-                    <div className="col-span-1 flex items-center justify-end">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
-                            <Eye className="w-4 h-4 mr-2" />
-                            미리보기
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Download className="w-4 h-4 mr-2" />
-                            다운로드
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Edit className="w-4 h-4 mr-2" />
-                            이름 변경
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Copy className="w-4 h-4 mr-2" />
-                            복사
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            삭제
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-                ))}
+                    )
+                  })
+                )}
               </div>
             </div>
           </div>

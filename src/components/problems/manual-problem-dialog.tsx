@@ -2,7 +2,7 @@
 
 import React, { useCallback, useMemo, useState, useEffect } from "react"
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd"
-import { useManualProblemStore } from "@/stores/manual-problem-store"
+import { ManualPageLayout, useManualProblemStore } from "@/stores/manual-problem-store"
 import { useProblemsBySkill } from "@/hooks/use-problems"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -184,7 +184,7 @@ export function ManualProblemDialog({
   }
 
   // ----- A4 칸반 유틸 -----
-  const getLaneItems = useCallback((page: PageLayout): string[][] => {
+  const getLaneItems = useCallback((page: ManualPageLayout): string[][] => {
     const laneCount = Math.max(1, Math.min(2, page.columns))
     const lanes: string[][] = Array.from({ length: laneCount }, () => [])
     const laneOf = page.laneOf ?? {}
@@ -700,7 +700,7 @@ export function ManualProblemDialog({
                                       문제 번호: {problem.problemNumber || problem.problemId}
                                     </div>
                                     <ProblemView
-                                      problem={problem as unknown}
+                                      problem={problem}
                                       width={390}
                                       margin={20}
                                       level={Number(problem.difficulty)}

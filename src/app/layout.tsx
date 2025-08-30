@@ -47,10 +47,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko" suppressHydrationWarning>
-      {/* <body className={`${pretendard.variable} ${inter.className}`}> */}
-      <body>
+      <body className={`${pretendard.variable} ${inter.className} min-h-screen bg-background antialiased`}>
         <QueryProvider>
-          <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             {children}
           </ThemeProvider>
         </QueryProvider>

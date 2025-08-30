@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useMemo, useCallback } from "react"
+import React, { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -14,12 +14,12 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable"
 import { PrintSettingsDialog } from "@/components/common/print-settings-dialog"
-import { ManualProblemDialog } from "@/components/create-problems/manual-problem-dialog"
+import { ManualProblemDialog } from "@/components/problems/manual-problem-dialog"
 import { useMyLectures, useLectureDetail, useLectureLastIndex } from "@/hooks/use-lecture"
 import { useSubjects, useSubjectTops } from "@/hooks/use-subjects"
 import { useSkillChapters, useSkillCounts } from "@/hooks/use-skills"
 import { MultiSelect } from "@/components/ui/multi-select"
-import { SubjectTree } from "@/components/ui/subject-tree"
+import { SubjectTree } from "@/components/problems/subject-tree"
 import type { Option } from "@/components/ui/multi-select"
 import type { SkillChapter } from "@/types/skill"
 import { ProblemDistributionProvider } from "@/contexts/problem-distribution-context"
@@ -55,33 +55,14 @@ function ProblemCreatorContent() {
   const [skillChapters, setSkillChapters] = useState<SkillChapter[]>([])
   const [selectedSkills, setSelectedSkills] = useState<string[]>([])
   
-  const [expandedCategories, setExpandedCategories] = useState<string[]>(["1 자연수의 성질"])
-  const [selectedProblems, setSelectedProblems] = useState<string[]>([])
   const [activeTab, setActiveTab] = useState("exam")
   const [questionsPerPage, setQuestionsPerPage] = useState(4)
   const [selectedHeaderStyle, setSelectedHeaderStyle] = useState(1)
   const [difficultyTab, setDifficultyTab] = useState("simple")
-  const [showManualDialog, setShowManualDialog] = useState(false)
-  const [selectedProblemsPreview, setSelectedProblemsPreview] = useState<Array<{ id: string; title: string }>>([])
   const [showPrintDialog, setShowPrintDialog] = useState(false)
-  const [showPageMapPreview, setShowPageMapPreview] = useState(false)
   const [showFunctionDialog, setShowFunctionDialog] = useState(false)
+
   
-  type ManualDialogProblem = {
-    id: string
-    title: string
-    description: string
-    formula: string
-    choices: string[]
-    difficulty: "쉬움" | "중간" | "어려움"
-    type: "객관식" | "주관식"
-    category: string
-    count: number
-    source: "교과서" | "문제집" | "기출" | "모의고사"
-    domain: "계산" | "이해" | "추론" | "해결"
-  }
-  
-  const [selectedManualProblems, setSelectedManualProblems] = useState<ManualDialogProblem[]>([])
 
   // 생성된 시험지 상태
   const [generatedPaper, setGeneratedPaper] = useState<GeneratedPaper | null>(null)
@@ -258,7 +239,7 @@ function ProblemCreatorContent() {
 
   // 헤더 스타일 구성 - 메모제이션
   const headerStyles = useMemo(() => [
-    { id: 1, name: "스타일 1", color: "bg-gray-100", description: "기본 스타일" },
+    { id: 1, name: "스타일 1", color: "bg-muted", description: "기본 스타일" },
     { id: 2, name: "스타일 2", color: "bg-gradient-to-br from-blue-400 to-blue-600", description: "파란색 그라데이션" },
     { id: 3, name: "스타일 3", color: "bg-gradient-to-br from-teal-400 to-cyan-500", description: "청록색 그라데이션" },
     { id: 4, name: "스타일 4", color: "bg-gradient-to-br from-green-400 to-blue-500", description: "기하학적 패턴" },
@@ -282,13 +263,7 @@ function ProblemCreatorContent() {
     
     // 3. 생성된 시험지 데이터 초기화
     setGeneratedPaper(null)
-    
-    // 4. 기타 선택 상태 초기화
-    setExpandedCategories([])
-    setSelectedProblems([])
-    setSelectedProblemsPreview([])
-    setSelectedManualProblems([])
-    
+        
     // 문항수 관련 초기화는 aggregator 훅 선언 이후에 처리
   }, [selectedLectureId])
 
@@ -561,7 +536,7 @@ function ProblemCreatorContent() {
                 min="0"
               />
             </div>
-            <div className="text-xs text-gray-500 mb-1">
+            <div className="text-xs text-muted-foreground mb-1">
               {difficultyStats[['highest', 'high', 'medium', 'low', 'lowest'][key] as keyof typeof difficultyStats]}
             </div>
           </div>
@@ -602,7 +577,7 @@ function ProblemCreatorContent() {
                     min="0"
                   />
                 </div>
-                <div className="text-xs text-gray-500 mb-1">
+                <div className="text-xs text-muted-foreground mb-1">
                   {maxFeasible.slice(0, 4).reduce((sum, row) => sum + row[key], 0)}
                 </div>
               </div>
@@ -633,7 +608,7 @@ function ProblemCreatorContent() {
                     min="0"
                   />
                 </div>
-                <div className="text-xs text-gray-500 mb-1">
+                <div className="text-xs text-muted-foreground mb-1">
                   {maxFeasible.slice(4, 8).reduce((sum, row) => sum + row[key], 0)}
                 </div>
               </div>
@@ -681,12 +656,12 @@ function ProblemCreatorContent() {
                               setDistribution(rowIndex, colIndex, newValue)
                             }}
                             className={`h-6 w-12 text-center border-0 bg-transparent px-1 focus-visible:ring-0 text-xs ${
-                              currentDistribution[rowIndex][colIndex] > 0 ? "text-blue-600 font-medium" : "text-gray-400"
+                              currentDistribution[rowIndex][colIndex] > 0 ? "text-primary font-medium" : "text-muted-foreground"
                             }`}
                             min="0"
                             max={maxFeasible[rowIndex][colIndex]}
                           />
-                          <div className="text-xs text-gray-500 mt-1">
+                          <div className="text-xs text-muted-foreground mt-1">
                             {maxFeasible[rowIndex][colIndex]}
                           </div>
                         </div>
@@ -729,12 +704,12 @@ function ProblemCreatorContent() {
                               setDistribution(rowIndex + 4, colIndex, newValue)
                             }}
                             className={`h-6 w-12 text-center border-0 bg-transparent px-1 focus-visible:ring-0 text-xs ${
-                              currentDistribution[rowIndex + 4][colIndex] > 0 ? "text-blue-600 font-medium" : "text-gray-400"
+                              currentDistribution[rowIndex + 4][colIndex] > 0 ? "text-primary font-medium" : "text-muted-foreground"
                             }`}
                             min="0"
                             max={maxFeasible[rowIndex + 4][colIndex]}
                           />
-                          <div className="text-xs text-gray-500 mt-1">
+                          <div className="text-xs text-muted-foreground mt-1">
                             {maxFeasible[rowIndex + 4][colIndex]}
                           </div>
                         </div>
@@ -864,40 +839,6 @@ function ProblemCreatorContent() {
     </ScrollArea>
   ), [questionsPerPage, selectedHeaderStyle, headerStyles])
 
-  const addProblemToPreview = useCallback((problem: any) => {
-    setSelectedProblemsPreview((prev) => {
-      // 이미 추가된 문제인지 확인
-      const isAlreadyAdded = prev.some((p) => p.id === problem.id)
-      if (isAlreadyAdded) {
-        return prev
-      }
-
-      return [
-        ...prev,
-        {
-          id: problem.id,
-          title: problem.title,
-        },
-      ]
-    })
-    setShowPageMapPreview(true)
-  }, [])
-
-  const handleManualSubmit = useCallback(() => {
-    // selectedProblemsPreview의 문제들을 selectedProblems에 추가
-    const newProblemIds = selectedProblemsPreview.map((problem) => problem.id)
-
-    // 중복 제거하면서 기존 선택된 문제들과 합치기
-    setSelectedProblems((prev) => {
-      const combined = [...prev, ...newProblemIds]
-      return [...new Set(combined)] // 중복 제거
-    })
-
-    // 모달 닫기 및 미리보기 초기화
-    setShowManualDialog(false)
-    setSelectedProblemsPreview([])
-    setShowPageMapPreview(false)
-  }, [selectedProblemsPreview])
 
   // 시험지 탭 렌더링 함수 - 메모제이션
   const renderExamTab = useMemo(() => {
@@ -917,9 +858,9 @@ function ProblemCreatorContent() {
       return (
         <ScrollArea className="h-[calc(100vh-1.5rem)]">
           <div className="space-y-2 px-2">
-            <div className="flex items-center justify-center h-96 text-gray-500">
+            <div className="flex items-center justify-center h-96 text-muted-foreground">
               <div className="text-center">
-                <BookOpenCheck className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <BookOpenCheck className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
                 <p>왼쪽에서 문제를 선택해주세요</p>
                 <p className="text-sm mt-2">자동출제 또는 수동출제를 사용해보세요</p>
               </div>
@@ -996,9 +937,9 @@ function ProblemCreatorContent() {
       <ScrollArea className="h-[calc(100vh-1.5rem)]">
         <div className="space-y-6 p-4">
           { currentPaper ? <AnswerSummaryPrint paper={currentPaper} showBlankPage={true} /> :
-          <div className="flex items-center justify-center h-96 text-gray-500">
+          <div className="flex items-center justify-center h-96 text-muted-foreground">
             <div className="text-center">
-              <BookOpenCheck className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <BookOpenCheck className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
               <p>왼쪽에서 문제를 선택해주세요</p>
             </div>
           </div>}
@@ -1024,9 +965,9 @@ function ProblemCreatorContent() {
     return (
       <ScrollArea className="h-[calc(100vh-1.5rem)]">
         { currentPaper ? <SolutionPagesPrint paper={currentPaper} /> : 
-        <div className="flex items-center justify-center h-96 text-gray-500">
+        <div className="flex items-center justify-center h-96 text-muted-foreground">
           <div className="text-center">
-            <BookOpenCheck className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+            <BookOpenCheck className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
             <p>왼쪽에서 문제를 선택해주세요</p>
           </div>
         </div>}
@@ -1042,7 +983,7 @@ function ProblemCreatorContent() {
           <div className="flex items-center gap-4">
             <h3 className="font-semibold text-lg">강좌명</h3>
             {lecturesLoading ? (
-              <div className="h-10 bg-gray-200 rounded animate-pulse w-64" />
+              <div className="h-10 bg-muted rounded animate-pulse w-64" />
             ) : (
               <Select value={selectedLectureId} onValueChange={setSelectedLectureId}>
                 <SelectTrigger className="w-64">
@@ -1065,7 +1006,7 @@ function ProblemCreatorContent() {
                 placeholder="제목을 입력하세요"
                 value={examTitle}
                 onChange={(e) => setExamTitle(e.target.value)}
-                className="w-64 px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-64 px-3 py-2 text-sm border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
           </div>
@@ -1087,31 +1028,31 @@ function ProblemCreatorContent() {
       <div className="mb-6">
         <div className="flex">
           <div className="w-[28%] pr-3">
-            <div className="bg-white rounded-lg border p-4 h-20 flex flex-col justify-center">
+            <div className="bg-card rounded-lg border p-4 h-20 flex flex-col justify-center">
               <h3 className="font-semibold text-sm mb-2">범위</h3>
-              <div className="text-sm text-gray-700">
+              <div className="text-sm text-muted-foreground">
                 {getRangeText}
               </div>
             </div>
           </div>
           
           <div className="w-[72%] pl-3">
-            <div className="bg-white rounded-lg border p-4 h-20 flex flex-col justify-center">
+            <div className="bg-card rounded-lg border p-4 h-20 flex flex-col justify-center">
               <h3 className="font-semibold text-sm mb-2">출제유형</h3>
               <div className="flex gap-1">
-                <Button variant="outline" className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
+                <Button variant="outline" className="px-3 py-1 text-xs font-medium">
                   전체
                 </Button>
-                <Button variant="outline" className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
+                <Button variant="outline" className="px-3 py-1 text-xs font-medium">
                   교과서 유형
                 </Button>
-                <Button variant="outline" className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
+                <Button variant="outline" className="px-3 py-1 text-xs font-medium">
                   문제집 유형
                 </Button>
-                <Button variant="outline" className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
+                <Button variant="outline" className="px-3 py-1 text-xs font-medium">
                   기출 유형
                 </Button>
-                <Button variant="outline" className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">
+                <Button variant="outline" className="px-3 py-1 text-xs font-medium">
                   모의고사 유형
                 </Button>
               </div>
@@ -1128,9 +1069,9 @@ function ProblemCreatorContent() {
           <div className="h-full pr-3">
             <div className="space-y-6">
               {/* 과목을 선택해 주세요 */}
-              <div className="bg-white rounded-lg border p-4">
+              <div className="bg-card rounded-lg border p-4">
                 <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                  <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
+                  <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm">
                     1
                   </span>
                   과목을 선택해 주세요
@@ -1147,7 +1088,7 @@ function ProblemCreatorContent() {
                 />
                 
                 {subjectsLoading && (
-                  <div className="text-sm text-gray-500 mt-2">과목 목록 로딩중...</div>
+                  <div className="text-sm text-muted-foreground mt-2">과목 목록 로딩중...</div>
                 )}
                 
                 {!subjectsLoading && (!subjects || subjects.length === 0) && (
@@ -1158,7 +1099,7 @@ function ProblemCreatorContent() {
                 {selectedSubjectKeys.length > 0 && (
                   <div className="mt-4">
                     <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-medium text-sm text-gray-700">상세 항목 선택</h4>
+                      <h4 className="font-medium text-sm">상세 항목 선택</h4>
                       {selectedTreeItems.length > 0 && (
                         <span className="text-xs text-gray-500">
                           {selectedTreeItems.length}개 선택됨
@@ -1189,7 +1130,7 @@ function ProblemCreatorContent() {
                       <ScrollArea className="h-60">
                         {subjectTopsLoading ? (
                           <div className="flex items-center justify-center h-32">
-                            <div className="text-sm text-gray-500">항목 로딩중...</div>
+                            <div className="text-sm text-muted-foreground">항목 로딩중...</div>
                           </div>
                         ) : subjectTops && subjectTops.length > 0 ? (
                           <SubjectTree
@@ -1199,7 +1140,7 @@ function ProblemCreatorContent() {
                             className="p-2"
                           />
                         ) : (
-                          <div className="flex items-center justify-center h-32 text-gray-500">
+                          <div className="flex items-center justify-center h-32 text-muted-foreground">
                             <div className="text-center">
                               <p className="text-sm">상세 항목이 없습니다</p>
                             </div>
@@ -1212,9 +1153,9 @@ function ProblemCreatorContent() {
               </div>
 
               {/* 항목을 선택해 주세요 */}
-              <div className="bg-white rounded-lg border p-4">
+              <div className="bg-card rounded-lg border p-4">
                 <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                  <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
+                  <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm">
                     2
                   </span>
                   항목을 선택해 주세요
@@ -1223,7 +1164,7 @@ function ProblemCreatorContent() {
                       {selectedSkills.length}개 선택됨
                     </span>
                   )} */}
-                  <span className="text-sm text-gray-500 ml-auto">* 자동출제용</span>
+                  <span className="text-sm text-muted-foreground ml-auto">* 자동출제용</span>
                 </h3>
 
                 {/* 선택된 스킬 표시 */}
@@ -1253,10 +1194,10 @@ function ProblemCreatorContent() {
                 <ScrollArea className="h-80">
                   {skillChaptersMutation.isPending ? (
                     <div className="flex items-center justify-center h-32">
-                      <div className="text-sm text-gray-500">문항 목록 로딩중...</div>
+                      <div className="text-sm text-muted-foreground">문항 목록 로딩중...</div>
                     </div>
                   ) : selectedTreeItems.length === 0 ? (
-                    <div className="flex items-center justify-center h-32 text-gray-500">
+                    <div className="flex items-center justify-center h-32 text-muted-foreground">
                       <div className="text-center">
                         <p>먼저 상세 항목을 선택해주세요</p>
                       </div>
@@ -1273,8 +1214,8 @@ function ProblemCreatorContent() {
                               onClick={() => toggleAllSkillsInChapter(chapter)}
                               className={`text-xs px-2 py-1 rounded transition-colors ${
                                 chapter.skillList.every(skill => selectedSkills.includes(skill.skillId))
-                                  ? "text-blue-600 bg-blue-50 hover:bg-blue-100"
-                                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                                  ? "text-blue-600 bg-blue-50 hover:bg-blue-500"
+                                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
                               }`}
                             >
                               {chapter.skillList.every(skill => selectedSkills.includes(skill.skillId))
@@ -1291,8 +1232,8 @@ function ProblemCreatorContent() {
                                 key={skill.skillId}
                                 className={`p-4 rounded-lg border cursor-pointer transition-colors ${
                                   selectedSkills.includes(skill.skillId)
-                                    ? "border-blue-500 bg-blue-50"
-                                    : "border-gray-200 hover:border-gray-300"
+                                    ? "border-blue-500 bg-blue-50/80 dark:border-blue-400 dark:bg-blue-950/50"
+                                    : "border-border hover:border-border/80"
                                 }`}
                                 onClick={() => toggleSkill(skill.skillId)}
                               >
@@ -1322,7 +1263,7 @@ function ProblemCreatorContent() {
                       ))}
                     </div>
                   ) : (
-                    <div className="flex items-center justify-center h-32 text-gray-500">
+                    <div className="flex items-center justify-center h-32 text-muted-foreground">
                       <div className="text-center">
                         <p>선택된 항목에 대한 문제가 없습니다</p>
                       </div>
@@ -1332,13 +1273,13 @@ function ProblemCreatorContent() {
               </div>
 
               {/* 문항수를 선택해 주세요 */}
-              <div className="bg-white rounded-lg border p-4 flex-1">
+              <div className="rounded-lg border p-4 flex-1">
                 <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                  <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
+                  <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm">
                     3
                   </span>
                   문항수를 선택해 주세요
-                  <span className="text-sm text-gray-500 ml-auto">(최대 200문항)</span>
+                  <span className="text-sm text-muted-foreground ml-auto">(최대 200문항)</span>
                 </h3>
               <div className="text-center mb-4">
                 <div className="text-2xl font-bold mb-2">전체 문항: {totalProblems}</div>
@@ -1368,7 +1309,7 @@ function ProblemCreatorContent() {
                 <Button 
                   size="sm" 
                   disabled={totalProblems === 0 || isGeneratingPaper}
-                  className={totalProblems === 0 || isGeneratingPaper ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-blue-100 text-blue-800 hover:bg-blue-200"}
+                  className={totalProblems === 0 || isGeneratingPaper ? "bg-muted text-muted-foreground cursor-not-allowed" : "bg-primary/10 text-primary hover:bg-primary/20"}
                   onClick={handleAutoGenerate}
                 >
                   <Edit3 className="w-4 h-4 mr-1" />
@@ -1378,7 +1319,7 @@ function ProblemCreatorContent() {
                   size="sm"
                   variant="outline"
                   disabled={selectedTreeItems.length === 0 || selectedSkills.length > 0}
-                  className={(selectedTreeItems.length === 0 || selectedSkills.length > 0) ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-transparent"}
+                  className={(selectedTreeItems.length === 0 || selectedSkills.length > 0) ? "bg-muted/50 text-muted-foreground cursor-not-allowed" : "bg-transparent"}
                   onClick={() => {
                     // 기존 자동 생성 시험지 초기화
                     if (generatedPaper) {
@@ -1403,7 +1344,7 @@ function ProblemCreatorContent() {
                   size="sm" 
                   variant="outline" 
                   disabled={true}
-                  className="bg-gray-50 text-gray-400 cursor-not-allowed"
+                  className="bg-muted/50 text-muted-foreground cursor-not-allowed"
                 >
                   <Plus className="w-4 h-4 mr-1" />
                   문제추가
@@ -1423,7 +1364,7 @@ function ProblemCreatorContent() {
               <div className="grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 p-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
                 {/* Tab Navigation */}
                 <div className="relative w-full">
-                  <div className="absolute bottom-0 left-0 right-0 h-px bg-gray-200"></div>
+                  <div className="absolute bottom-0 left-0 right-0 h-px bg-border"></div>
                   <div className="flex items-end gap-2 pb-px">
                     {tabs.map((tab) => {
                       const IconComponent = tab.icon
@@ -1432,15 +1373,15 @@ function ProblemCreatorContent() {
                           key={tab.id}
                           variant="ghost"
                           onClick={() => setActiveTab(tab.id)}
-                          className={`px-4 py-2 text-sm font-medium rounded-t-lg border border-b-0 transition-all duration-200 flex items-center gap-2 relative h-auto ${
+                          className={`px-4 py-2 text-sm font-medium !rounded-t-lg rounded-b-none border border-b-0 transition-all duration-200 flex items-center gap-2 relative h-auto ${
                             activeTab === tab.id
-                              ? "bg-white text-gray-900 border-gray-200 "
-                              : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+                              ? "bg-background text-foreground border-border dark:bg-background dark:text-foreground dark:border-border"
+                              : "bg-muted/50 text-muted-foreground border-border hover:bg-muted dark:bg-muted/20 dark:text-muted-foreground dark:border-border dark:hover:bg-muted/30"
                           }`}
                         >
                           <IconComponent className="w-4 h-4" />
                           {tab.label}
-                          {activeTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-px bg-white"></div>}
+                          {activeTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-px bg-background"></div>}
                         </Button>
                       )
                     })}

@@ -2,7 +2,6 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,14 +12,12 @@ import {
 import { ThemeToggle } from "@/components/common/theme-toggle"
 import {
   Bell,
-  Mail,
   Settings,
   LayoutDashboard,
   Database,
   PenTool,
   FolderOpen,
   Book,
-  Target,
   BarChart3,
   Cloud,
   Layers,
@@ -37,7 +34,7 @@ export function Header() {
   const menuItems = [
     { name: "대시보드", href: "/", icon: LayoutDashboard, color: "blue" },
     { name: "저장소", href: "/repository", icon: Database, color: "green" },
-    { name: "문제출제", href: "/create-problems", icon: PenTool, color: "orange" },
+    { name: "문제출제", href: "/problems", icon: PenTool, color: "orange" },
     { name: "학원 자료", href: "/materials", icon: FolderOpen, color: "teal" },
     { name: "출판교제 유사", href: "/textbooks", icon: Book, color: "pink" },
     { name: "성적표", href: "/report-card", icon: BarChart3, color: "cyan" },
@@ -68,7 +65,7 @@ export function Header() {
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-background to-muted/20 border-b border-border p-1">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-background to-muted border-b border p-1">
       <div className="container mx-auto px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo and Title */}
@@ -101,14 +98,7 @@ export function Header() {
           <div className="flex items-center gap-3">
             <ThemeToggle />
             <Button variant="ghost" size="icon" className="relative hover:bg-accent">
-              <Bell className="w-5 h-5 text-muted-foreground" />
-              <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center bg-red-500 text-white text-xs">
-                3
-              </Badge>
-            </Button>
-
-            <Button variant="ghost" size="icon" className="hover:bg-accent">
-              <Mail className="w-5 h-5 text-muted-foreground" />
+              <Settings className="w-5 h-5 text-muted-foreground" />
             </Button>
 
             <DropdownMenu>
@@ -139,14 +129,6 @@ export function Header() {
                 <DropdownMenuItem>
                   <Settings className="mr-2 h-4 w-4" />
                   <span>설정</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Bell className="mr-2 h-4 w-4" />
-                  <span>알림 설정</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Shield className="mr-2 h-4 w-4" />
-                  <span>보안</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <HelpCircle className="mr-2 h-4 w-4" />

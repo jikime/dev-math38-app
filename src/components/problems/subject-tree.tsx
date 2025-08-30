@@ -66,7 +66,7 @@ function SubjectTreeNode({ node, selectedKeys, onSelectionChange, level }: Subje
   return (
     <div className="select-none">
       <div 
-        className="flex items-center gap-2 py-1 px-2 hover:bg-gray-50 rounded-md cursor-pointer"
+        className="flex items-center gap-2 py-1 px-2 hover:bg-muted/50 rounded-md cursor-pointer"
         style={{ paddingLeft: `${indentLevel + 8}px` }}
       >
         {/* 확장/축소 버튼 */}
@@ -76,7 +76,7 @@ function SubjectTreeNode({ node, selectedKeys, onSelectionChange, level }: Subje
               variant="ghost"
               size="sm"
               onClick={handleToggleExpand}
-              className="p-0 h-4 w-4 hover:bg-gray-200"
+              className="p-0 h-4 w-4 hover:bg-muted"
             >
               {isExpanded ? (
                 <ChevronDown className="h-3 w-3" />
@@ -100,9 +100,9 @@ function SubjectTreeNode({ node, selectedKeys, onSelectionChange, level }: Subje
         <span 
           className={cn(
             "text-sm flex-1",
-            level === 0 && "font-semibold text-gray-900",
-            level === 1 && "font-medium text-gray-800",
-            level >= 2 && "text-gray-700"
+            level === 0 && "font-semibold text-foreground",
+            level === 1 && "font-medium text-foreground/90",
+            level >= 2 && "text-muted-foreground"
           )}
           onClick={handleToggleExpand}
         >
@@ -131,7 +131,7 @@ function SubjectTreeNode({ node, selectedKeys, onSelectionChange, level }: Subje
 export function SubjectTree({ data, selectedKeys, onSelectionChange, className }: SubjectTreeProps) {
   if (!data || data.length === 0) {
     return (
-      <div className={cn("p-4 text-center text-gray-500 text-sm", className)}>
+      <div className={cn("p-4 text-center text-muted-foreground text-sm", className)}>
         선택된 과목의 상세 항목이 없습니다.
       </div>
     )
