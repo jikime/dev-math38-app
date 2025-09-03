@@ -175,8 +175,13 @@ export function PaperViewSheet({
   // 39math-ui-prime의 rearrange 함수와 동일한 로직
   const rearrange = (set: PaperProblem[]) => {
     if (!set || set.length === 0) return
-    let margin = (columnHeight - set.reduce((a, v) => a + (v.height || 30), 0)) / set.length
-    set.map((v) => (v.margin = margin))
+    const totalProblemHeight = set.reduce((a, v) => a + (v.height || 30), 0)
+    let margin = (columnHeight - totalProblemHeight) / set.length
+    console.log(`Rearrange: columnHeight=${columnHeight}, totalHeight=${totalProblemHeight}, problems=${set.length}, calculatedMargin=${margin}`)
+    set.map((v) => {
+      v.margin = margin
+      console.log(`Problem ${v.problemNumber}: height=${v.height}, margin=${v.margin}`)
+    })
   }
 
   // 39math-ui-prime startPrint 함수와 동일한 로직
@@ -217,6 +222,11 @@ export function PaperViewSheet({
           index: i
         })
       }
+    }
+
+    // 마지막 set도 rearrange 호출
+    if (set.length > 0) {
+      rearrange(set)
     }
 
     let _pages: PaperPage[] = []
@@ -320,7 +330,7 @@ export function PaperViewSheet({
         </>
       )}
       {!caching && pages && (
-        <ScrollArea className="h-[calc(100vh-120px)]">
+        <ScrollArea className="h-[calc(100vh-100px)]">
           <div className="py-4">
             {pages.map((page, pageIndex) => (
               <PaperTemplate

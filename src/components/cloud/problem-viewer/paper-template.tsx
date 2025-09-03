@@ -171,10 +171,15 @@ function ProblemView({
 
   let { value, answerType, choice } = problem.content
 
+  // 디버깅을 위한 로그
+  if (print && problemNumber) {
+    console.log(`ProblemView ${problemNumber}: applied margin = ${margin}px`)
+  }
+
   return (
     <div
-      className="problem py-2"
-      style={print ? { width } : { minWidth: width, maxWidth: maxWidth, marginBottom: margin }}
+      className="problem"
+      style={print ? { width, marginBottom: margin, paddingTop: '0.5rem', paddingBottom: '0.5rem' } : { minWidth: width, maxWidth: maxWidth, marginBottom: margin, paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
       ref={problemEle}
       id={problem.problemId}
     >
@@ -299,6 +304,8 @@ export function PaperTemplate({
                   problem={p.problem}
                   problemNumber={parseInt(p.problemNumber)}
                   width={columns === 1 ? 740 : 360}
+                  margin={p.margin}
+                  print={true}
                 />
                 {editMode && (
                   <OverButtons
@@ -333,6 +340,8 @@ export function PaperTemplate({
                     problem={p.problem}
                     problemNumber={parseInt(p.problemNumber)}
                     width={370}
+                    margin={p.margin}
+                    print={true}
                   />
                   {editMode && (
                     <OverButtons

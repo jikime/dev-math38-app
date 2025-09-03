@@ -2,10 +2,8 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
-import { Card, CardContent } from "@/components/ui/card"
-import { Settings, Printer, RotateCcw } from "lucide-react"
+import { Printer, RotateCcw } from "lucide-react"
 import type { PaperLayoutSettings } from "@/types/paper-view"
 import { DEFAULT_PAPER_SETTINGS } from "@/types/paper-view"
 
@@ -95,7 +93,7 @@ export function PaperLayoutSetting({
 
   // 39math-ui-prime과 동일한 레이아웃과 스타일
   return (
-    <div className="fixed bottom-0 border-t border-t-slate-400 flex justify-center space-x-4 items-center py-2 px-4 w-[calc(100%-10%)] h-[50px] bg-white z-10 shadow-2xl">
+    <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 border-t border-t-slate-400 flex justify-center space-x-4 items-center py-2 h-[50px] bg-white z-10 w-full max-w-screen-2xl px-6">
       {/* 컬럼 설정 */}
       <div>
         <PaperColumnSetting 
@@ -106,7 +104,7 @@ export function PaperLayoutSetting({
       
       {/* Gap 설정 */}
       <div>
-        <div className="flex items-center space-x-5 flex-1 max-w-[500px] min-w-[300px]">
+        <div className="flex items-center space-x-5 flex-1">
           <div>
             <span>gap : {minMargin}</span>
           </div>
