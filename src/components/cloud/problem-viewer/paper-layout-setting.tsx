@@ -3,12 +3,9 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
-import { Separator } from "@/components/ui/separator"
+import { Slider } from "@/components/ui/slider"
 import { Card, CardContent } from "@/components/ui/card"
-import { Settings, Printer, Download, RotateCcw } from "lucide-react"
+import { Settings, Printer, RotateCcw } from "lucide-react"
 import type { PaperLayoutSettings } from "@/types/paper-view"
 import { DEFAULT_PAPER_SETTINGS } from "@/types/paper-view"
 
@@ -21,6 +18,50 @@ interface PaperLayoutSettingProps {
   totalPages: number
 }
 
+// 39math-ui-prime PaperColumnSetting과 동일한 컴포넌트
+function PaperColumnSetting({ 
+  columns, 
+  setColumns 
+}: { 
+  columns?: number
+  setColumns?: (value: number) => void 
+}) {
+  const handleColumnChange = (value: number) => {
+    setColumns && setColumns(value)
+  }
+
+  return (
+    <div className="mx-3 my-3">
+      <div className="flex rounded-lg border border-gray-200 bg-gray-50 p-1">
+        <button
+          className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+            columns === 1
+              ? "bg-white text-gray-900 shadow-sm"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+          onClick={() => handleColumnChange(1)}
+        >
+          1단
+        </button>
+        <button
+          className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+            columns === 2
+              ? "bg-white text-gray-900 shadow-sm"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+          onClick={() => handleColumnChange(2)}
+        >
+          2단
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * 39math-ui-prime과 동일한 시험지 레이아웃 설정 컴포넌트
+ * 단과 문제 사이 공백의 길이를 설정한다.
+ */
 export function PaperLayoutSetting({
   settings,
   onSettingsChange,
@@ -29,282 +70,83 @@ export function PaperLayoutSetting({
   totalProblems,
   totalPages
 }: PaperLayoutSettingProps) {
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [minMargin, setMinMargin] = useState(settings.minMargin || 30)
 
-  const handleSettingChange = (key: keyof PaperLayoutSettings, value: any) => {
+  const handleColumnChange = (columns: number) => {
     onSettingsChange({
       ...settings,
-      [key]: value
+      columns
+    })
+  }
+
+  const handleMarginChange = (value: number[]) => {
+    const newMargin = value[0]
+    setMinMargin(newMargin)
+    onSettingsChange({
+      ...settings,
+      minMargin: newMargin
     })
   }
 
   const resetToDefault = () => {
     onSettingsChange(DEFAULT_PAPER_SETTINGS)
+    setMinMargin(DEFAULT_PAPER_SETTINGS.minMargin)
   }
 
+  // 39math-ui-prime과 동일한 레이아웃과 스타일
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-lg z-50">
-      {/* 컨트롤 바 */}
-      <div className="flex items-center justify-between px-6 py-3">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center gap-2"
-          >
-            <Settings className="w-4 h-4" />
-            레이아웃 설정
-          </Button>
-          
-          <Separator orientation="vertical" className="h-6" />
-          
-          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-            <span>문제: {totalProblems}개</span>
-            <span>|</span>
-            <span>페이지: {totalPages}페이지</span>
+    <div className="fixed bottom-0 border-t border-t-slate-400 flex justify-center space-x-4 items-center py-2 px-4 w-[calc(100%-10%)] h-[50px] bg-white z-10 shadow-2xl">
+      {/* 컬럼 설정 */}
+      <div>
+        <PaperColumnSetting 
+          columns={settings.columns} 
+          setColumns={handleColumnChange} 
+        />
+      </div>
+      
+      {/* Gap 설정 */}
+      <div>
+        <div className="flex items-center space-x-5 flex-1 max-w-[500px] min-w-[300px]">
+          <div>
+            <span>gap : {minMargin}</span>
           </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={resetToDefault}
-            className="flex items-center gap-2"
-          >
-            <RotateCcw className="w-4 h-4" />
-            기본값
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onExport}
-            className="flex items-center gap-2"
-          >
-            <Download className="w-4 h-4" />
-            PDF 내보내기
-          </Button>
-          
-          <Button
-            variant="default"
-            size="sm"
-            onClick={onPrint}
-            className="flex items-center gap-2"
-          >
-            <Printer className="w-4 h-4" />
-            인쇄
-          </Button>
+          <div className="w-[200px]">
+            <Slider
+              value={[minMargin]}
+              min={30}
+              max={700}
+              step={1}
+              onValueChange={handleMarginChange}
+              className="flex-1"
+            />
+          </div>
         </div>
       </div>
 
-      {/* 상세 설정 패널 */}
-      {isExpanded && (
-        <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/* 페이지 설정 */}
-              <Card>
-                <CardContent className="p-4">
-                  <h4 className="font-medium mb-3 text-sm">페이지 설정</h4>
-                  <div className="space-y-3">
-                    <div>
-                      <Label htmlFor="paperSize" className="text-xs">용지 크기</Label>
-                      <Select
-                        value={settings.paperSize}
-                        onValueChange={(value: 'A4' | 'A3' | 'Letter') => handleSettingChange('paperSize', value)}
-                      >
-                        <SelectTrigger className="w-full mt-1">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="A4">A4</SelectItem>
-                          <SelectItem value="A3">A3</SelectItem>
-                          <SelectItem value="Letter">Letter</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="orientation" className="text-xs">용지 방향</Label>
-                      <Select
-                        value={settings.orientation}
-                        onValueChange={(value: 'portrait' | 'landscape') => handleSettingChange('orientation', value)}
-                      >
-                        <SelectTrigger className="w-full mt-1">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="portrait">세로</SelectItem>
-                          <SelectItem value="landscape">가로</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="columns" className="text-xs">컬럼 수</Label>
-                      <Select
-                        value={settings.columns.toString()}
-                        onValueChange={(value) => handleSettingChange('columns', parseInt(value))}
-                      >
-                        <SelectTrigger className="w-full mt-1">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="1">1단</SelectItem>
-                          <SelectItem value="2">2단</SelectItem>
-                          <SelectItem value="3">3단</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* 여백 설정 */}
-              <Card>
-                <CardContent className="p-4">
-                  <h4 className="font-medium mb-3 text-sm">여백 설정 (mm)</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <Label htmlFor="marginTop" className="text-xs">위</Label>
-                      <Input
-                        id="marginTop"
-                        type="number"
-                        value={settings.marginTop}
-                        onChange={(e) => handleSettingChange('marginTop', parseInt(e.target.value))}
-                        className="mt-1 text-xs"
-                        min={0}
-                        max={50}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="marginBottom" className="text-xs">아래</Label>
-                      <Input
-                        id="marginBottom"
-                        type="number"
-                        value={settings.marginBottom}
-                        onChange={(e) => handleSettingChange('marginBottom', parseInt(e.target.value))}
-                        className="mt-1 text-xs"
-                        min={0}
-                        max={50}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="marginLeft" className="text-xs">왼쪽</Label>
-                      <Input
-                        id="marginLeft"
-                        type="number"
-                        value={settings.marginLeft}
-                        onChange={(e) => handleSettingChange('marginLeft', parseInt(e.target.value))}
-                        className="mt-1 text-xs"
-                        min={0}
-                        max={50}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="marginRight" className="text-xs">오른쪽</Label>
-                      <Input
-                        id="marginRight"
-                        type="number"
-                        value={settings.marginRight}
-                        onChange={(e) => handleSettingChange('marginRight', parseInt(e.target.value))}
-                        className="mt-1 text-xs"
-                        min={0}
-                        max={50}
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* 텍스트 설정 */}
-              <Card>
-                <CardContent className="p-4">
-                  <h4 className="font-medium mb-3 text-sm">텍스트 설정</h4>
-                  <div className="space-y-3">
-                    <div>
-                      <Label htmlFor="fontSize" className="text-xs">글자 크기 (pt)</Label>
-                      <Input
-                        id="fontSize"
-                        type="number"
-                        value={settings.fontSize}
-                        onChange={(e) => handleSettingChange('fontSize', parseInt(e.target.value))}
-                        className="mt-1 text-xs"
-                        min={8}
-                        max={20}
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="lineHeight" className="text-xs">줄 간격</Label>
-                      <Input
-                        id="lineHeight"
-                        type="number"
-                        step={0.1}
-                        value={settings.lineHeight}
-                        onChange={(e) => handleSettingChange('lineHeight', parseFloat(e.target.value))}
-                        className="mt-1 text-xs"
-                        min={1.0}
-                        max={3.0}
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="problemSpacing" className="text-xs">문제 간격 (px)</Label>
-                      <Input
-                        id="problemSpacing"
-                        type="number"
-                        value={settings.problemSpacing}
-                        onChange={(e) => handleSettingChange('problemSpacing', parseInt(e.target.value))}
-                        className="mt-1 text-xs"
-                        min={0}
-                        max={50}
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* 내용 설정 */}
-              <Card>
-                <CardContent className="p-4">
-                  <h4 className="font-medium mb-3 text-sm">내용 설정</h4>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="showProblemNumber" className="text-xs">문제 번호 표시</Label>
-                      <Switch
-                        id="showProblemNumber"
-                        checked={settings.showProblemNumber}
-                        onCheckedChange={(checked) => handleSettingChange('showProblemNumber', checked)}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="showAnswer" className="text-xs">정답 표시</Label>
-                      <Switch
-                        id="showAnswer"
-                        checked={settings.showAnswer}
-                        onCheckedChange={(checked) => handleSettingChange('showAnswer', checked)}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="showExplanation" className="text-xs">해설 표시</Label>
-                      <Switch
-                        id="showExplanation"
-                        checked={settings.showExplanation}
-                        onCheckedChange={(checked) => handleSettingChange('showExplanation', checked)}
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+      {/* 출력 버튼 */}
+      {onPrint && (
+        <div>
+          <Button onClick={onPrint} variant="default" size="sm">
+            <Printer className="w-4 h-4 mr-1" />
+            출력
+          </Button>
         </div>
       )}
+
+      {/* 기본값 재설정 버튼 */}
+      <div>
+        <Button onClick={resetToDefault} variant="outline" size="sm">
+          <RotateCcw className="w-4 h-4 mr-1" />
+          기본값
+        </Button>
+      </div>
+
+      {/* 상태 정보 */}
+      <div className="flex items-center space-x-2 text-sm text-gray-600">
+        <span>문제: {totalProblems}개</span>
+        <span>•</span>
+        <span>페이지: {totalPages}페이지</span>
+      </div>
     </div>
   )
 }

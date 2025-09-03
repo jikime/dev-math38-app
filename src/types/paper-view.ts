@@ -11,6 +11,7 @@ export interface PaperLayoutSettings {
   marginLeft: number
   marginRight: number
   problemSpacing: number
+  minMargin: number  // 39math-ui-prime의 gap 설정
   showProblemNumber: boolean
   showAnswer: boolean
   showExplanation: boolean
@@ -27,6 +28,7 @@ export const DEFAULT_PAPER_SETTINGS: PaperLayoutSettings = {
   marginLeft: 20,
   marginRight: 20,
   problemSpacing: 16,
+  minMargin: 30,  // 39math-ui-prime의 기본 gap 값
   showProblemNumber: true,
   showAnswer: false,
   showExplanation: false,

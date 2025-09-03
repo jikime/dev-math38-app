@@ -94,7 +94,7 @@ export function PaperViewSheet({
     if (!caching) {
       startPrint()
     }
-  }, [caching, settings.columns])
+  }, [caching, settings.columns, settings.minMargin])
 
   useEffect(() => {
     if (!isMounted.current) {
@@ -170,7 +170,7 @@ export function PaperViewSheet({
   }
 
   const columnHeight = 940 // colheight
-  const minMargin = 30
+  const minMargin = settings.minMargin || 30
 
   // 39math-ui-prime의 rearrange 함수와 동일한 로직
   const rearrange = (set: PaperProblem[]) => {
