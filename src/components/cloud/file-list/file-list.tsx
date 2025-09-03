@@ -1,8 +1,10 @@
+import { useState, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { MoreVertical, Eye, Download, Edit, Trash2 } from "lucide-react"
+import { MoreVertical, Eye, Download, Edit, Trash2, GripVertical } from "lucide-react"
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd"
 import type { CloudResourceProblem } from "@/types/cloud"
 import { getFileIcon } from "../../../lib/utils/file-icons"
 import { getFileTypeFromPath, getFileTypeColor, getEstimatedFileSize } from "../../../lib/utils/file-utils"
@@ -11,9 +13,27 @@ interface FileListProps {
   problems: CloudResourceProblem[]
   isLoading: boolean
   selectedFolder?: string
+  onReorder?: (reorderedProblems: CloudResourceProblem[]) => void
 }
 
-export function FileList({ problems, isLoading, selectedFolder }: FileListProps) {
+export function FileList({ problems, isLoading, selectedFolder, onReorder }: FileListProps) {
+  const [items, setItems] = useState(problems)
+
+  useEffect(() => {
+    setItems(problems)
+  }, [problems])
+
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return
+
+    const newItems = Array.from(items)
+    const [reorderedItem] = newItems.splice(result.source.index, 1)
+    newItems.splice(result.destination.index, 0, reorderedItem)
+
+    setItems(newItems)
+    onReorder?.(newItems)
+  }
+
   if (isLoading) {
     return (
       <div className="text-center py-8 text-muted-foreground">
@@ -22,7 +42,7 @@ export function FileList({ problems, isLoading, selectedFolder }: FileListProps)
     )
   }
 
-  if (problems.length === 0) {
+  if (items.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
         {selectedFolder ? "파일이 없습니다" : "폴더를 선택해주세요"}
@@ -31,7 +51,7 @@ export function FileList({ problems, isLoading, selectedFolder }: FileListProps)
   }
 
   return (
-    <>
+    <DragDropContext onDragEnd={handleDragEnd}>
       <div className="grid grid-cols-12 gap-4 p-3 text-sm font-medium text-gray-500 border-b">
         <div className="col-span-1">#</div>
         <div className="col-span-8">파일명</div>
@@ -39,20 +59,37 @@ export function FileList({ problems, isLoading, selectedFolder }: FileListProps)
         <div className="col-span-1"></div>
       </div>
       <ScrollArea className="h-[calc(100vh-500px)]">
-        <div className="space-y-2 p-3">
-          {problems.map((problem, index) => {
-            const fileType = getFileTypeFromPath(problem.title)
-            const createdDate = new Date(problem.created).toLocaleDateString('ko-KR')
-            const fileSize = getEstimatedFileSize(problem.pageCount, problem.problemCount)
-            
-            return (
-              <div
-                key={problem.fileId}
-                className="grid grid-cols-12 gap-4 p-3 rounded-lg border hover:border-muted hover:bg-muted/50 transition-all duration-200"
-              >
-                <div className="col-span-1 flex items-center">
-                  <span className="text-sm font-medium text-muted-foreground">{index + 1}</span>
-                </div>
+        <Droppable droppableId="file-list">
+          {(provided) => (
+            <div 
+              className="space-y-2 p-3"
+              {...provided.droppableProps}
+              ref={provided.innerRef}
+            >
+              {items.map((problem, index) => {
+                const fileType = getFileTypeFromPath(problem.title)
+                const createdDate = new Date(problem.created).toLocaleDateString('ko-KR')
+                const fileSize = getEstimatedFileSize(problem.pageCount, problem.problemCount)
+                
+                return (
+                  <Draggable key={problem.fileId} draggableId={problem.fileId} index={index}>
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        className={`grid grid-cols-12 gap-4 p-3 rounded-lg border hover:border-muted hover:bg-muted/50 transition-all duration-200 ${
+                          snapshot.isDragging ? 'shadow-lg bg-background' : ''
+                        }`}
+                      >
+                        <div className="col-span-1 flex items-center gap-2">
+                          <div
+                            {...provided.dragHandleProps}
+                            className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded"
+                          >
+                            <GripVertical className="w-4 h-4 text-muted-foreground" />
+                          </div>
+                          <span className="text-sm font-medium text-muted-foreground">{index + 1}</span>
+                        </div>
                 <div className="col-span-8 flex items-center gap-3">
                   {getFileIcon(fileType)}
                   <div className="flex-1 min-w-0">
@@ -92,13 +129,17 @@ export function FileList({ problems, isLoading, selectedFolder }: FileListProps)
                         파일 삭제
                       </DropdownMenuItem>
                     </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-            )
-          })}
-        </div>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  )}
+                </Draggable>
+              )})}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
       </ScrollArea>
-    </>
+    </DragDropContext>
   )
 }
