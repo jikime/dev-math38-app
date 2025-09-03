@@ -25,7 +25,6 @@ interface ProblemViewerHeaderProps {
   onShowStats: () => void
   onShowFlashcard: () => void
   onGenerateExam: () => void
-  onSettings: () => void
 }
 
 export function ProblemViewerHeader({
@@ -37,7 +36,6 @@ export function ProblemViewerHeader({
   onShowStats,
   onShowFlashcard,
   onGenerateExam,
-  onSettings
 }: ProblemViewerHeaderProps) {
   return (
     <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
@@ -137,17 +135,7 @@ export function ProblemViewerHeader({
             className="flex items-center gap-2"
           >
             <List className="w-4 h-4" />
-            {viewMode === 'normal' ? '펼쳐보기' : '시험지'}
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onSettings}
-            className="flex items-center gap-2"
-          >
-            <FileText className="w-4 h-4" />
-            시험지
+            {viewMode === 'normal' ? '시험지' : '펼쳐보기'}
           </Button>
         </div>
       </div>

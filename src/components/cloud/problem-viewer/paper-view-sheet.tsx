@@ -118,17 +118,54 @@ export function PaperViewSheet({
 
   const setHeight = (index: number | undefined, height: number) => {
     if (!index) { index = 1 }
-    heights[index - 1] = height
-    setHeights([...heights]) // 배열 복사하여 상태 업데이트
+    heights[index - 1] = height;
+    setHeights([...heights]); // 배열 복사하여 상태 업데이트
     if (index < problems.length) {
-      setTimeout(() => cachingHeight(index), 20)
+      setTimeout(() => cachingHeight(index), 20);
     } else {
-      setCaching(false)
+      setCaching(false);
       // 모든 문제의 높이가 새로 측정된 경우에만 서버에 업데이트
-      // const needUpdate = problems.some((p, i) => p.printHeight !== heights[i]);
-      // if (needUpdate) {
-      //   updateProblemHeights();
-      // }
+      const needUpdate = problems.some((p, i) => p.printHeight !== heights[i]);
+      if (needUpdate) {
+        updateProblemHeights();
+      }
+    }
+  }
+
+  // 39math-ui-prime과 동일한 서버 업데이트 함수
+  const updateProblemHeights = async () => {
+    // 업데이트가 필요한 문제만 필터링
+    const problemHeightList = problems
+      .map((p, i) => {
+        if (p.printHeight !== heights[i]) {
+          p.printHeight = heights[i]; // 새로운 높이로 업데이트
+          return {
+            problemId: p.problemId,
+            height: heights[i],
+          };
+        }
+        return null;
+      })
+      .filter((item) => item !== null);
+
+    if (problemHeightList.length > 0) {
+      try {
+        // dev-math38의 API 구조에 맞게 조정 (실제 구현시 적절한 엔드포인트로 변경)
+        console.log("문제 높이 업데이트:", problemHeightList);
+        // TODO: 실제 API 호출 구현
+        // const response = await fetch('/api/problems/update-heights', {
+        //   method: 'PUT',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify(problemHeightList)
+        // });
+        // if (response.ok) {
+        //   console.log("문제 높이 업데이트 성공");
+        // } else {
+        //   console.error("문제 높이 업데이트 실패");
+        // }
+      } catch (error) {
+        console.error("문제 높이 업데이트 오류:", error);
+      }
     }
   }
 
@@ -235,7 +272,7 @@ export function PaperViewSheet({
                 }}
               >
                 <div
-                  className="problem py-2"
+                  className="problem"
                   ref={(el) => {
                     if (el) {
                       // 높이 측정 후 setHeight 호출

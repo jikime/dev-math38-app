@@ -69,6 +69,110 @@ $--button-over-bottom: -20px;
       justify-content: space-between;
       height: 100%;
     }
+    .empty-problem {
+      flex: 1;
+    }
   }
 
+}
+
+// 39math-ui-prime과 동일한 문제 스타일 (정확한 정렬)
+.problem {
+  margin-top: 10px !important;
+  padding: 10px !important;
+  margin-bottom: 30px !important;
+  font-size: $font-size !important;
+
+  .content {
+    display: flex !important;
+    align-items: flex-start !important; // 문제 번호와 내용을 상단 정렬
+    gap: 0 !important;
+    
+    .problem-number {
+      font-weight: bold !important;
+      margin-right: 8px !important;
+      margin-bottom: 0 !important;
+      padding: 0 !important;
+      flex-shrink: 0 !important; // 문제 번호 크기 고정
+      min-width: 20px !important; // 최소 너비 보장
+      line-height: 1.2 !important; // 줄 높이 조정
+      vertical-align: top !important;
+      display: inline-block !important;
+    }
+    
+    .problem-content {
+      flex: 1 !important;
+      line-height: 1.4 !important; // 내용 줄 높이 조정
+      margin: 0 !important; // 기본 마진 제거
+      padding: 0 !important;
+      vertical-align: top !important;
+      
+      // 내부 요소들도 상단 정렬 강제
+      * {
+        vertical-align: top !important;
+      }
+      
+      // 수식이나 특별한 요소들 정렬 수정
+      p, div {
+        margin: 0 !important;
+        line-height: 1.4 !important;
+        vertical-align: top !important;
+      }
+      
+      // 수학 수식 정렬
+      .katex, .katex-display {
+        margin: 0 !important;
+        vertical-align: top !important;
+      }
+    }
+  }
+  
+  .choice-list {
+    margin-top: 8px;
+    margin-left: 28px; // 문제 번호 너비만큼 들여쓰기
+    
+    .choice {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 4px;
+      
+      &.num-center {
+        align-items: center;
+      }
+      
+      .choice-num {
+        margin-right: 6px;
+        flex-shrink: 0;
+        min-width: 16px;
+        line-height: 1.2;
+      }
+      
+      .choice-value {
+        flex: 1;
+        line-height: 1.4;
+      }
+    }
+  }
+  
+  .problem-solution {
+    margin-top: 8px;
+    margin-left: 28px; // 문제 번호 너비만큼 들여쓰기
+    padding-top: 8px;
+    border-top: 1px solid #e0e0e0;
+  }
+}
+
+.problem-sect {
+  position: relative;
+  
+  &.edit {
+    .over-buttons {
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    
+    &:hover .over-buttons {
+      opacity: 1;
+    }
+  }
 }
