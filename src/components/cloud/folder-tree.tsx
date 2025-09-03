@@ -1,6 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
+import { Droppable } from "@hello-pangea/dnd"
 import type { CloudBookGroup } from "@/types/cloud"
 import {
   ChevronDown,
@@ -34,17 +35,24 @@ export function FolderTreeNode({
 
   return (
     <div>
-      <Button
-        variant="ghost"
-        className={`w-full justify-start p-2 h-auto ${
-          isSelected
-            ? "bg-primary/10 text-primary"
-            : "hover:bg-muted"
-        }`}
-        style={{ paddingLeft: `${indentLevel + 8}px` }}
-        onClick={() => onSelectFolder(folder.key)}
-      >
-        <div className="flex items-center gap-2 w-full">
+      <Droppable droppableId={`folder-${folder.key}`}>
+        {(provided, snapshot) => (
+          <div
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+            className={`${snapshot.isDraggedOver ? 'bg-primary/20 rounded-md' : ''}`}
+          >
+            <Button
+              variant="ghost"
+              className={`w-full justify-start p-2 h-auto ${
+                isSelected
+                  ? "bg-primary/10 text-primary"
+                  : "hover:bg-muted"
+              } ${snapshot.isDraggedOver ? 'bg-primary/20' : ''}`}
+              style={{ paddingLeft: `${indentLevel + 8}px` }}
+              onClick={() => onSelectFolder(folder.key)}
+            >
+              <div className="flex items-center gap-2 w-full">
           {/* 확장/축소 아이콘 */}
           <div className="flex items-center justify-start w-4 h-4">
             {hasChildren ? (
@@ -77,10 +85,14 @@ export function FolderTreeNode({
             <Folder className="w-4 h-4 mr-1" />
           )}
 
-          {/* 폴더명 */}
-          <span className="text-sm flex-1 text-left">{folder.title}</span>
-        </div>
-      </Button>
+              {/* 폴더명 */}
+              <span className="text-sm flex-1 text-left">{folder.title}</span>
+              </div>
+            </Button>
+            {provided.placeholder}
+          </div>
+        )}
+      </Droppable>
 
       {/* 하위 폴더들 */}
       {hasChildren && isExpanded && (

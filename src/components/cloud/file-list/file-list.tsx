@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { MoreVertical, Eye, Download, Edit, Trash2, GripVertical } from "lucide-react"
-import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd"
+import { Droppable, Draggable } from "@hello-pangea/dnd"
 import type { CloudResourceProblem } from "@/types/cloud"
 import { getFileIcon } from "../../../lib/utils/file-icons"
 import { getFileTypeFromPath, getFileTypeColor, getEstimatedFileSize } from "../../../lib/utils/file-utils"
@@ -17,22 +18,17 @@ interface FileListProps {
 }
 
 export function FileList({ problems, isLoading, selectedFolder, onReorder }: FileListProps) {
+  const router = useRouter()
   const [items, setItems] = useState(problems)
 
   useEffect(() => {
     setItems(problems)
   }, [problems])
 
-  const handleDragEnd = (result: DropResult) => {
-    if (!result.destination) return
-
-    const newItems = Array.from(items)
-    const [reorderedItem] = newItems.splice(result.source.index, 1)
-    newItems.splice(result.destination.index, 0, reorderedItem)
-
-    setItems(newItems)
-    onReorder?.(newItems)
+  const handleFileClick = (fileId: string) => {
+    router.push(`/cloud/${fileId}`)
   }
+
 
   if (isLoading) {
     return (
@@ -51,7 +47,7 @@ export function FileList({ problems, isLoading, selectedFolder, onReorder }: Fil
   }
 
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
+    <>
       <div className="grid grid-cols-12 gap-4 p-3 text-sm font-medium text-gray-500 border-b">
         <div className="col-span-1">#</div>
         <div className="col-span-8">파일명</div>
@@ -90,7 +86,10 @@ export function FileList({ problems, isLoading, selectedFolder, onReorder }: Fil
                           </div>
                           <span className="text-sm font-medium text-muted-foreground">{index + 1}</span>
                         </div>
-                <div className="col-span-8 flex items-center gap-3">
+                <div 
+                  className="col-span-8 flex items-center gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 rounded p-2 -m-2"
+                  onClick={() => handleFileClick(problem.fileId)}
+                >
                   {getFileIcon(fileType)}
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-foreground text-sm truncate">{problem.title}</p>
@@ -116,7 +115,7 @@ export function FileList({ problems, isLoading, selectedFolder, onReorder }: Fil
                         <Edit className="w-4 h-4 mr-2" />
                         파일명 수정
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleFileClick(problem.fileId)}>
                         <Eye className="w-4 h-4 mr-2" />
                         문제 보기
                       </DropdownMenuItem>
@@ -140,6 +139,6 @@ export function FileList({ problems, isLoading, selectedFolder, onReorder }: Fil
           )}
         </Droppable>
       </ScrollArea>
-    </DragDropContext>
+    </>
   )
 }

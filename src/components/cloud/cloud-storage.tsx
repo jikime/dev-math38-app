@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { DragDropContext, DropResult } from "@hello-pangea/dnd"
 import type { SelectOption } from "@/components/ui/flexible-select"
 import { useSubjects } from "@/hooks/use-subjects"
 import { useBookGroups, useBookGroupDetail, useResourceProblems, useBookGroupStats, useSkillChapters } from "@/hooks/use-cloud"
@@ -95,20 +96,46 @@ export function CloudStorage() {
     setSelectedFolder(folderId)
   }
 
+  // 드래그앤드롭 처리 함수
+  const handleDragEnd = (result: DropResult) => {
+    const { source, destination } = result
+
+    if (!destination) return
+
+    // 같은 영역 내에서 재정렬 (파일 리스트 내)
+    if (source.droppableId === "file-list" && destination.droppableId === "file-list") {
+      // 기존 파일 순서 변경 로직
+      console.log("파일 순서 변경:", source.index, "->", destination.index)
+      return
+    }
+
+    // 파일을 폴더로 이동
+    if (source.droppableId === "file-list" && destination.droppableId.startsWith("folder-")) {
+      const folderId = destination.droppableId.replace("folder-", "")
+      const draggedFile = resourceProblems?.[source.index]
+      
+      if (draggedFile) {
+        console.log("파일 이동:", draggedFile.title, "-> 폴더:", folderId)
+        // TODO: API 호출하여 실제 파일 이동 처리
+      }
+    }
+  }
+
   // 리소스 문제 목록 (현재는 필터링 없음)
   const filteredProblems = resourceProblems || []
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">수작 클라우드</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">시험지 파일을 안전하게 저장하고 관리하세요</p>
+    <DragDropContext onDragEnd={handleDragEnd}>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">수작 클라우드</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">시험지 파일을 안전하게 저장하고 관리하세요</p>
+          </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-12 gap-6 h-[calc(100vh-300px)]">
+        <div className="grid grid-cols-12 gap-6 h-[calc(100vh-300px)]">
         {/* Left Sidebar - Folder Structure */}
         <div className="col-span-3">
           <FolderStructure
@@ -178,6 +205,7 @@ export function CloudStorage() {
         bookGroupStatsLoading={bookGroupStatsLoading}
         skillChaptersLoading={skillChaptersLoading}
       />
-    </div>
+      </div>
+    </DragDropContext>
   )
 }
