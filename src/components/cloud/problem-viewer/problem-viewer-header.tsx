@@ -14,11 +14,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import type { ProblemStats } from "@/types/problem"
+import type { ViewMode } from "@/types/paper-view"
 
 interface ProblemViewerHeaderProps {
   title: string
   stats: ProblemStats | null
   isLoading: boolean
+  viewMode?: ViewMode
   onBack: () => void
   onShowStats: () => void
   onShowFlashcard: () => void
@@ -30,6 +32,7 @@ export function ProblemViewerHeader({
   title,
   stats,
   isLoading,
+  viewMode = 'normal',
   onBack,
   onShowStats,
   onShowFlashcard,
@@ -134,7 +137,7 @@ export function ProblemViewerHeader({
             className="flex items-center gap-2"
           >
             <List className="w-4 h-4" />
-            펼쳐보기
+            {viewMode === 'normal' ? '펼쳐보기' : '시험지'}
           </Button>
           
           <Button

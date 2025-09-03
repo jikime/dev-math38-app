@@ -1,0 +1,74 @@
+$body-height: 1024px;
+$column-height: 960px;
+$font-size: 9pt;
+$--size-problem-font: 10pt;
+$--button-over-bottom: -20px;
+
+
+
+.page.academy-paper {
+  page-break-after: always;
+  width: 21cm;
+  min-height: 29.7cm;
+  max-height: 29.7cm;
+  padding: 1cm;
+  margin: 1cm auto;
+  border: 1px #5a5959 solid;
+  border-radius: 0px;
+  // background: white;
+  box-shadow: 0 0 5px rgba(252, 72, 72, 0.1);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  font-size: $font-size !important;
+
+  .header {
+    .header-table {
+      td {
+        border: 1px solid black;
+      }
+    }
+  }
+
+  .body {
+    width: 100%;
+    height: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    // border-top: 1px solid black;
+    border-bottom: 1px solid black;
+    align-items: center;
+
+    .column-left {
+      flex: 1;
+      height: $column-height;
+      font-size: $font-size !important;
+      width: 357px !important;
+      margin-left: -10px;
+    }
+    .divider {
+      height: $column-height;
+      width: 1px;
+      border-left: 1px solid black;
+    }
+    .column-right {
+      flex: 1;
+      height: $column-height;
+      font-size: $font-size !important;
+      width: 357px !important;
+    }
+    .empty {
+      height: 1px;
+      width: 357px;
+      display: block;
+    }
+    .problem-column {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+    }
+  }
+
+}

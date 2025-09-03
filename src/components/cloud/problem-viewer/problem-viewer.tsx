@@ -5,11 +5,15 @@ import { useRouter } from "next/navigation"
 import { ProblemViewerHeader } from "@/components/cloud/problem-viewer/problem-viewer-header"
 import { ProblemFilterBar } from "@/components/cloud/problem-viewer/problem-filter-bar"
 import { ProblemGrid } from "@/components/cloud/problem-viewer/problem-grid"
+import { PaperViewSheet } from "@/components/cloud/problem-viewer/paper-view-sheet"
+import { PaperLayoutSetting } from "@/components/cloud/problem-viewer/paper-layout-setting"
 import { StatsModal } from "@/components/cloud/stats/stats-modal"
 import { useFileWithProblems, useFileStats } from "@/hooks/use-problems"
 import { useSkillChapters } from "@/hooks/use-cloud"
 import { convertFileDataToBookGroupStats, convertFileStatsToBookGroupStats } from "@/lib/utils/problem-stats-utils"
 import type { ProblemFilter, ProblemViewerSettings, Problem } from "@/types/problem"
+import type { ViewMode, PaperLayoutSettings } from "@/types/paper-view"
+import { DEFAULT_PAPER_SETTINGS } from "@/types/paper-view"
 import { useMemo } from "react"
 
 interface ProblemViewerProps {
@@ -29,6 +33,9 @@ export function ProblemViewer({ fileId, title }: ProblemViewerProps) {
     autoSave: true
   })
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false)
+  const [viewMode, setViewMode] = useState<ViewMode>('normal')
+  const [paperSettings, setPaperSettings] = useState<PaperLayoutSettings>(DEFAULT_PAPER_SETTINGS)
+  const [totalPaperPages, setTotalPaperPages] = useState(0)
 
   // 파일 정보와 문제 목록 조회
   const {
@@ -145,8 +152,8 @@ export function ProblemViewer({ fileId, title }: ProblemViewerProps) {
   }
 
   const handleGenerateExam = () => {
-    // TODO: 시험지 생성 모달 열기
-    console.log("시험지 생성")
+    // 펼쳐보기 모드 토글
+    setViewMode(viewMode === 'normal' ? 'paper' : 'normal')
   }
 
   const handleSettings = () => {
@@ -165,6 +172,24 @@ export function ProblemViewer({ fileId, title }: ProblemViewerProps) {
 
   const handleAnswerToggle = (problemId: string) => {
     console.log("답안 토글:", problemId)
+  }
+
+  // 시험지 모드 핸들러들
+  const handlePaperSettingsChange = (newSettings: PaperLayoutSettings) => {
+    setPaperSettings(newSettings)
+  }
+
+  const handlePaperHeightChange = (totalPages: number) => {
+    setTotalPaperPages(totalPages)
+  }
+
+  const handlePrint = () => {
+    window.print()
+  }
+
+  const handleExport = () => {
+    // TODO: PDF 내보내기 기능 구현
+    console.log("PDF 내보내기")
   }
 
   if (error) {
@@ -191,6 +216,7 @@ export function ProblemViewer({ fileId, title }: ProblemViewerProps) {
         title={fileData?.title || title}
         stats={stats}
         isLoading={isLoading}
+        viewMode={viewMode}
         onBack={handleBack}
         onShowStats={handleShowStats}
         onShowFlashcard={handleShowFlashcard}
@@ -198,21 +224,48 @@ export function ProblemViewer({ fileId, title }: ProblemViewerProps) {
         onSettings={handleSettings}
       />
 
-      {/* 필터 바 */}
-      <ProblemFilterBar
-        filter={filter}
-        stats={stats}
-        onFilterChange={handleFilterChange}
-      />
+      {/* 필터 바 (일반 모드에서만) */}
+      {viewMode === 'normal' && (
+        <ProblemFilterBar
+          filter={filter}
+          stats={stats}
+          onFilterChange={handleFilterChange}
+        />
+      )}
 
-      {/* 문제 그리드 */}
-      <ProblemGrid
-        problems={currentProblems}
-        isLoading={isLoading}
-        settings={settings}
-        onProblemCopy={handleProblemCopy}
-        onAnswerToggle={handleAnswerToggle}
-      />
+      {/* 컨텐츠 영역 - viewMode에 따라 다른 컴포넌트 렌더링 */}
+      {viewMode === 'normal' ? (
+        <ProblemGrid
+          problems={currentProblems}
+          isLoading={isLoading}
+          settings={settings}
+          onProblemCopy={handleProblemCopy}
+          onAnswerToggle={handleAnswerToggle}
+        />
+      ) : (
+        <PaperViewSheet
+          problems={currentProblems}
+          settings={paperSettings}
+          title={fileData?.title || "수학 시험지"}
+          subjectName="수학"
+          teacherName=""
+          academyName="수학생각"
+          editMode={false}
+          onHeightChange={handlePaperHeightChange}
+        />
+      )}
+
+      {/* 시험지 모드 설정 패널 */}
+      {viewMode === 'paper' && (
+        <PaperLayoutSetting
+          settings={paperSettings}
+          onSettingsChange={handlePaperSettingsChange}
+          onPrint={handlePrint}
+          onExport={handleExport}
+          totalProblems={currentProblems.length}
+          totalPages={totalPaperPages}
+        />
+      )}
 
       {/* 통계 모달 */}
       <StatsModal
