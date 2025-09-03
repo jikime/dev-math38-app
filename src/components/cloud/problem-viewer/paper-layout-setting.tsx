@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator"
 import { Card, CardContent } from "@/components/ui/card"
 import { Settings, Printer, Download, RotateCcw } from "lucide-react"
 import type { PaperLayoutSettings } from "@/types/paper-view"
+import { DEFAULT_PAPER_SETTINGS } from "@/types/paper-view"
 
 interface PaperLayoutSettingProps {
   settings: PaperLayoutSettings

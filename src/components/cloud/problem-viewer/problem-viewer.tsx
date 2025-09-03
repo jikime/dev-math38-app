@@ -156,11 +156,6 @@ export function ProblemViewer({ fileId, title }: ProblemViewerProps) {
     setViewMode(viewMode === 'normal' ? 'paper' : 'normal')
   }
 
-  const handleSettings = () => {
-    // TODO: 설정 모달 열기
-    console.log("설정")
-  }
-
   const handleFilterChange = (newFilter: ProblemFilter) => {
     setFilter(newFilter)
   }
@@ -221,7 +216,6 @@ export function ProblemViewer({ fileId, title }: ProblemViewerProps) {
         onShowStats={handleShowStats}
         onShowFlashcard={handleShowFlashcard}
         onGenerateExam={handleGenerateExam}
-        onSettings={handleSettings}
       />
 
       {/* 필터 바 (일반 모드에서만) */}
