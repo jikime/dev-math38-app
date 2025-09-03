@@ -2,10 +2,13 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { ProblemViewerHeader } from "./components/problem-viewer-header"
-import { ProblemFilterBar } from "./components/problem-filter-bar"
-import { ProblemGrid } from "./components/problem-grid"
-import { useFileWithProblems } from "@/hooks/use-problems"
+import { ProblemViewerHeader } from "@/components/cloud/problem-viewer/problem-viewer-header"
+import { ProblemFilterBar } from "@/components/cloud/problem-viewer/problem-filter-bar"
+import { ProblemGrid } from "@/components/cloud/problem-viewer/problem-grid"
+import { StatsModal } from "@/components/cloud/stats/stats-modal"
+import { useFileWithProblems, useFileStats } from "@/hooks/use-problems"
+import { useSkillChapters } from "@/hooks/use-cloud"
+import { convertFileDataToBookGroupStats, convertFileStatsToBookGroupStats } from "@/lib/utils/problem-stats-utils"
 import type { ProblemFilter, ProblemViewerSettings, Problem } from "@/types/problem"
 import { useMemo } from "react"
 
@@ -16,7 +19,6 @@ interface ProblemViewerProps {
 
 export function ProblemViewer({ fileId, title }: ProblemViewerProps) {
   const router = useRouter()
-  const [currentPage, setCurrentPage] = useState(1)
   const [filter, setFilter] = useState<ProblemFilter>({})
   const [settings, setSettings] = useState<ProblemViewerSettings>({
     layout: 'grid',
@@ -26,6 +28,7 @@ export function ProblemViewer({ fileId, title }: ProblemViewerProps) {
     showCurriculum: true,
     autoSave: true
   })
+  const [isStatsModalOpen, setIsStatsModalOpen] = useState(false)
 
   // 파일 정보와 문제 목록 조회
   const {
@@ -33,6 +36,29 @@ export function ProblemViewer({ fileId, title }: ProblemViewerProps) {
     isLoading,
     error
   } = useFileWithProblems(fileId)
+
+  // 통계 데이터 조회 (새로운 API 사용)
+  const {
+    data: fileStats,
+    isLoading: fileStatsLoading
+  } = useFileStats(fileId)
+
+  // 기존 통계 데이터 hooks (기존 컴포넌트 재사용을 위해)
+  const {
+    data: skillChapters,
+    isLoading: skillChaptersLoading  
+  } = useSkillChapters(fileData?.subjectId?.toString() || "")
+
+  // 파일 데이터를 통계 모달에서 사용할 수 있는 형태로 변환
+  const convertedBookGroupStats = useMemo(() => {
+    if (!fileData) return null
+    
+    // 새로운 API 데이터가 있으면 우선 사용, 없으면 기본 파일 데이터로 변환
+    if (fileStats) {
+      return convertFileStatsToBookGroupStats(fileStats, fileData)
+    }
+    return convertFileDataToBookGroupStats(fileData)
+  }, [fileData, fileStats])
 
   // 필터링된 문제 목록 계산
   const filteredProblems = useMemo(() => {
@@ -72,10 +98,8 @@ export function ProblemViewer({ fileId, title }: ProblemViewerProps) {
     return problems
   }, [fileData?.problemList, filter])
 
-  // 페이지네이션 계산
-  const totalPages = Math.ceil(filteredProblems.length / settings.problemsPerPage)
-  const startIndex = (currentPage - 1) * settings.problemsPerPage
-  const currentProblems = filteredProblems.slice(startIndex, startIndex + settings.problemsPerPage)
+  // 모든 문제 출력 (페이징 제거)
+  const currentProblems = filteredProblems
 
   // 통계 계산
   const stats = useMemo(() => {
@@ -112,8 +136,7 @@ export function ProblemViewer({ fileId, title }: ProblemViewerProps) {
   }
 
   const handleShowStats = () => {
-    // TODO: 통계 모달 열기
-    console.log("통계 보기")
+    setIsStatsModalOpen(true)
   }
 
   const handleShowFlashcard = () => {
@@ -133,11 +156,6 @@ export function ProblemViewer({ fileId, title }: ProblemViewerProps) {
 
   const handleFilterChange = (newFilter: ProblemFilter) => {
     setFilter(newFilter)
-    setCurrentPage(1) // 필터 변경 시 첫 페이지로
-  }
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page)
   }
 
   const handleProblemCopy = (problem: Problem) => {
@@ -192,11 +210,18 @@ export function ProblemViewer({ fileId, title }: ProblemViewerProps) {
         problems={currentProblems}
         isLoading={isLoading}
         settings={settings}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
         onProblemCopy={handleProblemCopy}
         onAnswerToggle={handleAnswerToggle}
+      />
+
+      {/* 통계 모달 */}
+      <StatsModal
+        isOpen={isStatsModalOpen}
+        onOpenChange={setIsStatsModalOpen}
+        bookGroupStats={convertedBookGroupStats}
+        skillChapters={skillChapters || null}
+        bookGroupStatsLoading={isLoading || fileStatsLoading}
+        skillChaptersLoading={skillChaptersLoading}
       />
     </div>
   )

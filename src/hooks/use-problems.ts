@@ -59,3 +59,14 @@ export function useSearchProblems(query: string, limit: number = 10) {
     }
   );
 }
+
+// 파일 통계 조회 (새로운 API)
+export function useFileStats(fileId: string) {
+  return useApiQuery(
+    [...problemKeys.all, 'file-stats', fileId],
+    `https://cms1.suzag.com/app/academy/book/stats/book/${fileId}`,
+    {
+      enabled: !!fileId,
+    }
+  );
+}

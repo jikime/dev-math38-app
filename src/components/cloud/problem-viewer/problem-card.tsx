@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Eye, EyeOff, Copy, BookOpen, Edit, FileText } from "lucide-react"
 import type { Problem } from "@/types/problem"
 
@@ -74,8 +73,8 @@ export function ProblemCard({
   }
 
   return (
-    <Card className="h-full hover:shadow-md transition-shadow duration-200">
-      <CardHeader className="pb-3 border-b border-gray-200 dark:border-gray-700">
+    <div className="h-full bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow hover:shadow-md transition-shadow duration-200 flex flex-col">
+      <div className="py-2 px-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
         <div className="flex items-start justify-between">
           {/* 문제 번호 및 타입 뱃지 */}
           <div className="flex items-center gap-2">
@@ -112,14 +111,14 @@ export function ProblemCard({
             </Button>
           </div>
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent className="flex flex-col h-full">
+      <div className="flex flex-col flex-1 p-6 min-h-0 problem">
         {/* 메인 컨텐츠 영역 */}
-        <div className="flex-1 space-y-4">
+        <div className="flex-1 space-y-4 content">
           {/* 문제 내용 */}
           <div 
-            className="text-sm leading-relaxed text-gray-700 dark:text-gray-300"
+            className="problem-content text-sm leading-relaxed text-gray-700 dark:text-gray-300"
             dangerouslySetInnerHTML={{ 
               __html: problem.content?.value || "문제 내용이 없습니다." 
             }}
@@ -167,13 +166,12 @@ export function ProblemCard({
         </div>
 
         {/* 하단 고정 정보 영역 */}
-        <div className="mt-auto space-y-3">
+        <div className="mt-auto space-y-3 flex-shrink-0">
           {/* 출처 정보 (태그에서 추출) */}
           {problem.tags && problem.tags.filter(tag => tag.type === 'paper').length > 0 && (
             <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded-md">
               <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                 <FileText className="w-3 h-3" />
-                <span className="font-medium">출처:</span>
                 {problem.tags
                   .filter(tag => tag.type === 'paper')
                   .map((tag, idx) => (
@@ -204,7 +202,7 @@ export function ProblemCard({
             </div>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

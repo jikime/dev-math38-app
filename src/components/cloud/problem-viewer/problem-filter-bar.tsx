@@ -39,9 +39,9 @@ export function ProblemFilterBar({ filter, stats, onFilterChange }: ProblemFilte
     const currentValues = newFilter[type] as string[] || []
     
     if (currentValues.includes(value)) {
-      newFilter[type] = currentValues.filter(v => v !== value)
+      (newFilter[type] as string[]) = currentValues.filter(v => v !== value)
     } else {
-      newFilter[type] = [...currentValues, value]
+      (newFilter[type] as string[]) = [...currentValues, value]
     }
     
     if (newFilter[type]?.length === 0) {
