@@ -8,7 +8,7 @@ import "katex/dist/katex.min.css";
 import "@/styles/main.scss";
 
 import { ThemeProvider } from "@/components/common/theme-provider"
-import { QueryProvider } from "@/providers/query-provider"
+import { QueryProvider } from "@/components/providers/query-provider"
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const inter = Inter({ subsets: ["latin"] })
