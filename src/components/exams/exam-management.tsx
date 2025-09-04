@@ -3,14 +3,12 @@
 import { useState, useEffect } from "react"
 import { useSubjects } from "@/hooks/use-subjects"
 import { useExamFolderGroups, useExamPapersByFolder, type ExamFolderGroup, type ExamPaperItem } from "@/hooks/use-exams"
+import ExamPaperView from "./exam-paper-view"
 import type { CloudBookGroup } from "@/types/cloud"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { FlexibleSelect } from "@/components/ui/flexible-select"
 import type { SelectOption } from "@/components/ui/flexible-select"
-import { Dialog, DialogTrigger } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import {
   FileText,
@@ -26,20 +24,9 @@ import {
   ChevronRight,
   FolderOpen,
   Folder,
-  Calendar,
-  FolderPlus,
 } from "lucide-react"
+import { ScrollArea } from "../ui/scroll-area"
 
-interface ExamPaper {
-  id: string
-  name: string
-  school: string
-  problems: number
-  date: string
-  status: "active" | "draft" | "archived"
-  subject: string
-  grade: string
-}
 
 // FolderTreeNode 컴포넌트
 interface FolderTreeNodeProps {
@@ -218,39 +205,20 @@ export function ExamManagement() {
     setSelectedSubject(newSubject)
   }
 
+  // 시험지 클릭 시 선택하기
+  const handlePaperClick = (paper: ExamPaperItem) => {
+    setSelectedPaper(paper)
+  }
+
 
   // 선택된 폴더의 시험지 목록 (API 데이터 사용)
   const filteredPapers = examPapers || []
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-      case "draft":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-      case "archived":
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "active":
-        return "활성"
-      case "draft":
-        return "임시저장"
-      case "archived":
-        return "보관"
-      default:
-        return status
-    }
-  }
 
   // 첫 번째 시험지를 기본 선택
   const defaultPaper = filteredPapers[0] || null
   const currentPaper = selectedPaper || defaultPaper
+
 
   return (
     <div className="space-y-6">
@@ -264,13 +232,10 @@ export function ExamManagement() {
 
       <div className="grid grid-cols-12 gap-6 h-[calc(100vh-200px)]">
         {/* Left Sidebar - Subject, Exam List, and Folders */}
-        <div className="col-span-4 flex flex-col gap-4">
+        <div className="col-span-3 flex flex-col gap-4">
           {/* Subject Selection and Folder Structure */}
           <div className="bg-card text-card-foreground rounded-xl border py-4 h-auto">
-            <div className="px-6">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="leading-none font-semibold text-lg">과목</h3>
-              </div>
+            <div className="px-4">
               <FlexibleSelect
                 options={subjectOptions}
                 value={selectedSubject}
@@ -293,10 +258,7 @@ export function ExamManagement() {
             <Separator className="my-4" />
             
             {/* Folder Structure */}
-            <div className="px-6">
-              <div className="mb-4">
-                <h3 className="leading-none font-semibold text-lg">폴더 구조</h3>
-              </div>
+            <div className="px-4">
               <div className="h-[150px] overflow-y-auto">
                 <div className="space-y-1">
                   {foldersLoading ? (
@@ -330,8 +292,8 @@ export function ExamManagement() {
           </div>
 
           {/* Exam List */}
-          <div className="bg-card text-card-foreground flex flex-col rounded-xl border py-4 h-96">
-            <div className="px-6 mb-4">
+          <div className="bg-card text-card-foreground flex flex-col rounded-xl border py-4 h-150">
+            <div className="px-4 mb-4">
               <div className="flex items-center justify-between">
                 <h3 className="leading-none font-semibold text-lg flex items-center gap-2">
                   <FileText className="w-5 h-5" />
@@ -343,14 +305,14 @@ export function ExamManagement() {
                 </Button>
               </div>
             </div>
-            <div className="px-6 flex-1 overflow-auto">
+            <ScrollArea className="px-4 flex-1 h-[calc(100vh-200px)]">
               <div className="space-y-2">
                 {papersLoading ? (
                   <div className="text-sm text-muted-foreground text-center py-4">
                     시험지를 불러오는 중...
                   </div>
                 ) : filteredPapers.length > 0 ? (
-                  filteredPapers.map((paper, index) => (
+                  filteredPapers.map((paper) => (
                   <div
                     key={paper.paperId}
                     className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
@@ -358,16 +320,10 @@ export function ExamManagement() {
                         ? "border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20"
                         : "border-gray-200 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:hover:border-gray-600 dark:hover:bg-gray-800"
                     }`}
-                    onClick={() => setSelectedPaper(paper)}
+                    onClick={() => handlePaperClick(paper)}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-medium text-gray-500">#{index + 1}</span>
-                          <Badge variant="outline" className="text-xs">
-                            {paper.paperGroupName}
-                          </Badge>
-                        </div>
                         <h4 className="font-medium text-gray-900 dark:text-white text-sm leading-tight mb-2">
                           {paper.title}
                         </h4>
@@ -375,10 +331,6 @@ export function ExamManagement() {
                           <span className="flex items-center gap-1">
                             <FileText className="w-3 h-3" />
                             {paper.countProblems}문제
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            {paper.creatorId}
                           </span>
                         </div>
                       </div>
@@ -430,15 +382,15 @@ export function ExamManagement() {
                   </div>
                 )}
               </div>
-            </div>
+            </ScrollArea>
           </div>
 
         </div>
 
         {/* Right - Exam Preview */}
-        <div className="col-span-8">
-          <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm h-full flex flex-col">
-            <div className="grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6 pb-3">
+        <div className="col-span-9">
+          <div className="bg-white dark:bg-gray-900 text-card-foreground flex flex-col rounded-xl border py-4 h-full flex flex-col">
+            <div className="grid auto-rows-min grid-rows-[auto_auto] items-start px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6 border-b">
               <div className="flex items-center justify-end">
                 <div className="flex items-center gap-2">
                   <Button size="sm" variant="outline">
@@ -456,146 +408,21 @@ export function ExamManagement() {
                 </div>
               </div>
             </div>
-            <div className="px-6 flex-1 pt-0">
+            <div className="px-6 flex-1 pt-0 bg-gray-50">
               <div className="h-full flex flex-col">
-                <div className="flex-1 mt-4">
-                  <div className="h-full bg-white dark:bg-gray-800 rounded-lg border p-6 overflow-auto">
-                    {currentPaper ? (
-                      <div className="space-y-6">
-                        {/* Exam Header */}
-                        <div className="text-center border-b pb-4">
-                          <h2 className="text-xl font-bold mb-2">2025 1학기(A)</h2>
-                          <div className="flex justify-between text-sm text-gray-600">
-                            <span>시험지명: {currentPaper.title}</span>
-                            <span>시험대비: 학평</span>
-                          </div>
-                          <div className="flex justify-between text-sm text-gray-600 mt-1">
-                            <span>성명: ___________</span>
-                            <span>학번: ___________</span>
-                          </div>
-                        </div>
-
-                        {/* Sample Problems */}
-                        <div className="space-y-6">
-                          <div className="problem-item">
-                            <div className="flex items-start gap-3">
-                              <Badge variant="outline" className="mt-1">
-                                01
-                              </Badge>
-                              <div className="flex-1">
-                                <p className="text-sm mb-2">
-                                  <span className="text-blue-600 font-medium">D103. 속도와 가속도</span>
-                                </p>
-                                <p className="text-sm leading-relaxed mb-3">
-                                  수직선 위를 움직이는 점 P의 시각 t (t ≥ 0)에서의 위치 x가
-                                  <br />x = t³ - 3t² + 2t
-                                </p>
-                                <p className="text-sm mb-3">일 때, t = 1에서 점 P의 속도와 가속도는? [3점]</p>
-                                <div className="grid grid-cols-5 gap-2 text-sm">
-                                  <div className="flex items-center gap-1">
-                                    <span className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center text-xs">
-                                      ①
-                                    </span>
-                                    <span>-1, -1</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <span className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center text-xs">
-                                      ②
-                                    </span>
-                                    <span>-1, 0</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <span className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center text-xs">
-                                      ③
-                                    </span>
-                                    <span>0, 0</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <span className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center text-xs">
-                                      ④
-                                    </span>
-                                    <span>0, 1</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <span className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center text-xs">
-                                      ⑤
-                                    </span>
-                                    <span>1, 1</span>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <Badge className="bg-blue-100 text-blue-800">개념</Badge>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="problem-item">
-                            <div className="flex items-start gap-3">
-                              <Badge variant="outline" className="mt-1">
-                                03
-                              </Badge>
-                              <div className="flex-1">
-                                <p className="text-sm mb-2">
-                                  <span className="text-blue-600 font-medium">D076. 다항함수의 극대와 극소</span>
-                                </p>
-                                <p className="text-sm leading-relaxed mb-3">
-                                  함수 f(x) = 2x³ - 3x² + 2의 극값은? [3.5점]
-                                </p>
-                                <div className="grid grid-cols-5 gap-2 text-sm">
-                                  <div className="flex items-center gap-1">
-                                    <span className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center text-xs">
-                                      ①
-                                    </span>
-                                    <span>1</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <span className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center text-xs">
-                                      ②
-                                    </span>
-                                    <span>2</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <span className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center text-xs">
-                                      ③
-                                    </span>
-                                    <span>3</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <span className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center text-xs">
-                                      ④
-                                    </span>
-                                    <span>4</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <span className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center text-xs">
-                                      ⑤
-                                    </span>
-                                    <span>5</span>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <Badge className="bg-green-100 text-green-800">개념</Badge>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* More problems would be rendered here */}
-                          <div className="text-center text-gray-500 text-sm py-8">
-                            ... 총 {currentPaper.countProblems}문제 중 2문제 미리보기 ...
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
+                <div className="flex-1 mt-2">
+                  {currentPaper ? (
+                    <ExamPaperView paperId={currentPaper.paperId} />
+                  ) : (
+                    <div className="h-full bg-white dark:bg-gray-800 rounded-lg border p-6 overflow-auto">
                       <div className="flex items-center justify-center h-full text-gray-500">
                         <div className="text-center">
                           <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
                           <p>시험지를 선택하세요</p>
                         </div>
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -127,7 +127,7 @@ $--button-over-bottom: -20px;
     .problem-content {
       flex: 1 !important;
       line-height: 1.4 !important; // 내용 줄 높이 조정
-      margin: 0 !important; // 기본 마진 제거
+      // margin: 0 !important; // 기본 마진 제거
       padding: 0 !important;
       vertical-align: top !important;
       
@@ -137,11 +137,11 @@ $--button-over-bottom: -20px;
       }
       
       // 수식이나 특별한 요소들 정렬 수정
-      p, div {
-        margin: 0 !important;
-        line-height: 1.4 !important;
-        vertical-align: top !important;
-      }
+      // p, div {
+      //   margin: 0 !important;
+      //   line-height: 1.4 !important;
+      //   vertical-align: top !important;
+      // }
       
       // 수학 수식 정렬
       .katex, .katex-display {

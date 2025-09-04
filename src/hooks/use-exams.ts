@@ -4,6 +4,7 @@ import { API_ENDPOINTS } from '@/lib/api/endpoints';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { cmsApiRequest } from '@/lib/api/cms-axios-client';
 import type { Exam, ExamCreateInput, ExamUpdateInput, ExamResult, ExamStatistics } from '@/types/exam';
+import type { ExamPaperDetail } from '@/types/exam-paper';
 
 // 시험지 폴더 그룹 타입 정의
 export interface ExamFolderGroup {
@@ -162,4 +163,19 @@ export function useDeleteExam(id: string) {
       },
     }
   );
+}
+
+// 시험지 상세 조회 (CMS API)
+export function useExamPaperDetail(paperId: string | null) {
+  return useQuery<ExamPaperDetail>({
+    queryKey: ['exam-paper-detail', paperId],
+    queryFn: async () => {
+      if (!paperId) throw new Error('Paper ID is required');
+      const response = await cmsApiRequest.get(`/app/academy/papergroup/paper/${paperId}`);
+      return response.data;
+    },
+    enabled: !!paperId,
+    staleTime: 10 * 60 * 1000, // 10분간 신선
+    gcTime: 60 * 60 * 1000, // 1시간간 캐시
+  });
 }
