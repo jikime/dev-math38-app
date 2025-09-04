@@ -122,7 +122,7 @@ export function FlexibleSelect({
                       className="text-xs px-2 py-0.5"
                     >
                       {option.label}
-                      <button
+                      <Button
                         className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
@@ -140,7 +140,7 @@ export function FlexibleSelect({
                         }}
                       >
                         <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                      </button>
+                      </Button>
                     </Badge>
                   ))}
                   {selectedOptions.length > maxCount && (

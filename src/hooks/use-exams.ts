@@ -2,7 +2,32 @@ import { useApiQuery, useApiMutation, useApiPutMutation, useApiDeleteMutation } 
 import { queryKeys } from '@/lib/api/query-client';
 import { API_ENDPOINTS } from '@/lib/api/endpoints';
 import { useQueryClient } from '@tanstack/react-query';
+import { cmsApiRequest } from '@/lib/api/cms-axios-client';
 import type { Exam, ExamCreateInput, ExamUpdateInput, ExamResult, ExamStatistics } from '@/types/exam';
+
+// 시험지 폴더 그룹 타입 정의
+export interface ExamFolderGroup {
+  value: string
+  title: string
+  children: ExamFolderGroup[] | null
+}
+
+// 시험지 폴더 그룹 목록 조회 (CMS API)
+export function useExamFolderGroups(subjectId: string | null) {
+  return useApiQuery<ExamFolderGroup[]>(
+    ['exam-folder-groups', subjectId],
+    async () => {
+      if (!subjectId) throw new Error('Subject ID is required');
+      const response = await cmsApiRequest.get(`/app/academy/papergroup/tree/${subjectId}`);
+      return response.data;
+    },
+    {
+      enabled: !!subjectId,
+      staleTime: 5 * 60 * 1000, // 5분간 신선
+      cacheTime: 30 * 60 * 1000, // 30분간 캐시
+    }
+  );
+}
 
 // 시험 목록 조회
 export function useExamList() {

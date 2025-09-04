@@ -1,12 +1,19 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSubjects } from "@/hooks/use-subjects"
+import { useExamFolderGroups, type ExamFolderGroup } from "@/hooks/use-exams"
+import type { CloudBookGroup } from "@/types/cloud"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { FlexibleSelect } from "@/components/ui/flexible-select"
+import type { SelectOption } from "@/components/ui/flexible-select"
+import { Dialog, DialogTrigger } from "@/components/ui/dialog"
+import { Separator } from "@/components/ui/separator"
 import {
   FileText,
   MoreVertical,
@@ -23,7 +30,9 @@ import {
   ChevronDown,
   ChevronRight,
   FolderOpen,
+  Folder,
   Calendar,
+  FolderPlus,
 } from "lucide-react"
 
 interface ExamPaper {
@@ -37,156 +46,185 @@ interface ExamPaper {
   grade: string
 }
 
-interface ExamFolder {
-  id: string
-  name: string
-  subject: string
-  expanded: boolean
-  papers: ExamPaper[]
+// FolderTreeNode 컴포넌트
+interface FolderTreeNodeProps {
+  folder: ExamFolderGroup;
+  level: number;
+  expandedFolders: Set<string>;
+  selectedFolder: string;
+  onToggleExpand: (folderId: string) => void;
+  onSelectFolder: (folderId: string) => void;
+}
+
+function FolderTreeNode({ 
+  folder, 
+  level, 
+  expandedFolders, 
+  selectedFolder, 
+  onToggleExpand, 
+  onSelectFolder 
+}: FolderTreeNodeProps) {
+  const hasChildren = folder.children && folder.children.length > 0
+  const isExpanded = expandedFolders.has(folder.value)
+  const isSelected = selectedFolder === folder.value
+  const indentLevel = level * 16
+
+  return (
+    <div>
+      <Button
+        variant="ghost"
+        className={`w-full justify-start p-2 h-auto ${
+          isSelected
+            ? "bg-primary/10 text-primary"
+            : "hover:bg-muted"
+        }`}
+        style={{ paddingLeft: `${indentLevel + 8}px` }}
+        onClick={() => onSelectFolder(folder.value)}
+      >
+        <div className="flex items-center gap-2 w-full">
+          {/* 확장/축소 아이콘 */}
+          <div className="flex items-center justify-start w-4 h-4">
+            {hasChildren ? (
+              <div 
+                className="p-0 h-4 w-4 hover:bg-muted flex items-center justify-start cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onToggleExpand(folder.value)
+                }}
+              >
+                {isExpanded ? (
+                  <ChevronDown className="h-3 w-3" />
+                ) : (
+                  <ChevronRight className="h-3 w-3" />
+                )}
+              </div>
+            ) : (
+              <div className="w-4 h-4" />
+            )}
+          </div>
+
+          {/* 폴더 아이콘 */}
+          {hasChildren ? (
+            isExpanded ? (
+              <FolderOpen className="w-4 h-4 mr-1" />
+            ) : (
+              <Folder className="w-4 h-4 mr-1" />
+            )
+          ) : (
+            <Folder className="w-4 h-4 mr-1" />
+          )}
+
+          {/* 폴더명 */}
+          <span className="text-sm flex-1 text-left">{folder.title}</span>
+        </div>
+      </Button>
+
+      {/* 하위 폴더들 */}
+      {hasChildren && isExpanded && (
+        <div>
+          {folder.children!.map((childFolder) => (
+            <FolderTreeNode
+              key={childFolder.value}
+              folder={childFolder}
+              level={level + 1}
+              expandedFolders={expandedFolders}
+              selectedFolder={selectedFolder}
+              onToggleExpand={onToggleExpand}
+              onSelectFolder={onSelectFolder}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export function ExamManagement() {
-  const [selectedFolder, setSelectedFolder] = useState("2025-1-mid")
+  const [selectedFolder, setSelectedFolder] = useState("")
   const [selectedPaper, setSelectedPaper] = useState<ExamPaper | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [activeTab, setActiveTab] = useState("exam")
+  const [selectedSubject, setSelectedSubject] = useState<string>("")
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
 
-  const [folders, setFolders] = useState<ExamFolder[]>([
-    {
-      id: "2024-1-final",
-      name: "2024 1학기 기말",
-      subject: "미적분학",
-      expanded: false,
-      papers: [],
-    },
-    {
-      id: "2025-1-mid",
-      name: "2025 1학기 중간",
-      subject: "미적분학",
-      expanded: true,
-      papers: [
-        {
-          id: "1",
-          name: "2025 1학기 중간 영생고(미적분)",
-          school: "영생고",
-          problems: 23,
-          date: "2025-01-15",
-          status: "active",
-          subject: "미적분",
-          grade: "고3",
-        },
-        {
-          id: "2",
-          name: "2025 1학기 중간 청천고(미적분)",
-          school: "청천고",
-          problems: 20,
-          date: "2025-01-16",
-          status: "active",
-          subject: "미적분",
-          grade: "고3",
-        },
-        {
-          id: "3",
-          name: "2025 1학기 중간 대명고(미적분)",
-          school: "대명고",
-          problems: 21,
-          date: "2025-01-17",
-          status: "active",
-          subject: "미적분",
-          grade: "고3",
-        },
-        {
-          id: "4",
-          name: "2025 1학기 중간 숙지고(미적분)",
-          school: "숙지고",
-          problems: 21,
-          date: "2025-01-18",
-          status: "draft",
-          subject: "미적분",
-          grade: "고3",
-        },
-        {
-          id: "5",
-          name: "2025 1학기 중간 수원고(미적분)",
-          school: "수원고",
-          problems: 19,
-          date: "2025-01-19",
-          status: "active",
-          subject: "미적분",
-          grade: "고3",
-        },
-        {
-          id: "6",
-          name: "2025 1학기 중간 수성고(미적분)",
-          school: "수성고",
-          problems: 21,
-          date: "2025-01-20",
-          status: "active",
-          subject: "미적분",
-          grade: "고3",
-        },
-        {
-          id: "7",
-          name: "2025 1학기 중간 영북여고(미적분)",
-          school: "영북여고",
-          problems: 22,
-          date: "2025-01-21",
-          status: "active",
-          subject: "미적분",
-          grade: "고3",
-        },
-        {
-          id: "8",
-          name: "2025 1학기 중간 조원고(미적분)",
-          school: "조원고",
-          problems: 20,
-          date: "2025-01-22",
-          status: "active",
-          subject: "미적분",
-          grade: "고3",
-        },
-        {
-          id: "9",
-          name: "2025 1학기 중간 창성고(미적분)",
-          school: "창성고",
-          problems: 20,
-          date: "2025-01-23",
-          status: "active",
-          subject: "미적분",
-          grade: "고3",
-        },
-        {
-          id: "10",
-          name: "2025 1학기 중간 창원고(미적분)",
-          school: "창원고",
-          problems: 20,
-          date: "2025-01-24",
-          status: "active",
-          subject: "미적분",
-          grade: "고3",
-        },
-      ],
-    },
-    {
-      id: "2025-1-final",
-      name: "2025 1학기 기말",
-      subject: "미적분학",
-      expanded: false,
-      papers: [],
-    },
-  ])
+  // API 훅을 통해 과목 데이터 조회
+  const { data: subjects, isLoading: subjectsLoading } = useSubjects()
 
-  const toggleFolder = (folderId: string) => {
-    setFolders(folders.map((folder) => (folder.id === folderId ? { ...folder, expanded: !folder.expanded } : folder)))
+  // 과목 데이터를 FlexibleSelect 옵션으로 변환
+  const subjectOptions: SelectOption[] = subjects?.map(subject => ({
+    label: subject.title,
+    value: subject.key.toString()
+  })) || []
+
+  // 첫 번째 과목을 기본 선택
+  useEffect(() => {
+    if (subjects && subjects.length > 0 && !selectedSubject) {
+      setSelectedSubject(subjects[0].key.toString())
+    }
+  }, [subjects, selectedSubject])
+
+  // 시험지 폴더 그룹 데이터 조회
+  const { data: folderGroups, isLoading: foldersLoading } = useExamFolderGroups(selectedSubject)
+
+  // ExamFolderGroup를 CloudBookGroup 형태로 변환
+  const mapExamFolderToCloudGroup = (examFolder: ExamFolderGroup): CloudBookGroup => ({
+    bookGroupId: 0,
+    academyId: 0,
+    parentBookGroupId: null,
+    subjectId: parseInt(selectedSubject || '0'),
+    groupName: examFolder.title,
+    indexNum: 0,
+    canRemove: false,
+    groupType: 0,
+    subList: null,
+    created: '',
+    title: examFolder.title,
+    value: examFolder.value,
+    key: examFolder.value,
+    children: examFolder.children ? examFolder.children.map(mapExamFolderToCloudGroup) : null,
+  })
+
+  const mappedFolders = folderGroups ? folderGroups.map(mapExamFolderToCloudGroup) : null
+
+  // 첫 번째 폴더를 기본 선택하고 루트 폴더들을 자동 확장
+  useEffect(() => {
+    if (folderGroups && folderGroups.length > 0 && !selectedFolder) {
+      // 첫 번째 폴더 선택
+      setSelectedFolder(folderGroups[0].value)
+      
+      // 루트 레벨 폴더들을 자동으로 확장
+      const rootFolderValues = folderGroups.map(folder => folder.value)
+      setExpandedFolders(new Set(rootFolderValues))
+    }
+  }, [folderGroups, selectedFolder])
+
+  // 폴더 확장/축소 처리 함수
+  const handleToggleExpand = (folderId: string) => {
+    setExpandedFolders(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(folderId)) {
+        newSet.delete(folderId)
+      } else {
+        newSet.add(folderId)
+      }
+      return newSet
+    })
   }
 
-  const selectedFolderData = folders.find((f) => f.id === selectedFolder)
-  const filteredPapers =
-    selectedFolderData?.papers.filter(
-      (paper) =>
-        paper.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        paper.school.toLowerCase().includes(searchTerm.toLowerCase()),
-    ) || []
+  // 폴더 선택 처리 함수
+  const handleSelectFolder = (folderId: string) => {
+    setSelectedFolder(folderId)
+  }
+
+  // 과목 선택 변경 처리
+  const handleSubjectChange = (value: string | string[]) => {
+    const newSubject = Array.isArray(value) ? value[0] : value
+    setSelectedSubject(newSubject)
+  }
+
+
+  // 임시로 빈 배열 - 추후 선택된 폴더의 시험지 목록 API 추가 예정
+  const filteredPapers: ExamPaper[] = []
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -261,48 +299,65 @@ export function ExamManagement() {
       <div className="grid grid-cols-12 gap-6 h-[calc(100vh-200px)]">
         {/* Left Sidebar - Folder Structure */}
         <div className="col-span-3">
-          <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm h-full">
-            <div className="grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6 pb-3">
+          <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 h-full">
+            <div className="grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-3">
               <div className="flex items-center justify-between">
-                <h3 className="leading-none font-semibold text-lg">과목 선택</h3>
-              </div>
-              <Select defaultValue="미적분학">
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="미적분학">미적분학</SelectItem>
-                  <SelectItem value="확률과통계">확률과통계</SelectItem>
-                  <SelectItem value="기하">기하</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="px-6 pt-0">
-              <div className="space-y-2">
-                {folders.map((folder) => (
-                  <div key={folder.id}>
-                    <Button
-                      variant="ghost"
-                      className={`w-full justify-start p-2 h-auto ${
-                        selectedFolder === folder.id
-                          ? "bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
-                          : "hover:bg-gray-50 dark:hover:bg-gray-800"
-                      }`}
-                      onClick={() => {
-                        setSelectedFolder(folder.id)
-                        toggleFolder(folder.id)
-                      }}
-                    >
-                      {folder.expanded ? (
-                        <ChevronDown className="w-4 h-4 mr-2" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4 mr-2" />
-                      )}
-                      <FolderOpen className="w-4 h-4 mr-2" />
-                      <span className="text-sm">{folder.name}</span>
+                <h3 className="leading-none font-semibold text-lg">과목</h3>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <FolderPlus className="w-4 h-4 mr-1" />
+                      새 폴더
                     </Button>
+                  </DialogTrigger>
+                </Dialog>
+              </div>
+              <FlexibleSelect
+                options={subjectOptions}
+                value={selectedSubject}
+                onValueChange={handleSubjectChange}
+                placeholder="과목을 선택하세요"
+                disabled={subjectsLoading}
+                className="w-full"
+                multiple={false}
+              />
+              
+              {subjectsLoading && (
+                <div className="text-sm text-muted-foreground mt-2">과목 목록 로딩중...</div>
+              )}
+              
+              {!subjectsLoading && (!subjectOptions || subjectOptions.length === 0) && (
+                <div className="text-sm text-red-500 mt-2">과목 목록을 불러올 수 없습니다</div>
+              )}
+            </div>
+            <Separator />
+            <div className="px-6 pt-0">
+              <div className="space-y-1">
+                {foldersLoading ? (
+                  <div className="text-sm text-muted-foreground text-center py-4">
+                    폴더를 불러오는 중...
                   </div>
-                ))}
+                ) : mappedFolders && mappedFolders.length > 0 ? (
+                  mappedFolders.map((folder) => (
+                    <FolderTreeNode
+                      key={folder.key}
+                      folder={folder}
+                      level={0}
+                      expandedFolders={expandedFolders}
+                      selectedFolder={selectedFolder}
+                      onToggleExpand={handleToggleExpand}
+                      onSelectFolder={handleSelectFolder}
+                    />
+                  ))
+                ) : selectedSubject ? (
+                  <div className="text-sm text-muted-foreground text-center py-4">
+                    폴더가 없습니다
+                  </div>
+                ) : (
+                  <div className="text-sm text-muted-foreground text-center py-4">
+                    과목을 선택하세요
+                  </div>
+                )}
               </div>
             </div>
           </div>

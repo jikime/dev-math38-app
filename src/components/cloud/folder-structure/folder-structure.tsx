@@ -6,6 +6,7 @@ import { FolderPlus } from "lucide-react"
 import type { CloudBookGroup } from "@/types/cloud"
 import { FolderTreeNode } from "../folder-tree"
 import { CreateFolderModal } from "../modals/create-folder-modal"
+import { Separator } from "@/components/ui/separator"
 
 interface FolderStructureProps {
   subjectOptions: SelectOption[]
@@ -38,9 +39,9 @@ export function FolderStructure({
 }: FolderStructureProps) {
   return (
     <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 h-full">
-      <div className="grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6 pb-3">
+      <div className="grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-3">
         <div className="flex items-center justify-between">
-          <h3 className="leading-none font-semibold text-lg">폴더 구조</h3>
+          <h3 className="leading-none font-semibold text-lg">과목</h3>
           <Dialog open={isCreateFolderOpen} onOpenChange={onCreateFolderOpenChange}>
             <DialogTrigger asChild>
               <Button variant="outline" size="sm">
@@ -68,6 +69,7 @@ export function FolderStructure({
           <div className="text-sm text-red-500 mt-2">과목 목록을 불러올 수 없습니다</div>
         )}
       </div>
+      <Separator />
       <div className="px-6 pt-0">
         <div className="space-y-1">
           {bookGroupsLoading ? (
