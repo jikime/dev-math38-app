@@ -26,6 +26,11 @@ cmsAxiosClient.interceptors.request.use(
       });
     }
 
+    const token = '#38ct-001';
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
     return config;
   },
   (error: AxiosError) => {

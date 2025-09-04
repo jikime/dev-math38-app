@@ -2,12 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { useSubjects } from "@/hooks/use-subjects"
-import { useExamFolderGroups, type ExamFolderGroup } from "@/hooks/use-exams"
+import { useExamFolderGroups, useExamPapersByFolder, type ExamFolderGroup, type ExamPaperItem } from "@/hooks/use-exams"
 import type { CloudBookGroup } from "@/types/cloud"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { FlexibleSelect } from "@/components/ui/flexible-select"
@@ -18,15 +16,12 @@ import {
   FileText,
   MoreVertical,
   Plus,
-  Search,
   Printer,
   Download,
   Edit,
   Copy,
   Trash2,
   Eye,
-  Save,
-  Sparkles,
   ChevronDown,
   ChevronRight,
   FolderOpen,
@@ -141,9 +136,7 @@ function FolderTreeNode({
 
 export function ExamManagement() {
   const [selectedFolder, setSelectedFolder] = useState("")
-  const [selectedPaper, setSelectedPaper] = useState<ExamPaper | null>(null)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [activeTab, setActiveTab] = useState("exam")
+  const [selectedPaper, setSelectedPaper] = useState<ExamPaperItem | null>(null)
   const [selectedSubject, setSelectedSubject] = useState<string>("")
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
 
@@ -165,6 +158,9 @@ export function ExamManagement() {
 
   // 시험지 폴더 그룹 데이터 조회
   const { data: folderGroups, isLoading: foldersLoading } = useExamFolderGroups(selectedSubject)
+
+  // 폴더별 시험지 목록 조회
+  const { data: examPapers, isLoading: papersLoading } = useExamPapersByFolder(selectedFolder)
 
   // ExamFolderGroup를 CloudBookGroup 형태로 변환
   const mapExamFolderToCloudGroup = (examFolder: ExamFolderGroup): CloudBookGroup => ({
@@ -223,8 +219,8 @@ export function ExamManagement() {
   }
 
 
-  // 임시로 빈 배열 - 추후 선택된 폴더의 시험지 목록 API 추가 예정
-  const filteredPapers: ExamPaper[] = []
+  // 선택된 폴더의 시험지 목록 (API 데이터 사용)
+  const filteredPapers = examPapers || []
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -264,53 +260,16 @@ export function ExamManagement() {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">시험지 관리</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">시험지를 생성하고 관리하세요</p>
         </div>
-        <div className="flex items-center gap-3">
-          <Select defaultValue="2025-1-mid">
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="시험지명" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="2025-1-mid">2025 1학기 중간</SelectItem>
-              <SelectItem value="2025-1-final">2025 1학기 기말</SelectItem>
-              <SelectItem value="2024-1-final">2024 1학기 기말</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select defaultValue="2025-mid-a">
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="2025 1학기(A)" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="2025-mid-a">2025 1학기(A)</SelectItem>
-              <SelectItem value="2025-mid-b">2025 1학기(B)</SelectItem>
-              <SelectItem value="2025-final-a">2025 기말(A)</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button className="bg-blue-600 hover:bg-blue-700">
-            <Save className="w-4 h-4 mr-2" />
-            저장
-          </Button>
-          <Button variant="outline" className="border-blue-200 text-blue-600 hover:bg-blue-50 bg-transparent">
-            <Sparkles className="w-4 h-4 mr-2" />
-            유사 시험지 제작
-          </Button>
-        </div>
       </div>
 
       <div className="grid grid-cols-12 gap-6 h-[calc(100vh-200px)]">
-        {/* Left Sidebar - Folder Structure */}
-        <div className="col-span-3">
-          <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 h-full">
-            <div className="grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-3">
-              <div className="flex items-center justify-between">
+        {/* Left Sidebar - Subject, Exam List, and Folders */}
+        <div className="col-span-4 flex flex-col gap-4">
+          {/* Subject Selection and Folder Structure */}
+          <div className="bg-card text-card-foreground rounded-xl border py-4 h-auto">
+            <div className="px-6">
+              <div className="flex items-center justify-between mb-3">
                 <h3 className="leading-none font-semibold text-lg">과목</h3>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <FolderPlus className="w-4 h-4 mr-1" />
-                      새 폴더
-                    </Button>
-                  </DialogTrigger>
-                </Dialog>
               </div>
               <FlexibleSelect
                 options={subjectOptions}
@@ -330,43 +289,49 @@ export function ExamManagement() {
                 <div className="text-sm text-red-500 mt-2">과목 목록을 불러올 수 없습니다</div>
               )}
             </div>
-            <Separator />
-            <div className="px-6 pt-0">
-              <div className="space-y-1">
-                {foldersLoading ? (
-                  <div className="text-sm text-muted-foreground text-center py-4">
-                    폴더를 불러오는 중...
-                  </div>
-                ) : mappedFolders && mappedFolders.length > 0 ? (
-                  mappedFolders.map((folder) => (
-                    <FolderTreeNode
-                      key={folder.key}
-                      folder={folder}
-                      level={0}
-                      expandedFolders={expandedFolders}
-                      selectedFolder={selectedFolder}
-                      onToggleExpand={handleToggleExpand}
-                      onSelectFolder={handleSelectFolder}
-                    />
-                  ))
-                ) : selectedSubject ? (
-                  <div className="text-sm text-muted-foreground text-center py-4">
-                    폴더가 없습니다
-                  </div>
-                ) : (
-                  <div className="text-sm text-muted-foreground text-center py-4">
-                    과목을 선택하세요
-                  </div>
-                )}
+            
+            <Separator className="my-4" />
+            
+            {/* Folder Structure */}
+            <div className="px-6">
+              <div className="mb-4">
+                <h3 className="leading-none font-semibold text-lg">폴더 구조</h3>
+              </div>
+              <div className="h-[150px] overflow-y-auto">
+                <div className="space-y-1">
+                  {foldersLoading ? (
+                    <div className="text-sm text-muted-foreground text-center py-4">
+                      폴더를 불러오는 중...
+                    </div>
+                  ) : mappedFolders && mappedFolders.length > 0 ? (
+                    mappedFolders.map((folder) => (
+                      <FolderTreeNode
+                        key={folder.key}
+                        folder={folder}
+                        level={0}
+                        expandedFolders={expandedFolders}
+                        selectedFolder={selectedFolder}
+                        onToggleExpand={handleToggleExpand}
+                        onSelectFolder={handleSelectFolder}
+                      />
+                    ))
+                  ) : selectedSubject ? (
+                    <div className="text-sm text-muted-foreground text-center py-4">
+                      폴더가 없습니다
+                    </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground text-center py-4">
+                      과목을 선택하세요
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Center - Exam List */}
-        <div className="col-span-4">
-          <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm h-full flex flex-col">
-            <div className="grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6 pb-3">
+          {/* Exam List */}
+          <div className="bg-card text-card-foreground flex flex-col rounded-xl border py-4 h-96">
+            <div className="px-6 mb-4">
               <div className="flex items-center justify-between">
                 <h3 className="leading-none font-semibold text-lg flex items-center gap-2">
                   <FileText className="w-5 h-5" />
@@ -377,23 +342,19 @@ export function ExamManagement() {
                   추가
                 </Button>
               </div>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  placeholder="시험지 검색..."
-                  className="pl-10"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
             </div>
-            <div className="px-6 flex-1 overflow-auto pt-0">
+            <div className="px-6 flex-1 overflow-auto">
               <div className="space-y-2">
-                {filteredPapers.map((paper, index) => (
+                {papersLoading ? (
+                  <div className="text-sm text-muted-foreground text-center py-4">
+                    시험지를 불러오는 중...
+                  </div>
+                ) : filteredPapers.length > 0 ? (
+                  filteredPapers.map((paper, index) => (
                   <div
-                    key={paper.id}
+                    key={paper.paperId}
                     className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
-                      currentPaper?.id === paper.id
+                      currentPaper?.paperId === paper.paperId
                         ? "border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20"
                         : "border-gray-200 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:hover:border-gray-600 dark:hover:bg-gray-800"
                     }`}
@@ -403,82 +364,101 @@ export function ExamManagement() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-sm font-medium text-gray-500">#{index + 1}</span>
-                          <Badge className={getStatusColor(paper.status)}>{getStatusText(paper.status)}</Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {paper.paperGroupName}
+                          </Badge>
                         </div>
                         <h4 className="font-medium text-gray-900 dark:text-white text-sm leading-tight mb-2">
-                          {paper.name}
+                          {paper.title}
                         </h4>
                         <div className="flex items-center gap-4 text-xs text-gray-500">
                           <span className="flex items-center gap-1">
                             <FileText className="w-3 h-3" />
-                            {paper.problems}문제
+                            {paper.countProblems}문제
                           </span>
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
-                            {paper.date}
+                            {paper.creatorId}
                           </span>
                         </div>
                       </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
-                            <Eye className="w-4 h-4 mr-2" />
-                            미리보기
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Edit className="w-4 h-4 mr-2" />
-                            편집
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Copy className="w-4 h-4 mr-2" />
-                            복사
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Download className="w-4 h-4 mr-2" />
-                            다운로드
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            삭제
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <div className="flex items-center gap-1 ml-2">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>
+                              <Eye className="w-4 h-4 mr-2" />
+                              미리보기
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Edit className="w-4 h-4 mr-2" />
+                              편집
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Copy className="w-4 h-4 mr-2" />
+                              복제
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Printer className="w-4 h-4 mr-2" />
+                              인쇄
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Download className="w-4 h-4 mr-2" />
+                              다운로드
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-red-600">
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              삭제
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
                   </div>
-                ))}
+                  ))
+                ) : selectedFolder ? (
+                  <div className="text-sm text-muted-foreground text-center py-4">
+                    선택한 폴더에 시험지가 없습니다
+                  </div>
+                ) : (
+                  <div className="text-sm text-muted-foreground text-center py-4">
+                    폴더를 선택하세요
+                  </div>
+                )}
               </div>
             </div>
           </div>
+
         </div>
 
         {/* Right - Exam Preview */}
-        <div className="col-span-5">
+        <div className="col-span-8">
           <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm h-full flex flex-col">
             <div className="grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6 pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Input placeholder="시험지" className="w-32 h-8 text-sm" defaultValue="시험지" />
-                  <Input placeholder="정답지" className="w-32 h-8 text-sm" defaultValue="정답지" />
+              <div className="flex items-center justify-end">
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="outline">
+                    <Edit className="w-4 h-4 mr-2" />
+                    수정
+                  </Button>
+                  <Button size="sm" variant="outline">
+                    <Printer className="w-4 h-4 mr-2" />
+                    프린트
+                  </Button>
+                  <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50">
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    삭제
+                  </Button>
                 </div>
-                <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                  <Printer className="w-4 h-4 mr-2" />
-                  프린트
-                </Button>
               </div>
             </div>
             <div className="px-6 flex-1 pt-0">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="exam">시험지</TabsTrigger>
-                  <TabsTrigger value="answer">정답지</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="exam" className="flex-1 mt-4">
+              <div className="h-full flex flex-col">
+                <div className="flex-1 mt-4">
                   <div className="h-full bg-white dark:bg-gray-800 rounded-lg border p-6 overflow-auto">
                     {currentPaper ? (
                       <div className="space-y-6">
@@ -486,7 +466,7 @@ export function ExamManagement() {
                         <div className="text-center border-b pb-4">
                           <h2 className="text-xl font-bold mb-2">2025 1학기(A)</h2>
                           <div className="flex justify-between text-sm text-gray-600">
-                            <span>시험지명: {currentPaper.name}</span>
+                            <span>시험지명: {currentPaper.title}</span>
                             <span>시험대비: 학평</span>
                           </div>
                           <div className="flex justify-between text-sm text-gray-600 mt-1">
@@ -603,7 +583,7 @@ export function ExamManagement() {
 
                           {/* More problems would be rendered here */}
                           <div className="text-center text-gray-500 text-sm py-8">
-                            ... 총 {currentPaper.problems}문제 중 2문제 미리보기 ...
+                            ... 총 {currentPaper.countProblems}문제 중 2문제 미리보기 ...
                           </div>
                         </div>
                       </div>
@@ -616,46 +596,8 @@ export function ExamManagement() {
                       </div>
                     )}
                   </div>
-                </TabsContent>
-
-                <TabsContent value="answer" className="flex-1 mt-4">
-                  <div className="h-full bg-white dark:bg-gray-800 rounded-lg border p-6 overflow-auto">
-                    {currentPaper ? (
-                      <div className="space-y-6">
-                        <div className="text-center border-b pb-4">
-                          <h2 className="text-xl font-bold mb-2">정답지</h2>
-                          <p className="text-sm text-gray-600">{currentPaper.name}</p>
-                        </div>
-
-                        <div className="grid grid-cols-5 gap-4">
-                          {Array.from({ length: Math.min(currentPaper.problems, 20) }, (_, i) => (
-                            <div
-                              key={i}
-                              className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded"
-                            >
-                              <span className="font-medium">{i + 1}번</span>
-                              <span className="text-blue-600 font-bold">{Math.floor(Math.random() * 5) + 1}</span>
-                            </div>
-                          ))}
-                        </div>
-
-                        {currentPaper.problems > 20 && (
-                          <div className="text-center text-gray-500 text-sm">
-                            ... 총 {currentPaper.problems}문제 정답 ...
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center h-full text-gray-500">
-                        <div className="text-center">
-                          <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                          <p>시험지를 선택하세요</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </TabsContent>
-              </Tabs>
+                </div>
+              </div>
             </div>
           </div>
         </div>
