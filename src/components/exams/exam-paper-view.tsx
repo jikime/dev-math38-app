@@ -39,7 +39,7 @@ export default function ExamPaperView({ paperId, onClose }: ExamPaperViewProps) 
   }
 
   return (
-    <div className="flex-1 overflow-auto">
+    <div className="flex-1">
       <AcademyPaperPrint 
         paper={paper} 
         showTags={true} 

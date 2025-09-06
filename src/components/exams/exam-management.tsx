@@ -25,7 +25,7 @@ import {
   FolderOpen,
   Folder,
 } from "lucide-react"
-import { ScrollArea } from "../ui/scroll-area"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 
 // FolderTreeNode 컴포넌트
@@ -222,14 +222,6 @@ export function ExamManagement() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">시험지 관리</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">시험지를 생성하고 관리하세요</p>
-        </div>
-      </div>
-
       <div className="grid grid-cols-12 gap-6 h-[calc(100vh-200px)]">
         {/* Left Sidebar - Subject, Exam List, and Folders */}
         <div className="col-span-3 flex flex-col gap-4">
@@ -408,18 +400,20 @@ export function ExamManagement() {
                 </div>
               </div>
             </div>
-            <div className="px-6 flex-1 pt-0 bg-gray-50">
+            <div className="px-6 flex-1 pt-0">
               <div className="h-full flex flex-col">
-                <div className="flex-1 mt-2">
+                <div className="flex-1 mt-4">
                   {currentPaper ? (
-                    <ExamPaperView paperId={currentPaper.paperId} />
+                    <ScrollArea className="h-[calc(100vh-280px)] bg-white dark:bg-gray-800 rounded-lg border">
+                      <div className="p-4">
+                        <ExamPaperView paperId={currentPaper.paperId} />
+                      </div>
+                    </ScrollArea>
                   ) : (
-                    <div className="h-full bg-white dark:bg-gray-800 rounded-lg border p-6 overflow-auto">
-                      <div className="flex items-center justify-center h-full text-gray-500">
-                        <div className="text-center">
-                          <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                          <p>시험지를 선택하세요</p>
-                        </div>
+                    <div className="h-[calc(100vh-280px)] bg-white dark:bg-gray-800 rounded-lg border p-6 flex items-center justify-center">
+                      <div className="text-center text-gray-500">
+                        <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                        <p>시험지를 선택하세요</p>
                       </div>
                     </div>
                   )}

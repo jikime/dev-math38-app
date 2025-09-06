@@ -1,5 +1,5 @@
 import { useMemo, useCallback } from "react"
-import { useProblemDistribution } from "@/contexts/problem-distribution-context"
+import { useProblemDistribution } from "@/stores/problem-distribution-store"
 
 /** 행/열 의미 상수들 */
 // row 0..3: 객관식[계산, 이해, 해결, 추론], row 4..7: 주관식[계산, 이해, 해결, 추론]

@@ -1,10 +1,13 @@
-import { useApiQuery } from '@/hooks/use-api';
+import { useApiMutation, useApiQuery } from '@/hooks/use-api';
+import { API_ENDPOINTS } from '@/lib/api/endpoints';
 import { queryKeys } from '@/lib/api/query-client';
+import { ApiProblemsResponse } from '@/types/api-problem';
 import type { 
   Problem, 
   FileWithProblems,
-  ProblemFilter,
-  ProblemStatus
+  ProblemStatus,
+  GeneratedPaper,
+  GeneratePaperRequest
 } from '@/types/problem';
 
 // 문제 관련 쿼리 키
@@ -14,6 +17,21 @@ const problemKeys = {
   single: (problemId: string) => [...problemKeys.all, 'single', problemId] as const,
   status: (fileId: string) => [...problemKeys.byFile(fileId), 'status'] as const,
 };
+
+// 시험지 생성
+export function useGeneratePaper() {
+  return useApiMutation<GeneratedPaper, GeneratePaperRequest>(
+    API_ENDPOINTS.PROBLEMS.GENERATE_PAPER,
+    {
+      onSuccess: (data) => {
+        console.log('Paper generated successfully:', data);
+      },
+      onError: (error) => {
+        console.error('Paper generation failed:', error);
+      },
+    }
+  );
+}
 
 // 파일 정보와 문제 목록을 함께 조회
 export function useFileWithProblems(fileId: string) {
@@ -67,6 +85,17 @@ export function useFileStats(fileId: string) {
     `https://cms1.suzag.com/app/academy/book/stats/book/${fileId}`,
     {
       enabled: !!fileId,
+    }
+  );
+}
+
+// 스킬별 문제 조회
+export function useProblemsBySkill(skillId: string) {
+  return useApiQuery<ApiProblemsResponse>(
+    ['problems', 'skill', skillId],
+    `https://math2.suzag.com/app/skill/${skillId}/problems`,
+    {
+      enabled: !!skillId,
     }
   );
 }

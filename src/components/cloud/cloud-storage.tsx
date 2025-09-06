@@ -127,14 +127,6 @@ export function CloudStorage() {
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">수작 클라우드</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">시험지 파일을 안전하게 저장하고 관리하세요</p>
-          </div>
-        </div>
-
         <div className="grid grid-cols-12 gap-6 h-[calc(100vh-300px)]">
         {/* Left Sidebar - Folder Structure */}
         <div className="col-span-3">

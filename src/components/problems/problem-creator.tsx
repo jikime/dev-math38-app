@@ -22,7 +22,6 @@ import { MultiSelect } from "@/components/ui/multi-select"
 import { SubjectTree } from "@/components/problems/subject-tree"
 import type { Option } from "@/components/ui/multi-select"
 import type { SkillChapter } from "@/types/skill"
-import { ProblemDistributionProvider } from "@/contexts/problem-distribution-context"
 import { useSimple1Aggregator, useNormal1Aggregator, useDetailedAggregator } from "@/hooks/use-aggregators"
 import { useGeneratePaper } from "@/hooks/use-problems"
 import { GeneratedPaper } from "@/types/problem"
@@ -1413,8 +1412,8 @@ function ProblemCreatorContent() {
 
 export function ProblemCreator() {
   return (
-    <ProblemDistributionProvider>
+    <>
       <ProblemCreatorContent />
-    </ProblemDistributionProvider>
+    </>
   )
 }
