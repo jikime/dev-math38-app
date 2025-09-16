@@ -1,5 +1,4 @@
 import { 
-  useApiQuery, 
   useApiMutation, 
   useApiPutMutation, 
   useApiDeleteMutation, 
@@ -7,6 +6,7 @@ import {
   useFileUploadMutation,
   downloadFile 
 } from '@/hooks/use-api';
+import { createGetHook, createPostHook } from '@/net/core/registry/ApiHookFactory';
 import { queryKeys } from '@/lib/api/query-client';
 import { API_ENDPOINTS } from '@/lib/api/endpoints';
 import { useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
@@ -48,49 +48,22 @@ const repositoryKeys = {
 // ===== 문제 저장소 =====
 
 // 저장소 문제 목록 조회 (실제 API)
-export function useRepositoryProblems(params: LecturePaperSearchParams) {
-  const defaultParams = {
-    ...params
-  };
-
-  return useApiQuery<LecturePaper[]>(
-    [...repositoryKeys.problems(), defaultParams],
-    API_ENDPOINTS.REPOSITORY.LECTURE_PAPERS(defaultParams.lectureId!),
-    {
-      method: 'POST',
-      params: defaultParams,
-      enabled: !!defaultParams.lectureId,
-    }
-  );
-}
+export const useRepositoryProblems = createPostHook<[string], LecturePaperSearchParams, LecturePaper[]>(
+  'main',
+  (lectureId: string) => API_ENDPOINTS.REPOSITORY.LECTURE_PAPERS(lectureId)
+);
 
 // 처방 저장소 목록 조회 (addon_ps 타입)
-export function useRepositoryPrescriptionProblems(params: LecturePaperSearchParams) {
-  const defaultParams = {
-    ...params
-  };
-
-  return useApiQuery<LecturePaper[]>(
-    [...repositoryKeys.problems(), 'prescriptions', defaultParams],
-    API_ENDPOINTS.REPOSITORY.PRESCRIPTION_PAPERS(defaultParams.lectureId!),
-    {
-      method: 'POST',
-      params: defaultParams,
-      enabled: !!defaultParams.lectureId,
-    }
-  );
-}
+export const useRepositoryPrescriptionProblems = createPostHook<[string], LecturePaperSearchParams, LecturePaper[]>(
+  'main',
+  (lectureId: string) => API_ENDPOINTS.REPOSITORY.PRESCRIPTION_PAPERS(lectureId)
+);
 
 // 저장소 문제 상세 조회
-export function useRepositoryProblem(id: string) {
-  return useApiQuery<RepositoryProblem>(
-    repositoryKeys.problem(id),
-    `${API_ENDPOINTS.REPOSITORY.PROBLEMS}/${id}`,
-    {
-      enabled: !!id,
-    }
-  );
-}
+export const useRepositoryProblem = createGetHook<[string], RepositoryProblem>(
+  'main',
+  (id: string) => id ? `${API_ENDPOINTS.REPOSITORY.PROBLEMS}/${id}` : null
+);
 
 // 저장소 문제 생성
 export function useCreateRepositoryProblem() {
@@ -141,26 +114,16 @@ export function useDeleteRepositoryProblem(id: string) {
 // ===== 처방 저장소 =====
 
 // 저장소 처방 목록 조회
-export function useRepositoryPrescriptions(params?: RepositorySearchParams) {
-  return useApiQuery<{ prescriptions: RepositoryPrescription[]; total: number }>(
-    [...repositoryKeys.prescriptions(), params],
-    API_ENDPOINTS.REPOSITORY.PRESCRIPTIONS,
-    {
-      params,
-    }
-  );
-}
+export const useRepositoryPrescriptions = createGetHook<[], { prescriptions: RepositoryPrescription[]; total: number }>(
+  'main',
+  API_ENDPOINTS.REPOSITORY.PRESCRIPTIONS
+);
 
 // 저장소 처방 상세 조회
-export function useRepositoryPrescription(id: string) {
-  return useApiQuery<RepositoryPrescription>(
-    repositoryKeys.prescription(id),
-    `${API_ENDPOINTS.REPOSITORY.PRESCRIPTIONS}/${id}`,
-    {
-      enabled: !!id,
-    }
-  );
-}
+export const useRepositoryPrescription = createGetHook<[string], RepositoryPrescription>(
+  'main',
+  (id: string) => id ? `${API_ENDPOINTS.REPOSITORY.PRESCRIPTIONS}/${id}` : null
+);
 
 // 저장소 처방 생성
 export function useCreateRepositoryPrescription() {
@@ -230,38 +193,28 @@ export function useRepositoryInfiniteSearch(params: RepositorySearchParams) {
 }
 
 // 일반 검색
-export function useRepositorySearch(params: RepositorySearchParams) {
-  return useApiQuery<{
-    problems: RepositoryProblem[];
-    prescriptions: RepositoryPrescription[];
-    total: number;
-  }>(
-    repositoryKeys.search(params),
-    API_ENDPOINTS.REPOSITORY.SEARCH,
-    {
-      params,
-      enabled: !!params.query || !!params.tags?.length || !!params.category,
-    }
-  );
-}
+export const useRepositorySearch = createPostHook<[], RepositorySearchParams, {
+  problems: RepositoryProblem[];
+  prescriptions: RepositoryPrescription[];
+  total: number;
+}>(
+  'main',
+  API_ENDPOINTS.REPOSITORY.SEARCH
+);
 
 // ===== 태그 & 카테고리 =====
 
 // 태그 목록 조회
-export function useRepositoryTags() {
-  return useApiQuery<RepositoryTag[]>(
-    repositoryKeys.tags(),
-    API_ENDPOINTS.REPOSITORY.TAGS
-  );
-}
+export const useRepositoryTags = createGetHook<[], RepositoryTag[]>(
+  'main',
+  API_ENDPOINTS.REPOSITORY.TAGS
+);
 
 // 카테고리 목록 조회
-export function useRepositoryCategories() {
-  return useApiQuery<RepositoryCategory[]>(
-    repositoryKeys.categories(),
-    API_ENDPOINTS.REPOSITORY.CATEGORIES
-  );
-}
+export const useRepositoryCategories = createGetHook<[], RepositoryCategory[]>(
+  'main',
+  API_ENDPOINTS.REPOSITORY.CATEGORIES
+);
 
 // 태그 생성
 export function useCreateRepositoryTag() {
@@ -329,16 +282,10 @@ export function useExportRepositoryData() {
 // ===== 통계 =====
 
 // 저장소 통계 조회
-export function useRepositoryStatistics() {
-  return useApiQuery<RepositoryStatistics>(
-    repositoryKeys.statistics(),
-    `${API_ENDPOINTS.REPOSITORY.PROBLEMS}/statistics`,
-    {
-      // 통계는 5분마다 재조회
-      refetchInterval: 5 * 60 * 1000,
-    }
-  );
-}
+export const useRepositoryStatistics = createGetHook<[], RepositoryStatistics>(
+  'main',
+  `${API_ENDPOINTS.REPOSITORY.PROBLEMS}/statistics`
+);
 
 // ===== 유틸리티 함수 =====
 
@@ -406,26 +353,16 @@ export function useClonePrescription() {
 }
 
 // 수동 시험지 조회 (PaperModal에서 사용)
-export function useManualPaper(paperId: string | undefined) {
-  return useApiQuery<M38GeneratedPaper>(
-    [...repositoryKeys.all, 'manual-paper', paperId],
-    API_ENDPOINTS.REPOSITORY.MANUAL_PAPER(paperId!),
-    {
-      enabled: !!paperId,
-    }
-  );
-}
+export const useManualPaper = createGetHook<[string], M38GeneratedPaper>(
+  'main',
+  (paperId: string) => paperId ? API_ENDPOINTS.REPOSITORY.MANUAL_PAPER(paperId) : null
+);
 
 // 아카데미 정적 시험지 조회
-export function useAcademyStaticPaper(paperId: string | undefined) {
-  return useApiQuery<any>(
-    [...repositoryKeys.all, 'academy-static-paper', paperId],
-    API_ENDPOINTS.REPOSITORY.ACADEMY_STATIC_PAPER(paperId!),
-    {
-      enabled: !!paperId,
-    }
-  );
-}
+export const useAcademyStaticPaper = createGetHook<[string], any>(
+  'main',
+  (paperId: string) => paperId ? API_ENDPOINTS.REPOSITORY.ACADEMY_STATIC_PAPER(paperId) : null
+);
 
 // 시험지 복사
 export function useCopyPaper() {
@@ -448,26 +385,16 @@ export function useCopyPaper() {
 }
 
 // 강의 학생 목록 조회
-export function useLectureStudents(lectureId: string) {
-  return useApiQuery<SimpleStudentVO[]>(
-    [...repositoryKeys.all, 'lecture-students', lectureId],
-    API_ENDPOINTS.REPOSITORY.STUDENTS(lectureId),
-    {
-      enabled: !!lectureId,
-    }
-  );
-}
+export const useLectureStudents = createGetHook<[string], SimpleStudentVO[]>(
+  'main',
+  (lectureId: string) => lectureId ? API_ENDPOINTS.REPOSITORY.STUDENTS(lectureId) : null
+);
 
 // 학생별 시험지 ID 조회
-export function useStudentPaperIds(lecturePaperId: string) {
-  return useApiQuery<StudentStudyPaperId[]>(
-    [...repositoryKeys.all, 'student-paper-ids', lecturePaperId],
-    API_ENDPOINTS.REPOSITORY.USER_STUDY_PAPER_IDS(lecturePaperId),
-    {
-      enabled: !!lecturePaperId,
-    }
-  );
-}
+export const useStudentPaperIds = createGetHook<[string], StudentStudyPaperId[]>(
+  'main',
+  (lecturePaperId: string) => lecturePaperId ? API_ENDPOINTS.REPOSITORY.USER_STUDY_PAPER_IDS(lecturePaperId) : null
+);
 
 // 시험지 배포
 export function usePublishPaper() {
@@ -490,40 +417,25 @@ export function usePublishPaper() {
 }
 
 // 학생 이미지 조회 (Blob 응답)
-export function useStudentImage(userId: string) {
-  return useApiQuery<Blob>(
-    [...repositoryKeys.all, 'student-image', userId],
-    API_ENDPOINTS.REPOSITORY.STUDENT_IMAGE(userId),
-    {
-      enabled: !!userId,
-      // Blob 응답을 위한 설정 필요
-    }
-  );
-}
+export const useStudentImage = createGetHook<[string], Blob>(
+  'main',
+  (userId: string) => userId ? API_ENDPOINTS.REPOSITORY.STUDENT_IMAGE(userId) : null
+);
 
 // ===== 답안입력 관련 =====
 
 // 학생별 시험지 목록 조회
-export function useStudyPaperList(lecturePaperId: string, type: string) {
-  return useApiQuery<M38UserStudyPaperVO[]>(
-    [...repositoryKeys.all, 'study-paper-list', lecturePaperId, type],
-    API_ENDPOINTS.REPOSITORY.STUDY_PAPER_LIST(lecturePaperId, type),
-    {
-      enabled: !!lecturePaperId && !!type,
-    }
-  );
-}
+export const useStudyPaperList = createGetHook<[string, string], M38UserStudyPaperVO[]>(
+  'main',
+  (lecturePaperId: string, type: string) => 
+    lecturePaperId && type ? API_ENDPOINTS.REPOSITORY.STUDY_PAPER_LIST(lecturePaperId, type) : null
+);
 
 // 답안지 조회
-export function useAnswerSheet(paperId: string) {
-  return useApiQuery<PaperAnswerSheet>(
-    [...repositoryKeys.all, 'answer-sheet', paperId],
-    API_ENDPOINTS.REPOSITORY.ANSWER_SHEET(paperId),
-    {
-      enabled: !!paperId,
-    }
-  );
-}
+export const useAnswerSheet = createGetHook<[string], PaperAnswerSheet>(
+  'main',
+  (paperId: string) => paperId ? API_ENDPOINTS.REPOSITORY.ANSWER_SHEET(paperId) : null
+);
 
 // 답안지 채점
 export function useGradePaper() {
@@ -555,14 +467,7 @@ export function useResetPaper() {
 }
 
 // 시험지별 정답률 조회 (PaperSolveCounts)
-export function usePaperSolveCounts(params: PaperSolveCountsParams | null) {
-  return useApiQuery<LectureStudentSkillSolveCountRO>(
-    [...repositoryKeys.all, 'paper-solve-counts', params],
-    API_ENDPOINTS.REPOSITORY.PAPER_SOLVE_COUNTS,
-    {
-      method: 'POST',
-      params: params || undefined,  // useApiQuery에서는 params로 body 전달
-      enabled: !!params && !!params.lectureId && params.studentIds.length > 0, // paperIds 조건 제거
-    }
-  );
-}
+export const usePaperSolveCounts = createPostHook<[], PaperSolveCountsParams, LectureStudentSkillSolveCountRO>(
+  'main',
+  API_ENDPOINTS.REPOSITORY.PAPER_SOLVE_COUNTS
+);

@@ -9,7 +9,7 @@ export const mainServiceConfig: ServiceConfig = {
   name: '38 서버 비즈니스 API',
   description: '38 서버 비즈니스 API',
   version: 'v2',
-  urlPrefix: '/api/',
+  urlPrefix: '/',
   urlTransform: (url: string) => url.replace('/api/', '/api/'),
   timeout: 30000,
   headers: {

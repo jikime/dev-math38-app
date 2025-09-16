@@ -1,9 +1,9 @@
 import { 
-  useApiQuery, 
   useApiMutation, 
   useApiPutMutation, 
   useApiDeleteMutation 
 } from '@/hooks/use-api';
+import { createGetHook, createPostHook } from '@/net/core/registry/ApiHookFactory';
 import { queryKeys } from '@/lib/api/query-client';
 import { API_ENDPOINTS } from '@/lib/api/endpoints';
 import { useQueryClient } from '@tanstack/react-query';
@@ -107,41 +107,22 @@ const lectureKeys = {
 // ===== 강의 조회 =====
 
 // 내 강의 목록 조회
-export function useMyLectures() {
-  return useApiQuery<Lecture[]>(
-    lectureKeys.myLectures(),
-    API_ENDPOINTS.LECTURES.MY_LECTURES,
-    {
-      method: 'GET',
-      // 5분마다 자동 재조회
-      refetchInterval: 5 * 60 * 1000,
-      // 윈도우 포커스 시 재조회
-      refetchOnWindowFocus: true,
-    }
-  );
-}
+export const useMyLectures = createGetHook<[], Lecture[]>(
+  'main',
+  API_ENDPOINTS.LECTURES.MY_LECTURES
+);
 
 // 특정 강의 상세 조회
-export function useLecture(id: string) {
-  return useApiQuery<Lecture>(
-    lectureKeys.lecture(id),
-    API_ENDPOINTS.LECTURES.DETAIL(id),
-    {
-      enabled: !!id,
-    }
-  );
-}
+export const useLecture = createGetHook<[string], Lecture>(
+  'main',
+  (id: string) => id ? API_ENDPOINTS.LECTURES.DETAIL(id) : null
+);
 
 // 강의 상세정보 조회 (teacher 정보 포함)
-export function useLectureDetail(id: string) {
-  return useApiQuery<LectureDetail>(
-    lectureKeys.lectureDetail(id),
-    API_ENDPOINTS.LECTURES.GET_DETAIL(id),
-    {
-      enabled: !!id,
-    }
-  );
-}
+export const useLectureDetail = createGetHook<[string], LectureDetail>(
+  'main',
+  (id: string) => id ? API_ENDPOINTS.LECTURES.GET_DETAIL(id) : null
+);
 
 // ===== 강의 생성/수정/삭제 =====
 
@@ -268,14 +249,7 @@ export interface LectureLastIndex {
   lectureId: string;
 }
 
-export function useLectureLastIndex(lectureId: string) {
-  return useApiQuery<LectureLastIndex>(
-    [...lectureKeys.all, 'lastIndex', lectureId],
-    API_ENDPOINTS.LECTURES.LAST_INDEX(lectureId),
-    {
-      enabled: !!lectureId,
-      staleTime: 0, // 항상 최신 값을 가져오도록 설정
-      cacheTime: 0, // 캐시하지 않음
-    }
-  );
-}
+export const useLectureLastIndex = createGetHook<[string], LectureLastIndex>(
+  'main',
+  (lectureId: string) => lectureId ? API_ENDPOINTS.LECTURES.LAST_INDEX(lectureId) : null
+);
