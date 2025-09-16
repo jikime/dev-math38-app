@@ -17,9 +17,14 @@ declare module "next-auth" {
       idPasswordLimitTime?: Date
     } & DefaultSession["user"]
     accessToken?: string
+    idToken?: string
     refreshToken?: string
     impersonated?: boolean
     impersonator?: string
+    error?: string
+    errorTime?: number
+    lastRefreshError?: string
+    lastRefreshErrorTime?: number
   }
 
   interface User {
@@ -32,6 +37,7 @@ declare module "next-auth" {
     impersonated?: boolean
     impersonator?: string
     idPasswordLimitTime?: Date
+    forceRefresh?: boolean
   }
 }
 
@@ -57,5 +63,9 @@ declare module "next-auth/jwt" {
     }
     impersonated?: boolean
     impersonator?: string
+    error?: string
+    errorTime?: number
+    lastRefreshError?: string
+    lastRefreshErrorTime?: number
   }
 }

@@ -1,6 +1,3 @@
-import NextAuth from "next-auth"
-import authOptions from "@/components/math-paper/net/auth/auth-options"
+import { handlers } from "@/net/core/auth/auth"
 
-const handler = NextAuth(authOptions)
-
-export { handler as GET, handler as POST }
+export const { GET, POST } = handlers

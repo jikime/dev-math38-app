@@ -10,6 +10,7 @@ import "@/styles/main.scss";
 import { ThemeProvider } from "@/components/common/theme-provider"
 import { QueryProvider } from "@/components/providers/query-provider"
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { AuthProvider } from "@/components/providers/AuthProvider";
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -49,9 +50,11 @@ export default function RootLayout({
     <html lang="ko" suppressHydrationWarning>
       <body className={`${pretendard.variable} ${inter.className} min-h-screen bg-background antialiased overflow-hidden`}>
         <QueryProvider>
+        <AuthProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             <ScrollArea className="h-[calc(100vh-0.1rem)] pb-4">{children}</ScrollArea>
           </ThemeProvider>
+          </AuthProvider>
         </QueryProvider>
       </body>
     </html>

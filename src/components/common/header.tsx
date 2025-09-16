@@ -28,8 +28,10 @@ import {
   LogOut,
 } from "lucide-react"
 import { usePathname } from "next/navigation"
+import { useSession } from "next-auth/react"
 
 export function Header() {
+  const { data: session } = useSession()
   const pathname = usePathname()
   const menuItems = [
     { name: "대시보드", href: "/", icon: LayoutDashboard, color: "blue" },
@@ -63,6 +65,22 @@ export function Header() {
       colorMap[color as keyof typeof colorMap] || "bg-gradient-to-br from-gray-500 to-gray-600 text-white shadow-lg"
     )
   }
+
+
+  const handleLogout = () => {
+    const idToken = session?.idToken;
+    const issuer = process.env.NEXT_PUBLIC_OIDC_ISSUER!;       // http://localhost:9010
+    const clientId = process.env.NEXT_PUBLIC_OIDC_CLIENT_ID!;  // client1
+    const postLogout = process.env.NEXT_PUBLIC_OIDC_LOGOUT_CALLBACK || "";
+
+    // id_token_hint가 없거나 이상하면 서버가 client_id로만 식별하도록 허용
+    const url = new URL(`${issuer}/connect/logout`);
+    if (idToken) url.searchParams.set("id_token_hint", idToken);
+    url.searchParams.set("client_id", clientId);
+    url.searchParams.set("post_logout_redirect_uri", postLogout);
+
+    window.location.href = url.toString(); // 브라우저 네비게이션(쿠키 동반)
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-background to-muted border-b border p-1">
@@ -106,7 +124,7 @@ export function Header() {
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
                     <AvatarImage src="/placeholder.svg?height=32&width=32" alt="선생님" />
-                    <AvatarFallback>김</AvatarFallback>
+                    <AvatarFallback>{session?.user.name}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
@@ -114,10 +132,10 @@ export function Header() {
                 <div className="flex items-center justify-start gap-2 p-2">
                   <Avatar className="h-8 w-8">
                     <AvatarImage src="/placeholder.svg?height=32&width=32" alt="선생님" />
-                    <AvatarFallback>김</AvatarFallback>
+                    <AvatarFallback>{session?.user.name}</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col space-y-1 leading-none">
-                    <p className="font-medium">김수학 선생님</p>
+                    <p className="font-medium">{session?.user.name}</p>
                     <p className="w-[200px] truncate text-sm text-muted-foreground">math.teacher@academy.com</p>
                   </div>
                 </div>
@@ -135,7 +153,7 @@ export function Header() {
                   <span>도움말</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-red-600">
+                <DropdownMenuItem className="text-red-600" onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>로그아웃</span>
                 </DropdownMenuItem>
